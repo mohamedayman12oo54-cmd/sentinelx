@@ -1,0 +1,27 @@
+flowchart LR
+
+Dashboard["Dashboard"]
+
+Backend["Backend API"]
+
+Queue["Queue"]
+
+ML["ML Service"]
+
+Database["Database"]
+
+Health["Health Checks"]
+
+Metrics["Operational Metrics"]
+
+Dashboard --> Health
+
+Backend --> Health
+
+Queue --> Health
+
+ML --> Health
+
+Database --> Health
+
+Health --> Metrics

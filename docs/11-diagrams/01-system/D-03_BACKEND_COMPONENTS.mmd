@@ -1,0 +1,27 @@
+flowchart TD
+
+    API["Backend API"]
+
+    Auth["Authentication"]
+
+    Agents["Agents"]
+
+    Obs["Observations"]
+
+    Pred["Predictions"]
+
+    Alerts["Alerts"]
+
+    Dash["Dashboard"]
+
+    API --> Auth
+
+    API --> Agents
+
+    API --> Obs
+
+    API --> Pred
+
+    API --> Alerts
+
+    API --> Dash
