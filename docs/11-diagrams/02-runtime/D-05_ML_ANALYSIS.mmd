@@ -1,0 +1,16 @@
+sequenceDiagram
+
+participant Backend
+participant ML
+
+Backend->>ML: POST /analysis (ML Request)
+
+ML->>ML: Prompt Injection Detection
+
+ML->>ML: Threat Classification
+
+ML->>ML: CVE Correlation
+
+ML-->>Backend: Prediction Response
+
+Backend->>Backend: Persist Prediction & Evidence

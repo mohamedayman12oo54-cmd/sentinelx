@@ -1,0 +1,15 @@
+stateDiagram-v2
+
+[*] --> Submitted
+
+Submitted --> Validated
+
+Validated --> Stored
+
+Stored --> Queued
+
+Queued --> Analyzed
+
+Analyzed --> Archived
+
+Archived --> [*]

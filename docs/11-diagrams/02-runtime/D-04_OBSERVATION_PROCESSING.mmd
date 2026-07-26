@@ -1,0 +1,27 @@
+sequenceDiagram
+
+participant SDK
+participant Backend
+participant Database
+participant Queue
+participant ML
+
+SDK->>Backend: POST /api/v1/observations (ASES Observation)
+
+Backend->>Backend: Validate Observation
+
+Backend->>Database: Store Observation
+
+Backend->>Queue: Enqueue Analysis Job
+
+Backend-->>SDK: 202 Accepted
+
+Queue->>ML: Send ML Request
+
+ML->>ML: Analyze Observation
+
+ML-->>Backend: Prediction Response
+
+Backend->>Database: Store Prediction
+
+Note over Backend,Database: Results become available to the Dashboard
