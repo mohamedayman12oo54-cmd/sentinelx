@@ -6,7 +6,7 @@ All diagrams are in **SVG** format. They are organized into four categories, exa
 
 | File | Description |
 |------|-------------|
-| [`auth-domain-erd.svg`](./erd/auth-domain-erd.svg) | The Authentication-domain entities: `Organization`, `User`, `Agent`, `API Key`, `Invitation`, and their relationships. This is a focused view — for the full platform database ERD (Observations, Predictions, Alerts, etc.), see the `database/` documentation instead. |
+| [`auth-domain-erd.svg`](./erd/auth-domain-erd.svg) | The Authentication-domain entities: `Organization` (`companies` table), `User`, `Agent`, `API Key`, and `Invitation`, and their relationships. Foreign keys are labeled to match the real column names (`company_id`, not `organization_id`) so this diagram stays implementation-ready. `Invitation` is an additive 8th table, not part of the original 7-entity frozen schema — see [`adr/ADR-005-invitations-table.md`](../adr/ADR-005-invitations-table.md). This is a focused view — for the full platform database ERD (Observations, Predictions, Alerts, etc.), see the `backend/docs/01-database/` documentation instead. |
 
 ## `sequence/`
 
@@ -29,8 +29,8 @@ All diagrams are in **SVG** format. They are organized into four categories, exa
 |------|-------------|
 | [`invitation-state.svg`](./state/invitation-state.svg) | `PENDING → ACCEPTED / EXPIRED / CANCELLED` |
 | [`api-key-state.svg`](./state/api-key-state.svg) | `ACTIVE → REVOKED` |
-| [`human-identity-state.svg`](./state/human-identity-state.svg) | `PENDING VERIFICATION → ACTIVE → SUSPENDED → ARCHIVED` |
-| [`agent-identity-state.svg`](./state/agent-identity-state.svg) | `ACTIVE → DISABLED → ARCHIVED` |
+| [`human-identity-state.svg`](./state/human-identity-state.svg) | `ACTIVE → DISABLED` (also covers not-yet-verified, matching `users.status` — see [`02-domain.md`](../02-domain.md#9-does-identity-have-state)) |
+| [`agent-identity-state.svg`](./state/agent-identity-state.svg) | `ACTIVE → ARCHIVED` (matches `agents.status` exactly) |
 
 ---
 

@@ -24,8 +24,8 @@ All authentication failures — regardless of the underlying, specific cause —
 | Invalid JWT signature | `401 Unauthorized` — `"Authentication failed."` |
 | Malformed / missing API Key | `401 Unauthorized` — `"Authentication failed."` |
 | Revoked API Key | `401 Unauthorized` — `"Authentication failed."` |
-| Disabled Agent | `401 Unauthorized` — `"Authentication failed."` |
-| Disabled / Suspended User | `401 Unauthorized` — `"Authentication failed."` |
+| Archived Agent (`agents.status = ARCHIVED`) | `401 Unauthorized` — `"Authentication failed."` |
+| Disabled User, including not-yet-verified (`users.status = DISABLED`) | `401 Unauthorized` — `"Authentication failed."` |
 
 ### Example Response Body
 

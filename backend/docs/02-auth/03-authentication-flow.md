@@ -40,6 +40,8 @@ Walking through the story: Ahmed opens the site for the first time and registers
 
 **No.** He must first **Verify Email**, because SentinelX is a B2B platform and we do not want fake or unverified emails on the platform.
 
+> **Reconciliation note (aligned with `backend/docs/database/`):** `users` has no dedicated "email verified" column or status value (see [`02-domain.md`](./02-domain.md#9-does-identity-have-state)). "Not yet verified" *is* `status = DISABLED` — a newly registered User row is created `DISABLED` and flips to `ACTIVE` only once verification succeeds. The verification link itself does not require any new table either: it is a **signed, expiring URL** carrying the User's ID (the same stateless-signed-token approach already used for password resets in Laravel-style stacks), verified by signature and expiry alone — nothing about it is persisted.
+
 ### The Journey
 
 ```text

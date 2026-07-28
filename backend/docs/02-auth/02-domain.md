@@ -132,11 +132,15 @@ This means the Credential is **an attribute of Identity**, not Identity itself.
 
 ```text
 Human
-Pending Verification → Active → Suspended → Archived
+Active → Disabled
 
 Agent
-Active → Disabled → Archived
+Active → Archived
 ```
+
+> **Reconciliation note (aligned with `backend/docs/database/`):** the database's `users.status` and `agents.status` columns are each a deliberately minimal two-value enum — `ACTIVE`/`DISABLED` for `users`, `ACTIVE`/`ARCHIVED` for `agents` (see [`02-schema/enums.md`](../01-database/02-schema/enums.md)) — and neither carries a third "pending" or "suspended" value. Both identity lifecycles are collapsed onto these two values rather than the richer state machines originally sketched here:
+> - **Human**: a newly registered User starts `DISABLED` (this is also how "not yet email-verified" is represented — see [`03-authentication-flow.md`](./03-authentication-flow.md#3-human-authentication-flow)) and becomes `ACTIVE` once verified. Any later reason to block login — suspension, offboarding — also sets `status = DISABLED`; the column does not distinguish *why* a Human is disabled, matching how the database already treats `companies.status` (`ACTIVE`/`SUSPENDED` only) and `agents.status` with the same minimalism.
+> - **Agent**: `DISABLED` does not exist as a separate value — the one real "stop this Agent" action is `ARCHIVED`, exactly as the database ADR on Agent status already decided (Archive *is* the Business Action, not a lesser state before it).
 
 ---
 
@@ -146,7 +150,7 @@ We committed to this rule from the very start of the project:
 
 > **Security Data Never Truly Disappears.**
 
-So the answer is **no**. Instead of `Delete`, we do `Archived` or `Disabled`, depending on the identity type.
+So the answer is **no**. Instead of `Delete`, we set `status = DISABLED` (Human) or `status = ARCHIVED` (Agent).
 
 ---
 

@@ -167,7 +167,7 @@ we can then add Multiple Keys — but not right now.
 ```text
 Rotate
 Revoke
-Disable Agent
+Agent Archived
 ```
 
 This fits the nature of Agents well.
