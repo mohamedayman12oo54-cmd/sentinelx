@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 850" width="1100" height="850"><rect x="0" y="0" width="1100" height="850" fill="#f1f5f9"/>
+<text x="550.0" y="34" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800" fill="#0f172a">SentinelX — Authentication Pipeline</text>
+<text x="550.0" y="56" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#64748b">High-level flow — every request, regardless of Identity type, converges on the same downstream chain</text>
+<defs>
+<marker id="arrowD" markerWidth="12" markerHeight="12" refX="5" refY="9" orient="auto" markerUnits="strokeWidth">
+  <path d="M0,0 L10,0 L5,9 z" fill="#475569"/>
+</marker>
+</defs>
+<g>
+  <rect x="323.0" y="93" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="320.0" y="90" width="460" height="64" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2.2"/>
+  <text x="550.0" y="120.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Incoming Request</text>
+  <text x="550.0" y="140.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">HTTPS</text>
+</g><path d="M 550.0 154 L 550.0 214" stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrowD)"/><path d="M 550.0 214 L 450.0 254" stroke="#475569" stroke-width="2" fill="none"/><path d="M 550.0 214 L 650.0 254" stroke="#475569" stroke-width="2" fill="none"/>
+<g>
+  <rect x="133.0" y="257" width="320" height="70" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="130.0" y="254" width="320" height="70" rx="10" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2.2"/>
+  <text x="290.0" y="287.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Human Identity</text>
+  <text x="290.0" y="307.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">Verify Password → Issue JWT
+(on Login) / Verify JWT (subsequent)</text>
+</g>
+<g>
+  <rect x="653.0" y="257" width="320" height="70" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="650.0" y="254" width="320" height="70" rx="10" fill="#7c2d12" stroke="#f97316" stroke-width="2.2"/>
+  <text x="810.0" y="287.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Agent Identity</text>
+  <text x="810.0" y="307.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">Verify API Key (Hash Comparison)
+every request, stateless</text>
+</g><path d="M 290.0 324 L 550.0 374" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowD)"/><path d="M 810.0 324 L 550.0 374" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowD)"/>
+<g>
+  <rect x="323.0" y="377" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="320.0" y="374" width="460" height="64" rx="10" fill="#166534" stroke="#22c55e" stroke-width="2.2"/>
+  <text x="550.0" y="404.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Authenticated Identity</text>
+  <text x="550.0" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">{ id, type, company_id } — the only object seen downstream</text>
+</g><path d="M 550.0 438 L 550.0 498" stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrowD)"/>
+<g>
+  <rect x="323.0" y="501" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="320.0" y="498" width="460" height="64" rx="10" fill="#581c87" stroke="#a855f7" stroke-width="2.2"/>
+  <text x="550.0" y="528.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Authorization</text>
+  <text x="550.0" y="548.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">Load Role/Capability → Allow or Deny</text>
+</g><path d="M 550.0 562 L 550.0 622" stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrowD)"/>
+<g>
+  <rect x="323.0" y="625" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="320.0" y="622" width="460" height="64" rx="10" fill="#7f1d1d" stroke="#ef4444" stroke-width="2.2"/>
+  <text x="550.0" y="652.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Business Logic</text>
+  <text x="550.0" y="672.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">The actual requested operation</text>
+</g><path d="M 550.0 686 L 550.0 746" stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrowD)"/>
+<g>
+  <rect x="323.0" y="749" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="320.0" y="746" width="460" height="64" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2.2"/>
+  <text x="550.0" y="776.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Database + Audit Log</text>
+  <text x="550.0" y="796.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">Persist result, record important security events</text>
+</g></svg>
