@@ -1,16 +1,16 @@
-# ADR-005: Multi-Tenancy عبر `company_id`، بما في ذلك تكراره داخل `observations`
+# ADR-005: Multi-Tenancy via `organization_id`, Including Its Duplication Inside `observations`
 
 | | |
 |---|---|
-| **الحالة** | ✅ مُعتمد (Frozen) |
-| **الجلسة** | Session 4 (القرار الأساسي) + Session 6 (تأكيد Denormalization) |
-| **يؤثر على** | كل الجداول Business تقريبًا، وبالأخص `observations.company_id` |
+| **Status** | ✅ Accepted (Frozen) |
+| **Session** | Session 4 (core decision) + Session 6 (confirmation of denormalization) |
+| **Affects** | Nearly every business table, especially `observations.organization_id` |
 
 ---
 
-## السياق (Context)
+## Context
 
-من اليوم الأول، تحدد أن العميل يسجّل عبر "Register Company"، وليس "Register User". هذا يجعل SentinelX منصة **Multi-Tenant SaaS** بطبيعتها، حيث Company هو الـ Tenant الجذري:
+From day one, it was established that a client registers via "Register Organization," not "Register User." This makes SentinelX inherently a **Multi-Tenant SaaS** platform, where Organization is the root tenant:
 
 ```text
 SentinelX
@@ -26,61 +26,61 @@ SentinelX
 
 ---
 
-## القرار (Decision)
+## Decision
 
-### الجزء الأول: Company هو الـ Root Entity
-كل كيان Business تقريبًا يحمل `company_id` مباشرة أو بشكل غير مباشر:
+### Part One: Organization Is the Root Entity
+Nearly every business entity carries `organization_id`, either directly or indirectly:
 
 ```text
-Company
+Organization
     │
-    ├── Users            (company_id مباشر)
-    ├── Agents            (company_id مباشر)
-    │      └── API Keys   (عبر agent_id → agents.company_id)
-    └── Observations      (company_id مباشر + agent_id)
-            └── Predictions (عبر observation_id)
-                    └── Alerts (عبر prediction_id)
+    ├── Users            (organization_id direct)
+    ├── Agents            (organization_id direct)
+    │      └── API Keys   (via agent_id → agents.organization_id)
+    └── Observations      (organization_id direct + agent_id)
+            └── Predictions (via observation_id)
+                    └── Alerts (via prediction_id)
 ```
 
-### الجزء الثاني: Denormalization متعمّد في `observations`
-رغم أن `company_id` يمكن استنتاجه من `agent_id → agents.company_id`، تقرر تكرار `company_id` **مباشرة** داخل جدول `observations`.
+### Part Two: Deliberate Denormalization in `observations`
+Even though `organization_id` can be derived from `agent_id → agents.organization_id`, it was decided to duplicate `organization_id` **directly** inside the `observations` table.
 
 ---
 
-## الأسباب (Rationale)
+## Rationale
 
-### لماذا Company هو الجذر وليس User؟
-العميل الحقيقي للمنصة هو الشركة، والمستخدم مجرد شخص "ينتمي" لها (`User belongs to Company`)، وليس العكس. هذا القرار المعماري يؤثر على تصميم كل العلاقات في القاعدة — كل Query تقريبًا تبدأ منطقيًا بفلترة `company_id`.
+### Why Is Organization the Root, Not User?
+The real client of the platform is the organization, and the user is simply a person who "belongs to it" (`User belongs to Organization`), not the other way around. This architectural decision shapes the design of every relationship in the database — nearly every query logically begins by filtering on `organization_id`.
 
-### لماذا تكرار `company_id` في `observations` (Denormalization)؟
-هذا القرار قد يبدو مخالفًا لمبادئ الـ Normalization الأكاديمية للوهلة الأولى، لكنه محسوب بدقة:
+### Why Duplicate `organization_id` in `observations` (Denormalization)?
+This decision might seem to violate academic normalization principles at first glance, but it's carefully calculated:
 
-- **تقريبًا كل استعلام في الـ Dashboard يبدأ بـ `company_id`** — هذا هو نمط الاستخدام الفعلي والمتكرر للمنصة.
-- **يُعفي من `JOIN` مع جدول `agents`** في أغلب عمليات القراءة، خصوصًا الاستعلامات عالية التكرار مثل `GET /observations`.
-- **يعزل الـ Observation عن أي تغييرات مستقبلية على بيانات الـ Agent** (مثل نقل Agent بين شركات نظريًا — رغم عدم دعمه حاليًا، العزل يحمي من هذا السيناريو).
-- **يجعل الاستعلامات الأساسية أسرع وأبسط** بشكل مباشر وملموس.
+- **Nearly every query in the Dashboard starts with `organization_id`** — this is the real, frequent usage pattern of the platform.
+- **It avoids a `JOIN` against the `agents` table** in most read operations, especially high-frequency queries like `GET /observations`.
+- **It isolates the Observation from any future changes to Agent data** (such as theoretically moving an Agent between organizations — while not currently supported, the isolation protects against this scenario).
+- **It makes the core queries directly and measurably faster and simpler.**
 
-القاعدة التي حكمت هذا القرار:
+The rule that governed this decision:
 
 > **Normalize by default... Denormalize only when it clearly improves real business queries.**
 
-هذا ليس تضحية بالنقاء الأكاديمي، بل **Production Engineering** حقيقي مبني على طريقة استخدام المنصة الفعلية.
+This isn't a sacrifice of academic purity — it's genuine **Production Engineering**, based on how the platform is actually used.
 
 ---
 
-## البدائل المرفوضة
+## Rejected Alternatives
 
-| البديل | سبب الرفض |
-|--------|-----------|
-| الاعتماد فقط على `agent_id` واستنتاج الشركة عبر JOIN | يبطئ الاستعلامات الأكثر تكرارًا في المنصة (Dashboard queries)، ويزيد التعقيد في كل استعلام |
-| جعل User هو الـ Tenant الجذري بدلاً من Company | يخالف طبيعة المنتج الفعلية — التسجيل من الأساس هو "Register Company" |
-| نظام Multi-Tenancy عبر قواعد بيانات منفصلة لكل Tenant (Database-per-Tenant) | تعقيد تشغيلي غير مبرر لحجم المشروع الحالي (V1) — Over Engineering |
+| Alternative | Reason for Rejection |
+|-------------|------------------------|
+| Relying only on `agent_id` and deriving the organization via a JOIN | Slows down the platform's most frequent queries (Dashboard queries) and adds complexity to every query |
+| Making User the root tenant instead of Organization | Contradicts the actual nature of the product — registration is fundamentally "Register Organization" |
+| Multi-tenancy via a separate database per tenant (Database-per-Tenant) | Unjustified operational complexity for the current project scale (V1) — over-engineering |
 
 ---
 
-## العواقب (Consequences)
+## Consequences
 
-- ✅ كل استعلام Dashboard رئيسي يعمل بأداء عالٍ دون الحاجة لـ JOIN متكرر.
-- ✅ عزل منطقي بين بيانات كل Company، يسهّل تطبيق قواعد الأمان (Row-Level Security مستقبلاً إن لزم).
-- ✅ الأساس المعماري جاهز لأي تطور مستقبلي في نظام الصلاحيات (RBAC) أو الفوترة (Billing per Tenant).
-- ⚠️ **مسؤولية إضافية على طبقة التطبيق:** أي عملية إنشاء لـ Observation يجب أن تضمن تطابق `company_id` مع `agent.company_id` فعليًا — القاعدة لا تفرض هذا التطابق تلقائيًا عبر Constraint (لا يوجد Composite Foreign Key يربط الاثنين معًا في V1).
+- ✅ Every major Dashboard query performs well without needing a repeated JOIN.
+- ✅ Logical isolation between each organization's data, easing the future application of security rules (Row-Level Security if needed).
+- ✅ The architectural foundation is ready for any future evolution in the permissions system (RBAC) or billing (per-tenant billing).
+- ⚠️ **Additional responsibility on the application layer:** any Observation creation operation must ensure `organization_id` actually matches `agent.organization_id` — the database does not automatically enforce this match via a constraint (there is no composite foreign key linking the two together in V1).

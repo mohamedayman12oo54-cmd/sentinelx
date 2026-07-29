@@ -26,7 +26,7 @@ Many start with a `Login API`. That's a mistake. We build from the bottom up.
 Before any Authentication work, the core Domain must exist:
 
 ```text
-Company
+Organization
     ↓
 User
     ↓
@@ -175,7 +175,7 @@ This is what gives us confidence in the system.
 **No** — one of the most important decisions of the whole project. We work **incrementally**.
 
 ```text
-Sprint 1: Companies, Users, Register, Login
+Sprint 1: Organizations, Users, Register, Login
 Sprint 2: JWT, Authentication Middleware, /me
 Sprint 3: Agents, API Keys, Observation Authentication
 Sprint 4: Roles, Permissions, Authorization

@@ -1,22 +1,22 @@
-# ADR-004: API Key كـ Entity مستقل بدلاً من عمود داخل Agent
+# ADR-004: API Key as an Independent Entity Instead of a Column Inside Agent
 
 | | |
 |---|---|
-| **الحالة** | ✅ مُعتمد (Frozen) |
-| **الجلسة** | Session 5 |
-| **يؤثر على** | جدول `api_keys` المستقل + علاقته بـ `agents` |
+| **Status** | ✅ Accepted (Frozen) |
+| **Session** | Session 5 |
+| **Affects** | The independent `api_keys` table + its relationship with `agents` |
 
 ---
 
-## السياق (Context)
+## Context
 
-الـ Agent يحتاج طريقة لإثبات هويته عند التواصل مع المنصة (المصادقة/Authentication). النمط الشائع في مشاريع كثيرة هو إضافة عمود `api_key` مباشرة داخل جدول الكيان نفسه (`agents.api_key`). تم تقييم هذا النمط مقابل إنشاء جدول مستقل.
+An Agent needs a way to prove its identity when communicating with the platform (authentication). A common pattern in many projects is adding an `api_key` column directly inside the entity's own table (`agents.api_key`). This pattern was evaluated against creating an independent table.
 
 ---
 
-## القرار (Decision)
+## Decision
 
-**`api_keys` جدول مستقل تمامًا عن `agents`**، بعلاقة `Agent (1) → API Keys (∞)` — وليست One-to-One، وليست عمود داخل جدول Agent.
+**`api_keys` is a completely independent table from `agents`**, with a `Agent (1) → API Keys (∞)` relationship — not One-to-One, and not a column inside the Agent table.
 
 ```text
 agents
@@ -24,76 +24,76 @@ agents
     └── api_keys (∞)
 ```
 
-المفتاح الحقيقي **لا يُخزَّن أبدًا** بأي شكل — فقط:
+The real key is **never** stored in any form — only:
 ```text
-key_prefix   → جزء ظاهر للعرض فقط (مثل sk_live_ab12)
-key_hash     → Hash المفتاح الكامل (Unique)
+key_prefix   → the visible portion for display only (e.g., sk_live_ab12)
+key_hash     → a hash of the full key (Unique)
 ```
 
 ---
 
-## الأسباب (Rationale)
+## Rationale
 
-### 1. Credential له دورة حياة مستقلة تمامًا عن الـ Entity
-الـ Agent كيان (Identity)، لكن الـ API Key **Credential** له دورة حياة مختلفة بالكامل:
-- إنشاء (Create)
-- تدوير (Rotate)
-- إلغاء (Revoke)
-- تعطيل (Disable)
-- معرفة آخر استخدام (`last_used_at`)
-- تسجيل تاريخ الإنشاء (Audit Trail)
+### 1. A Credential Has a Completely Independent Lifecycle From the Entity
+An Agent is an entity (Identity), but an API Key is a **Credential** with a fully distinct lifecycle:
+- Creation
+- Rotation
+- Revocation
+- Disabling
+- Tracking last use (`last_used_at`)
+- Recording creation history (Audit Trail)
 
-دمج هذا داخل عمود واحد في `agents` يجعل من المستحيل تتبع هذا الـ Lifecycle بشكل صحيح.
+Merging this into a single column in `agents` makes it impossible to properly track this lifecycle.
 
-### 2. لماذا One-to-Many وليس One-to-One؟
-المنصة تحتاج Endpoint لتدوير المفتاح:
+### 2. Why One-to-Many Instead of One-to-One?
+The platform needs an endpoint to rotate the key:
 ```http
 POST /agents/{id}/rotate-api-key
 ```
 
-لو كانت العلاقة One-to-One، عملية الـ Rotation ستكون صعبة (يجب الكتابة فوق السجل القديم مباشرة، مما يفقد أي أثر للمفتاح السابق). مع One-to-Many:
-- يمكن الاحتفاظ بالمفتاح القديم كسجل بحالة `REVOKED`.
-- هذا يوفر Audit Trail ممتاز لمن يحقق لاحقًا في أي حادث أمني.
-- الـ Rotation يحدث بدون أي لحظة انقطاع فعلي (No Downtime).
+If the relationship were One-to-One, rotation would be difficult (the old record would need to be overwritten directly, losing any trace of the previous key). With One-to-Many:
+- The old key can be retained as a record with `REVOKED` status.
+- This provides an excellent audit trail for anyone investigating a security incident later.
+- Rotation happens with zero downtime (no interruption).
 
-### 3. Hash Only — أبدًا Plain Text
-تمامًا مثل كلمات المرور، تخزين المفتاح الحقيقي بأي شكل يمثل خطرًا أمنيًا جسيمًا لمنصة أمنية بالأساس. `key_prefix` يُستخدم فقط لعرض تلميح بصري للمستخدم (مثل آخر 4 أحرف من بطاقة ائتمان)، بينما `key_hash` هو المستخدم فعليًا للمصادقة عبر المقارنة.
-
----
-
-## Business Rule (على مستوى التطبيق، وليس Database Constraint)
-
-> عدد المفاتيح بحالة `ACTIVE` لكل Agent يجب أن يكون ≤ 1 دائمًا.
-
-القاعدة نفسها تقنيًا تسمح بوجود أكثر من سجل لنفس الـ Agent (هذا مقصود لدعم الـ Rotation)، لكن طبقة التطبيق (Application Layer) هي المسؤولة عن ضمان عدم وجود أكثر من مفتاح `ACTIVE` واحد في نفس اللحظة.
+### 3. Hash Only — Never Plain Text
+Just like passwords, storing the real key in any form represents a serious security risk on a platform that is fundamentally about security. `key_prefix` is only used to show the user a visual hint (like the last 4 digits of a credit card), while `key_hash` is what's actually used for authentication via comparison.
 
 ---
 
-## البدائل المرفوضة
+## Business Rule (Application Layer, Not a Database Constraint)
 
-| البديل | سبب الرفض |
-|--------|-----------|
-| عمود `api_key` داخل `agents` | يفقد القدرة على تتبع Lifecycle المفتاح (Rotation, Revocation, Audit) بشكل منفصل عن الـ Agent نفسه |
-| علاقة One-to-One | يجعل الـ Rotation عملية معقدة وتفقد سجل المفاتيح القديمة |
-| تخزين المفتاح Plain Text (حتى مشفّرًا وليس Hash) | خطر أمني غير مقبول في منصة أمنية |
-| إضافة Permissions/Scopes على مستوى المفتاح | Over Engineering غير ضروري لـ V1 — تم رفضه بوعي |
+> The count of `ACTIVE` keys per Agent must always be ≤ 1.
+
+The database itself technically allows more than one record for the same Agent (this is intentional, to support rotation), but the application layer is responsible for ensuring no more than one `ACTIVE` key exists at any given moment.
 
 ---
 
-## ما تم رفضه بوعي في هذا النطاق (V1 Scope)
+## Rejected Alternatives
 
-- ❌ Permissions على مستوى الـ API Key.
-- ❌ Scopes (تحديد صلاحيات دقيقة لكل مفتاح).
-- ❌ دعم أكثر من مفتاح `ACTIVE` في نفس الوقت.
-
-كل هذه القدرات يمكن إضافتها لاحقًا في V2 إذا ظهرت الحاجة الفعلية، دون الحاجة لإعادة تصميم الجدول من الأساس — لأن البنية الأساسية (جدول مستقل، Hash Only، One-to-Many) تدعم هذا التوسع بشكل طبيعي.
+| Alternative | Reason for Rejection |
+|-------------|------------------------|
+| An `api_key` column inside `agents` | Loses the ability to track the key's lifecycle (rotation, revocation, audit) separately from the Agent itself |
+| A One-to-One relationship | Makes rotation a complex operation and loses the history of old keys |
+| Storing the key as plain text (even if encrypted, not hashed) | An unacceptable security risk on a security platform |
+| Adding Permissions/Scopes at the API Key level | Unnecessary over-engineering for V1 — deliberately rejected |
 
 ---
 
-## العواقب (Consequences)
+## What Was Deliberately Rejected in This Scope (V1 Scope)
 
-- ✅ API Key Rotation بدون Downtime.
-- ✅ الاحتفاظ بتاريخ المفاتيح القديمة لأغراض الـ Audit.
-- ✅ معرفة آخر استخدام لكل مفتاح بشكل مستقل.
-- ✅ إلغاء مفتاح معين دون التأثير على سجل الاستخدام التاريخي.
-- ⚠️ يتطلب من طبقة التطبيق تنفيذ منطق التحقق من "مفتاح واحد Active فقط" — هذا غير مضمون تلقائيًا على مستوى قاعدة البيانات.
+- ❌ Permissions at the API Key level.
+- ❌ Scopes (fine-grained permissions per key).
+- ❌ Supporting more than one `ACTIVE` key at the same time.
+
+All of these capabilities can be added later in V2 if the real need arises, without requiring a redesign of the table from scratch — because the core structure (independent table, Hash Only, One-to-Many) naturally supports this kind of expansion.
+
+---
+
+## Consequences
+
+- ✅ API Key rotation with zero downtime.
+- ✅ Retention of old key history for audit purposes.
+- ✅ Independent tracking of last use for each key.
+- ✅ Revoking a specific key without affecting the historical usage record.
+- ⚠️ Requires the application layer to implement the "only one Active key" validation logic — this is not automatically guaranteed at the database level.

@@ -29,6 +29,7 @@ The database is optimized for immutable Observation storage and efficient histor
 Version 1 includes:
 
 - Organizations
+- Users
 - Agents
 - API Keys
 - Observations

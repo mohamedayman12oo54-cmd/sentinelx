@@ -1,16 +1,16 @@
 # Naming Conventions
 
-> قواعد التسمية دي **Frozen** ولازم تتطبق بدون استثناء على أي جدول أو Migration جديدة.
+> These naming rules are **frozen** and must apply without exception to any new table or migration.
 
 ---
 
-## 1. أسماء الجداول (Tables)
+## 1. Table Names
 
-- **صيغة الجمع دائمًا (Plural).**
+- **Always plural.**
 - `snake_case`.
 
 ```text
-companies
+organizations
 users
 agents
 api_keys
@@ -19,65 +19,65 @@ predictions
 alerts
 ```
 
-❌ ممنوع: `company`, `Company`, `tblCompany`, `companyList`
+❌ Not allowed: `organization`, `Organization`, `tblOrganization`, `organizationList`
 
 ---
 
-## 2. أسماء الأعمدة (Columns)
+## 2. Column Names
 
-- `snake_case` دائمًا.
+- Always `snake_case`.
 
 ```text
 agent_name
 risk_score
 created_at
-company_id
+organization_id
 ```
 
-❌ ممنوع: `AgentName`, `riskScore`, `CompanyID`
+❌ Not allowed: `AgentName`, `riskScore`, `OrganizationID`
 
 ---
 
-## 3. المفاتيح الأساسية (Primary Keys)
+## 3. Primary Keys
 
-كل جدول له عمود `id` من نوع `UUID v7`.
+Every table has an `id` column of type `UUID v7`.
 
 ```text
 id UUID PRIMARY KEY
 ```
 
-راجع [`decisions/adr-001-uuid-strategy.md`](../decisions/adr-001-uuid-strategy.md) للسبب الكامل.
+See [`decisions/adr-001-uuid-strategy.md`](../decisions/adr-001-uuid-strategy.md) for the full reasoning.
 
 ---
 
-## 4. المفاتيح الأجنبية (Foreign Keys)
+## 4. Foreign Keys
 
-الصيغة دائمًا: `<singular_entity_name>_id`
+Always in the format: `<singular_entity_name>_id`
 
 ```text
-company_id      → companies.id
+organization_id      → organizations.id
 agent_id        → agents.id
 observation_id  → observations.id
 prediction_id   → predictions.id
 ```
 
-بدون استثناء — حتى لو الجدول اللي بيتم الإشارة له اسمه مختلف عن الـ Entity.
+No exceptions — even if the referenced table's name differs from the entity name.
 
 ---
 
-## 5. الطوابع الزمنية (Timestamps)
+## 5. Timestamps
 
-كل جدول (بدون استثناء، شامل `api_keys`) لازم يحتوي:
+Every table (with zero exceptions, including `api_keys`) must contain:
 
 ```text
 created_at
 updated_at
 ```
 
-بالإضافة لطوابع زمنية خاصة بالـ Domain عند الحاجة، وكلها بتنتهي بـ `_at`:
+Plus domain-specific timestamps where needed, all ending in `_at`:
 
-| الجدول | الأعمدة الإضافية |
-|--------|-------------------|
+| Table | Additional Columns |
+|-------|---------------------|
 | `observations` | `received_at`, `processing_started_at`, `processed_at` |
 | `predictions` | `analyzed_at` |
 | `alerts` | `acknowledged_at`, `resolved_at` |
@@ -85,51 +85,51 @@ updated_at
 | `api_keys` | `last_used_at`, `expires_at` |
 | `users` | `last_login_at` |
 
-**القاعدة:** أي عمود بيمثل "وقت حدوث حاجة" لازم اسمه ينتهي بـ `_at`. لا استثناءات.
+**Rule:** Any column representing "the time something happened" must end in `_at`. No exceptions.
 
 ---
 
-## 6. الـ Enums
+## 6. Enums
 
-القيم بتتخزن كـ **Strings واضحة بالحروف الكبيرة (UPPERCASE)**، مش أرقام.
+Values are stored as **clear UPPERCASE strings**, not numbers.
 
 ```text
 ACTIVE, ARCHIVED, SUSPENDED, PENDING, OPEN, RESOLVED
 ```
 
-**ليه Strings مش Integers؟** أوضح في القراءة، أسهل في الـ Debugging، ومفيش حاجة اسمها "إيه معنى الرقم 3 في status؟".
+**Why strings instead of integers?** Clearer to read, easier to debug, and perfectly suited to the current project scale.
 
-القائمة الكاملة لكل الـ Enums في [`schema/enums.md`](../schema/enums.md).
+The full list of every enum is in [`schema/enums.md`](../schema/enums.md).
 
 ---
 
-## 7. أعمدة الـ JSON
+## 7. JSON Columns
 
-الاسم دايمًا بيوضح المحتوى + بيلاحقه `_json`:
+The name always describes the content and is suffixed with `_json`:
 
 ```text
 raw_ases_json
 prediction_json
 ```
 
-النوع دائمًا `JSONB` (PostgreSQL)، مش `JSON` العادي — لأداء أفضل في البحث والفهرسة.
+The type is always `JSONB` (PostgreSQL), never plain `JSON` — for better search and indexing performance.
 
 ---
 
-## 8. أسماء الـ Unique / Composite Constraints
+## 8. Unique / Composite Constraint Naming
 
-بيتم التعبير عنها بالشكل:
+Expressed as:
 
 ```text
 UNIQUE(column)
 UNIQUE(column_a, column_b)   -- Composite
 ```
 
-مثال:
+Example:
 ```text
-UNIQUE(slug)                     -- companies
+UNIQUE(slug)                     -- organizations
 UNIQUE(email)                    -- users
-UNIQUE(company_id, name)         -- agents (Composite)
+UNIQUE(organization_id, name)         -- agents (Composite)
 UNIQUE(key_hash)                 -- api_keys
 UNIQUE(observation_id)           -- predictions
 UNIQUE(prediction_id)            -- alerts
@@ -137,12 +137,12 @@ UNIQUE(prediction_id)            -- alerts
 
 ---
 
-## 9. أسماء الـ Migrations
+## 9. Migration Names
 
-كل Entity له Migration مستقلة، مرقمة بالترتيب الصحيح للتبعية (Dependency Order):
+Every entity has its own migration, numbered by dependency order:
 
 ```text
-001_create_companies_table
+001_create_organizations_table
 002_create_users_table
 003_create_agents_table
 004_create_api_keys_table
@@ -151,19 +151,19 @@ UNIQUE(prediction_id)            -- alerts
 007_create_alerts_table
 ```
 
-راجع [`implementation/migration-order.md`](../implementation/migration-order.md) للتفاصيل الكاملة.
+See [`implementation/migration-order.md`](../implementation/migration-order.md) for full details.
 
 ---
 
-## 10. ملخص سريع (Cheat Sheet)
+## 10. Quick Reference (Cheat Sheet)
 
-| العنصر | القاعدة | مثال |
-|--------|---------|------|
-| اسم الجدول | جمع + snake_case | `observations` |
-| اسم العمود | snake_case | `risk_score` |
+| Element | Rule | Example |
+|---------|------|---------|
+| Table name | Plural + snake_case | `observations` |
+| Column name | snake_case | `risk_score` |
 | Primary Key | `id` (UUID v7) | `id` |
 | Foreign Key | `<entity>_id` | `agent_id` |
-| Timestamp | ينتهي بـ `_at` | `received_at` |
-| Enum Value | UPPERCASE String | `ACTIVE` |
+| Timestamp | Ends in `_at` | `received_at` |
+| Enum Value | UPPERCASE string | `ACTIVE` |
 | JSON Column | `<name>_json` (JSONB) | `raw_ases_json` |
-| Migration | مرقمة حسب التبعية | `005_create_observations_table` |
+| Migration | Numbered by dependency | `005_create_observations_table` |

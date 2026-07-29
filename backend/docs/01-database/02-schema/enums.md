@@ -1,117 +1,117 @@
 # Enums
 
-> كل قيم الـ Enums في قاعدة بيانات SentinelX. تُخزَّن كـ **Strings واضحة بالـ UPPERCASE**، وليس أرقام — لأنها أوضح في القراءة، أسهل في الـ Debugging، ومناسبة تمامًا لحجم المشروع الحالي.
-> راجع [`naming-conventions.md`](../architecture/naming-conventions.md#6-الـ-enums) لقاعدة التسمية.
+> Every enum value in the SentinelX database. Stored as **clear UPPERCASE strings**, not numbers — for readability, easier debugging, and a perfect fit for the current project scale.
+> See [`naming-conventions.md`](../architecture/naming-conventions.md#6-enums) for the naming rule.
 
 ---
 
-## 1. `CompanyStatus` — جدول `companies.status`
+## 1. `OrganizationStatus` — table `organizations.status`
 
-| القيمة | الوصف |
-|--------|-------|
-| `ACTIVE` | الشركة نشطة وتستخدم المنصة بشكل طبيعي |
-| `SUSPENDED` | الشركة موقوفة (بديل عن الحذف الفيزيائي) |
+| Value | Description |
+|-------|-------------|
+| `ACTIVE` | The organization is active and using the platform normally |
+| `SUSPENDED` | The organization is suspended (replaces physical deletion) |
 
-**غير مضاف عمدًا في V1:** `ARCHIVED`, `PENDING`.
-
----
-
-## 2. `UserRole` — جدول `users.role`
-
-| القيمة | الوصف |
-|--------|-------|
-| `OWNER` | المالك الأساسي لحساب الشركة |
-| `MEMBER` | عضو عادي داخل الشركة |
-
-**غير مضاف عمدًا في V1:** `ADMIN`, `VIEWER` — تجنبًا للـ Over Engineering قبل بناء نظام RBAC كامل لاحقًا.
+**Deliberately not added in V1:** `ARCHIVED`, `PENDING`.
 
 ---
 
-## 3. `UserStatus` — جدول `users.status`
+## 2. `UserRole` — table `users.role`
 
-| القيمة | الوصف |
-|--------|-------|
-| `ACTIVE` | المستخدم نشط وقادر على تسجيل الدخول |
-| `DISABLED` | المستخدم معطّل (بديل عن الحذف) |
+| Value | Description |
+|-------|-------------|
+| `OWNER` | The primary owner of the organization account |
+| `MEMBER` | A regular member within the organization |
 
----
-
-## 4. `AgentStatus` — جدول `agents.status`
-
-| القيمة | الوصف |
-|--------|-------|
-| `ACTIVE` | الـ Agent يعمل ويرسل Observations بشكل طبيعي |
-| `ARCHIVED` | الـ Agent تمت أرشفته (Lifecycle الحقيقي — بديل عن الحذف) |
-
-**غير مضاف عمدًا في V1:** `DISABLED` — لأن `ARCHIVED` يعكس Business Action حقيقي بالفعل (Archive Agent).
+**Deliberately not added in V1:** `ADMIN`, `VIEWER` — to avoid over-engineering before a full RBAC system is built.
 
 ---
 
-## 5. `ApiKeyStatus` — جدول `api_keys.status`
+## 3. `UserStatus` — table `users.status`
 
-| القيمة | الوصف |
-|--------|-------|
-| `ACTIVE` | المفتاح فعّال ويمكن استخدامه للمصادقة |
-| `REVOKED` | المفتاح مُلغى (يُحتفظ به كسجل Audit، لا يُحذف) |
-
-**Business Rule:** مفتاح `ACTIVE` واحد فقط لكل Agent في أي وقت (على مستوى التطبيق).
+| Value | Description |
+|-------|-------------|
+| `ACTIVE` | The user is active and able to log in |
+| `DISABLED` | The user is disabled (replaces deletion) |
 
 ---
 
-## 6. `AnalysisStatus` — جدول `observations.analysis_status`
+## 4. `AgentStatus` — table `agents.status`
 
-| القيمة | الوصف |
-|--------|-------|
-| `PENDING` | الـ Observation وصل ولم يبدأ تحليله بعد |
-| `PROCESSING` | الـ ML يعالج الـ Observation حاليًا |
-| `COMPLETED` | التحليل اكتمل بنجاح، ويوجد Prediction مرتبط |
-| `FAILED` | فشل التحليل |
+| Value | Description |
+|-------|-------------|
+| `ACTIVE` | The agent is running and sending Observations normally |
+| `ARCHIVED` | The agent has been archived (the real lifecycle — replaces deletion) |
 
-**الاستخدام الحرج:** الـ Worker يستعلم باستمرار عن `WHERE analysis_status = 'PENDING' ORDER BY received_at ASC` — لهذا يوجد Index مخصص لهذا العمود (راجع [`indexes.md`](./indexes.md)).
+**Deliberately not added in V1:** `DISABLED` — because `ARCHIVED` already reflects a real business action (Archive Agent).
 
 ---
 
-## 7. `Verdict` — جدول `predictions.verdict`
+## 5. `ApiKeyStatus` — table `api_keys.status`
 
-| القيمة | الوصف |
-|--------|-------|
-| `SAFE` | الحدث آمن — لن يُنشئ Alert |
-| `SUSPICIOUS` | الحدث مشبوه |
-| `MALICIOUS` | الحدث خبيث/ضار |
+| Value | Description |
+|-------|-------------|
+| `ACTIVE` | The key is active and can be used for authentication |
+| `REVOKED` | The key has been revoked (kept as an audit record, never deleted) |
 
-**ملاحظة أداء:** لا يوجد Index على هذا العمود عمدًا — Low Cardinality (3 قيم فقط فقط)، والفائدة من الـ Index محدودة جدًا.
-
----
-
-## 8. `Severity` — جدول `alerts.severity`
-
-| القيمة | الوصف |
-|--------|-------|
-| `LOW` | خطورة منخفضة |
-| `MEDIUM` | خطورة متوسطة |
-| `HIGH` | خطورة عالية |
-| `CRITICAL` | خطورة حرجة |
-
-**لماذا منفصل عن `risk_score` (الرقمي في Predictions)؟** لأن المستخدم يفكر بالألوان/المستويات وليس بالأرقام المجردة عند اتخاذ القرار التشغيلي.
+**Business Rule:** only one `ACTIVE` key per Agent at any time (enforced at the application layer).
 
 ---
 
-## 9. `AlertStatus` — جدول `alerts.status`
+## 6. `AnalysisStatus` — table `observations.analysis_status`
 
-| القيمة | الوصف |
-|--------|-------|
-| `OPEN` | التنبيه جديد ولم تتم مراجعته |
-| `ACKNOWLEDGED` | تمت رؤية التنبيه، وقيد المعالجة |
-| `RESOLVED` | تم حل التنبيه |
+| Value | Description |
+|-------|-------------|
+| `PENDING` | The Observation has arrived and analysis hasn't started yet |
+| `PROCESSING` | ML is currently analyzing the Observation |
+| `COMPLETED` | Analysis finished successfully, and a Prediction exists |
+| `FAILED` | Analysis failed |
 
-**غير مضاف عمدًا:** `ARCHIVED` — لأن الأرشفة استراتيجية تخزين وليست حالة عمل (Business State).
+**Critical usage:** the Worker continuously queries `WHERE analysis_status = 'PENDING' ORDER BY received_at ASC` — this is why a dedicated index exists for this column (see [`indexes.md`](./indexes.md)).
 
 ---
 
-## 10. ملخص شامل لكل الـ Enums
+## 7. `Verdict` — table `predictions.verdict`
+
+| Value | Description |
+|-------|-------------|
+| `SAFE` | The event is safe — will never produce an Alert |
+| `SUSPICIOUS` | The event is suspicious |
+| `MALICIOUS` | The event is malicious/harmful |
+
+**Performance note:** deliberately no index on this column — low cardinality (only 3 values), so the benefit of an index would be very limited.
+
+---
+
+## 8. `Severity` — table `alerts.severity`
+
+| Value | Description |
+|-------|-------------|
+| `LOW` | Low severity |
+| `MEDIUM` | Medium severity |
+| `HIGH` | High severity |
+| `CRITICAL` | Critical severity |
+
+**Why separate from `risk_score` (numeric, in Predictions)?** Because users think in colors/levels, not raw numbers, when making an operational decision.
+
+---
+
+## 9. `AlertStatus` — table `alerts.status`
+
+| Value | Description |
+|-------|-------------|
+| `OPEN` | The alert is new and hasn't been reviewed |
+| `ACKNOWLEDGED` | The alert has been seen and is being handled |
+| `RESOLVED` | The alert has been resolved |
+
+**Deliberately not added:** `ARCHIVED` — because archiving is a storage strategy, not a business state.
+
+---
+
+## 10. Complete Summary of All Enums
 
 ```text
-CompanyStatus     → ACTIVE, SUSPENDED
+OrganizationStatus → ACTIVE, SUSPENDED
 UserRole           → OWNER, MEMBER
 UserStatus          → ACTIVE, DISABLED
 AgentStatus          → ACTIVE, ARCHIVED

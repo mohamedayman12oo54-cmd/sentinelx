@@ -59,7 +59,7 @@ Email
 Password
 Profile
 Role
-Company
+Organization
 ```
 
 Note: the email exists here **not** because this identity is "a user" but because email is simply the appropriate credential for humans.
@@ -69,7 +69,7 @@ The most interesting part of the project. An Agent, from the system's point of v
 
 ```text
 Name
-Company
+Organization
 Status
 API Key
 SDK
@@ -154,13 +154,13 @@ So the answer is **no**. Instead of `Delete`, we set `status = DISABLED` (Human)
 
 ---
 
-## 11. Does Identity Know the Company?
+## 11. Does Identity Know the Organization?
 
 In our project — **yes**, in most cases:
 
 ```text
-Human    → belongs to a Company
-Agent    → belongs to a Company
+Human    → belongs to a Organization
+Agent    → belongs to a Organization
 Service  → does not
 ```
 
@@ -178,7 +178,7 @@ Identity
           │         │         │
     Password    API Key   Secret
           │         │         │
-      Company   Company   Internal
+      Organization   Organization   Internal
 ```
 
 ---
@@ -226,7 +226,7 @@ Identity Types
 Identity Owns
 ✔ Lifecycle
 ✔ State
-✔ Company Association
+✔ Organization Association
 ✔ Credential
 
 ────────────────────────

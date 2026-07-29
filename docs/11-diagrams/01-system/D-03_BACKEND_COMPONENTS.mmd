@@ -2,26 +2,35 @@ flowchart TD
 
     API["Backend API"]
 
-    Auth["Authentication"]
+    Auth["Authentication
+(Identity + API Key)"]
 
-    Agents["Agents"]
+    Org["Organization"]
 
-    Obs["Observations"]
+    Agents["Agent"]
 
-    Pred["Predictions"]
+    Obs["Observation"]
 
-    Alerts["Alerts"]
+    Analysis["Analysis"]
+
+    Alerts["Alert"]
 
     Dash["Dashboard"]
 
+    Audit["Audit"]
+
     API --> Auth
+
+    API --> Org
 
     API --> Agents
 
     API --> Obs
 
-    API --> Pred
+    API --> Analysis
 
     API --> Alerts
 
     API --> Dash
+
+    API --> Audit

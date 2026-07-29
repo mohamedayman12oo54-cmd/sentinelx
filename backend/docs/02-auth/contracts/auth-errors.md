@@ -63,9 +63,9 @@ Per [`06-authorization.md`](../06-authorization.md#11-is-authorization-responsib
 
 ---
 
-## 4. Invitation-Specific Errors
+## 4. Invitation-Specific Errors 🟡 (Future Version — Not Applicable in V1)
 
-Derived from [`08-identity-lifecycle.md`](../08-identity-lifecycle.md) and [`adr/ADR-004-invitation-based-onboarding.md`](../adr/ADR-004-invitation-based-onboarding.md).
+Derived from [`08-identity-lifecycle.md`](../08-identity-lifecycle.md) and [`adr/ADR-004-invitation-based-onboarding.md`](../adr/ADR-004-invitation-based-onboarding.md). These error responses only become relevant once Team Management / Invitations ship; there is no invitation flow to trigger them in V1.
 
 | Scenario | Client-Facing Response |
 |----------|----------------------------|

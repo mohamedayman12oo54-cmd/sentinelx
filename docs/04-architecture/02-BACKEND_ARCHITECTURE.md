@@ -2,7 +2,7 @@
 title: Backend Architecture
 category: Architecture
 status: Approved
-version: 1.0
+version: 2.0
 
 depends_on:
   - DOMAIN_MODEL.md
@@ -17,11 +17,13 @@ related_diagrams:
 
 # Backend Architecture
 
+> **Baseline v2.0 note:** this document was a high-level, pre-implementation sketch. A full Backend Architecture design series (9 sessions) was completed afterward, defining the actual module set, module dependencies, and implementation layers in detail. This document is updated to summarize that outcome; the authoritative, full detail lives in `docs/backend/backend-architecture/`.
+
 ## Overview
 
 The SentinelX Backend acts as the central orchestration layer of the platform.
 
-It receives Observations, validates requests, coordinates processing, communicates with the ML Engine, stores results, and serves the Dashboard.
+It receives Observations, validates requests, coordinates processing, communicates with the ML Engine, stores results, and serves the Dashboard. It also authenticates and authorizes both human Users (Dashboard) and AI Agents (SDK).
 
 ---
 
@@ -29,27 +31,34 @@ It receives Observations, validates requests, coordinates processing, communicat
 
 The Backend is responsible for:
 
-- Authentication
+- Authentication (Human and Agent)
+- Authorization (Role-based for Users, Capability-based for Agents)
+- Organization management
+- Agent management
 - Observation validation
 - Observation persistence
 - ML communication
 - Prediction persistence
 - Alert generation
 - Dashboard APIs
+- Audit logging
 
 ---
 
-# High-Level Components
+# Modules (Baseline v2.0)
 
-Version 1 consists of:
+The Backend is organized as a **Modular Monolith** of 8 business modules — not a flat set of "Services." Full detail, including responsibilities and one-way dependency rules for each, is in `docs/backend/backend-architecture/03-system-modules.md` through `05-module-dependencies.md`.
 
-- REST API Layer
-- Authentication Layer
-- Observation Service
-- ML Integration Layer
-- Prediction Service
-- Alert Service
-- Dashboard Service
+```text
+Authentication   (includes Identity and API Key submodules)
+Organization
+Agent
+Observation
+Analysis          (formerly referred to as "Prediction Service")
+Alert
+Dashboard
+Audit
+```
 
 ---
 
@@ -60,6 +69,10 @@ Observation Received
 ↓
 
 Authentication
+
+↓
+
+Authorization
 
 ↓
 
@@ -96,4 +109,4 @@ The Backend should remain:
 - Testable
 - Extensible
 
-Business logic belongs inside Services rather than Controllers.
+Business Logic lives in the **Application Layer** of each module, implemented using **Actions** (one Action per use case) — not "Services." See `docs/backend/backend-architecture/06-implementation-layers.md` and `docs/backend/backend-architecture/adr/ADR-004-actions-over-services.md` for the full rationale behind this convention.

@@ -2,7 +2,7 @@
 title: Security Model
 category: Integration
 status: Approved
-version: 1.0
+version: 2.0
 
 depends_on:
   - REST_API.md
@@ -17,6 +17,8 @@ related_diagrams:
 
 # Security Model
 
+> **Baseline v2.0 note:** this document originally covered Agent authentication only. Human authentication (Password + JWT, RBAC) was designed afterward in a dedicated Authentication series and is summarized below; full detail lives in `docs/backend/authentication/`.
+
 ## Overview
 
 The Security Model defines how SentinelX authenticates clients and protects communication between platform components.
@@ -25,7 +27,15 @@ The Security Model defines how SentinelX authenticates clients and protects comm
 
 # Authentication Model
 
-Version 1 uses Agent API Keys as the primary authentication mechanism for Observation submission.
+SentinelX has two independent authentication mechanisms, one per actor type — there is no universal mechanism (see `docs/backend/authentication/01-overview.md`):
+
+## Human Authentication (Dashboard Users)
+
+Users authenticate with Email + Password. On success, a short-lived, stateless JWT is issued and used to authenticate subsequent requests. The JWT carries only identifiers (Identity ID, Identity Type, Organization ID) — never Role or profile data, which are always read fresh from the database. Full detail: `docs/backend/authentication/04-jwt.md`.
+
+## Agent Authentication (API Submission)
+
+Version 1 uses Agent API Keys as the authentication mechanism for Observation submission.
 
 Each API Key uniquely identifies:
 
@@ -37,6 +47,8 @@ Each API Key uniquely identifies:
 # Authorization
 
 Authenticated Agents may only submit Observations associated with their own identity.
+
+Authenticated Users are authorized via a simple Role model (`Owner`, `Admin`, `Member`) evaluated on every request against the database — never cached in the JWT. Full detail: `docs/backend/authentication/06-authorization.md`.
 
 Authorization rules are enforced by the Backend.
 

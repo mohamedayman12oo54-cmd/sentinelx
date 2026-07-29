@@ -1,7 +1,7 @@
 # SentinelX — Authentication & Identity Documentation
 
-> **Status:** 🔒 **FROZEN** (V1)
-> **Last Updated:** After closing the Authentication Design phase (9 complete sessions)
+> **Status:** 🔒 **FROZEN** (Documentation Baseline v2.0)
+> **Last Updated:** After closing the Authentication Design phase (9 complete sessions), and synchronized with the Backend Architecture Cross-Review (`Company` → `Organization`; `Team Management` and `Invitations` confirmed deferred — see `backend-architecture/adr/ADR-001-organization-naming.md` and `ADR-002-human-identity-baseline-update.md`)
 > **Owner:** Backend / Security Architecture Team
 
 ---
@@ -108,7 +108,7 @@ Every numbered file (`01-...` through `09-...`) is a **direct, faithful translat
 | 5 | [`05-api-keys.md`](./05-api-keys.md) | How Agents authenticate with a long-lived credential |
 | 6 | [`06-authorization.md`](./06-authorization.md) | RBAC for Humans, Capabilities for Agents, and how a decision is made |
 | 7 | [`07-security.md`](./07-security.md) | The ten hardening principles applied across every layer |
-| 8 | [`08-identity-lifecycle.md`](./08-identity-lifecycle.md) | How an Organization, its Owner, and its team members actually come into existence |
+| 8 | [`08-identity-lifecycle.md`](./08-identity-lifecycle.md) | How an Organization and its Owner come into existence (V1). Also documents the Invitation/Team Management design for a future version (see the scope banner at the top of the file) |
 | 9 | [`09-implementation-roadmap.md`](./09-implementation-roadmap.md) | The actual build order, phase by phase, sprint by sprint |
 | — | [`adr/`](./adr) | The four pivotal architectural decisions, with full reasoning and rejected alternatives |
 | — | [`contracts/`](./contracts) | Exact JWT claim shape, API key format, and error response shape — implementation-ready |
@@ -154,7 +154,7 @@ JWT Design                           ✅ Frozen
 API Key Design                        ✅ Frozen
 Authorization Design                   ✅ Frozen
 Security Hardening                      ✅ Frozen
-Organization & Identity Lifecycle        ✅ Frozen
+Organization & Identity Lifecycle        ✅ Frozen (V1: single-Owner only; Invitations deferred)
 Implementation Roadmap                    ✅ Frozen
 ```
 
@@ -174,6 +174,9 @@ To avoid over-engineering, these were **consciously excluded** from V1:
 ❌ Adaptive Authentication                  ❌ Multiple API Keys per Agent
 ❌ Token Revocation / Blacklist              ❌ Multi-device Session Management
 ❌ Multi-Organization Membership               ❌ Agent Roles
+❌ Team Management (multi-member orgs)          🟡 Invitations (designed, not built in V1)
 ```
+
+> **Baseline v2.0 update:** per the Cross-Review resolution (`backend-architecture/adr/ADR-002-human-identity-baseline-update.md`), `Team Management` and `Invitations` — both fully designed in [`08-identity-lifecycle.md`](./08-identity-lifecycle.md) — are confirmed deferred. V1 ships with single-Owner Organizations only; the Role model (`Owner`, `Admin`, `Member`) remains in the baseline so no schema change is needed when these features ship.
 
 Every one of these was discussed and rejected for a **specific reason**, not out of ignorance — details are inside the relevant numbered file or ADR. Most are explicitly earmarked as **Future Evolution**, not permanently rejected.

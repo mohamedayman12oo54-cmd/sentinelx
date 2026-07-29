@@ -2,8 +2,7 @@
 title: Domain Model
 category: Architecture
 status: Approved
-version: 1.0
-owner: SentinelX Team
+version: 2.0
 
 depends_on:
   - BUSINESS_FLOW.md
@@ -18,6 +17,8 @@ related_diagrams:
 ---
 
 # Domain Model
+
+> **Baseline v2.0 note:** this document was updated to add the Human Identity layer (`User`), which was designed after the original v1.0 freeze in a dedicated Authentication Design series. See `docs/backend/backend-architecture/adr/ADR-002-human-identity-baseline-update.md` for the full rationale, and `docs/backend/authentication/` for the complete Authentication design.
 
 ## Overview
 
@@ -47,6 +48,7 @@ It intentionally avoids discussing:
 Version 1 consists of the following primary entities.
 
 - Organization
+- User
 - Agent
 - Observation
 - Event
@@ -62,10 +64,28 @@ Represents a customer using SentinelX.
 
 Responsibilities:
 
+- Owns Users.
 - Owns Agents.
 - Owns Observations.
 - Owns Alerts.
 - Manages API Keys.
+
+---
+
+# User
+
+Represents a human who authenticates into SentinelX to manage an Organization and view its data.
+
+Responsibilities:
+
+- Authenticates using Email + Password, issued a JWT upon successful login.
+- Belongs to exactly one Organization (V1).
+- Holds a Role (`Owner`, `Admin`, or `Member`) that determines what actions are authorized.
+- The first User created for an Organization is always its `Owner`.
+
+A User is distinct from an Agent: a User is a human observer who manages the platform; an Agent is the AI entity being monitored. See `docs/backend/authentication/` for the full Authentication and Authorization design.
+
+**V1 scope note:** every Organization is provisioned with exactly one User (its Owner) at registration. Multi-member teams, invited via an Invitation flow, are designed but deferred to a future version — see `docs/backend/authentication/08-identity-lifecycle.md`.
 
 ---
 
@@ -151,6 +171,16 @@ Agent identity is never included inside the Observation payload itself.
 ---
 
 # Relationships
+
+Organization
+
+↓
+
+owns
+
+↓
+
+User
 
 Organization
 

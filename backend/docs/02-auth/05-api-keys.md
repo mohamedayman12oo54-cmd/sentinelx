@@ -51,7 +51,7 @@ This means the Agent needs a **stable Credential** — and that's the real reaso
 
 **No.** Does it change daily? **No.**
 
-It stays fixed until the company decides to:
+It stays fixed until the organization decides to:
 
 ```text
 Rotate
@@ -63,14 +63,14 @@ This means its lifecycle is fundamentally different from a JWT's.
 
 ---
 
-## 5. Does the API Key Represent the Company?
+## 5. Does the API Key Represent the Organization?
 
-**Indirectly.** We deliberately keep the SDK from sending `Company ID` and `Agent ID` on every request — the SDK needs to stay simple.
+**Indirectly.** We deliberately keep the SDK from sending `Organization ID` and `Agent ID` on every request — the SDK needs to stay simple.
 
 So: the **API Key** is what tells us:
 
 ```text
-Company
+Organization
     ↓
 Agent
 ```
@@ -90,7 +90,7 @@ Verify API Key
     ↓
 Resolve Agent Identity
     ↓
-Resolve Company
+Resolve Organization
     ↓
 Build Authenticated Identity
     ↓
@@ -202,7 +202,7 @@ API Key
 API URL
 ```
 
-That's it. No Company ID. No Agent ID. No identity-related metadata whatsoever. The Backend derives all of that on its own.
+That's it. No Organization ID. No Agent ID. No identity-related metadata whatsoever. The Backend derives all of that on its own.
 
 ---
 
@@ -221,7 +221,7 @@ Hash Comparison
     ↓
 Resolve Agent
     ↓
-Resolve Company
+Resolve Organization
     ↓
 Authenticated Identity
     ↓
@@ -290,18 +290,18 @@ Rules
 ✔ Long-lived
 ✔ Stored as Hash
 ✔ Never shown again
-✔ Resolves Agent & Company
+✔ Resolves Agent & Organization
 ✔ Produces Authenticated Identity
-✔ No Company ID or Agent ID required from SDK
+✔ No Organization ID or Agent ID required from SDK
 ```
 
 ---
 
 ## 16. The Most Important Decision in This Session
 
-> **The SDK carries no responsibility for answering "which company do I belong to?" or "which Agent am I?" — its only responsibility is to supply the API Key.**
+> **The SDK carries no responsibility for answering "which organization do I belong to?" or "which Agent am I?" — its only responsibility is to supply the API Key.**
 
-Everything else — verifying the key, identifying the Agent, identifying the Company, building the Authenticated Identity — is done by the platform. This is a smart decision because it achieves two things at once:
+Everything else — verifying the key, identifying the Agent, identifying the Organization, building the Authenticated Identity — is done by the platform. This is a smart decision because it achieves two things at once:
 
 1. It simplifies the SDK developer's experience — nothing to configure beyond a single value.
-2. It preserves the source of truth inside the platform — Company and Agent are always derived from the database, never from client-supplied data that could be forged or wrong.
+2. It preserves the source of truth inside the platform — Organization and Agent are always derived from the database, never from client-supplied data that could be forged or wrong.

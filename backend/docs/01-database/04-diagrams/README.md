@@ -1,11 +1,11 @@
 # Diagrams
 
-كل الرسومات هنا بصيغة **SVG** (قابلة للفتح في أي متصفح أو أداة تصميم، وقابلة للتحرير النصي المباشر).
+All diagrams here are in **SVG** format (viewable in any browser or design tool, and directly editable as text).
 
-| الملف | الوصف | يُستخدم لـ |
-|-------|-------|-------------|
-| [`erd.svg`](./erd.svg) | ERD كامل — كل الجداول السبعة بكل أعمدتها، مع PK/FK/UNIQUE والعلاقات | فهم الـ Schema الكامل دفعة واحدة، ومرجع أثناء كتابة الـ Migrations |
-| [`entity-relationships.svg`](./entity-relationships.svg) | نسخة مبسّطة — الجداول فقط والعلاقات بينها (بدون تفاصيل الأعمدة) | شرح سريع للـ Architecture لأي عضو جديد في الفريق |
-| [`observation-lifecycle.svg`](./observation-lifecycle.svg) | تتبع دورة حياة الـ Observation من SDK إلى Dashboard | فهم كيف تتحرك البيانات عبر النظام، وربط قاعدة البيانات بالـ Architecture الأكبر |
+| File | Description | Used For |
+|------|-------------|----------|
+| [`erd.svg`](./erd.svg) | Full ERD — all seven tables with every column, PK/FK/UNIQUE markers, and relationships | Understanding the complete schema at a glance, and as a reference while writing migrations |
+| [`entity-relationships.svg`](./entity-relationships.svg) | Simplified version — tables only and their relationships (no column-level detail) | Quick architecture explanation for any new team member |
+| [`observation-lifecycle.svg`](./observation-lifecycle.svg) | Traces the Observation's lifecycle from SDK to Dashboard | Understanding how data flows through the system, and connecting the database to the bigger architecture |
 
-جميع الرسومات مبنية مباشرة على القرارات الموثّقة في [`../schema/`](../schema) و[`../decisions/`](../decisions) — أي تحديث في الـ Schema يجب أن ينعكس هنا أيضًا للحفاظ على الاتساق.
+All diagrams are built directly from the decisions documented in [`../schema/`](../schema) and [`../decisions/`](../decisions) — any schema update must be reflected here as well to maintain consistency.

@@ -19,7 +19,7 @@ The JWT already carries an Identity ID and Identity Type (see [`04-jwt.md`](../0
 **Role is never stored inside the JWT.** It is fetched from the database on every Authorization check.
 
 ```text
-JWT contains → Identity ID, Identity Type, Company ID, Issued At, Expires At
+JWT contains → Identity ID, Identity Type, Organization ID, Issued At, Expires At
 JWT does NOT contain → Role
 ```
 
