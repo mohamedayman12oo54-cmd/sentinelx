@@ -34,6 +34,7 @@ class UserFactory extends Factory
             'role' => UserRole::Member,
             'status' => UserStatus::Active,
             'last_login_at' => null,
+            'email_verified_at' => now(),
         ];
     }
 
@@ -54,6 +55,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => UserStatus::Disabled,
+        ]);
+    }
+
+    /**
+     * Indicate that the user has not yet verified their email address.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
         ]);
     }
 }
