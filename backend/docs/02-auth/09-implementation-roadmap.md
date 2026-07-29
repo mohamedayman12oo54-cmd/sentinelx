@@ -156,7 +156,7 @@ Many leave this for last. We treat it as **part of the implementation itself**.
 ✔ Valid Key
 ✔ Invalid Key
 ✔ Revoked Key
-✔ Disabled Agent
+✔ Archived Agent
 ```
 
 **Authorization**

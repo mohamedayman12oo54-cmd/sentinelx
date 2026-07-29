@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\AgentStatus;
 use Database\Factories\AgentFactory;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Agent extends Model
+class Agent extends Model implements Authenticatable
 {
     /** @use HasFactory<AgentFactory> */
     use HasFactory, HasUuids;
@@ -52,5 +53,47 @@ class Agent extends Model
     public function observations(): HasMany
     {
         return $this->hasMany(Observation::class);
+    }
+
+    // ======= Authenticatable =======
+
+    /**
+     * An Agent has no password or remember-token concept — its Credential
+     * is the API Key, hashed and verified entirely inside the
+     * "agent-api-key" guard (see AppServiceProvider::boot()), never through
+     * these framework-contract methods. They exist only so Agent can be
+     * returned from Auth::viaRequest() as a valid Authenticatable — see
+     * 05-api-keys.md.
+     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'id';
+    }
+
+    public function getAuthIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    public function getAuthPasswordName(): string
+    {
+        return '';
+    }
+
+    public function getAuthPassword(): string
+    {
+        return '';
+    }
+
+    public function getRememberToken(): ?string
+    {
+        return null;
+    }
+
+    public function setRememberToken($value): void {}
+
+    public function getRememberTokenName(): string
+    {
+        return '';
     }
 }

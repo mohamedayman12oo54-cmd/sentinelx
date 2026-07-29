@@ -101,7 +101,7 @@ Email
 Role
 ```
 
-For example: `mohamed@company.com`, `Admin`.
+For example: `mohamed@company.com`, `Member`.
 
 The system creates an **Invitation**, and sends an email.
 
@@ -132,9 +132,9 @@ Done
 
 ---
 
-## 5. Can an Admin Send Invitations?
+## 5. Who Can Send Invitations?
 
-A decision that must be made explicitly. For the current project:
+A decision that must be made explicitly. For the current project, there are only two roles — `Owner` and `Member` (see the reconciliation note in [`06-authorization.md`](./06-authorization.md#7-what-are-our-roles)) — and invitation rights are not shared between them:
 
 **Owner:**
 ```text
@@ -144,7 +144,7 @@ A decision that must be made explicitly. For the current project:
 ✔ Delete Company
 ```
 
-**Admin:** manages day-to-day operations, but **cannot** change the company's own identity — because these are sovereign-level privileges reserved for the Owner.
+**Member:** works within the platform day-to-day but holds no organization-management privileges — cannot invite, remove, or change the role of anyone, and cannot alter the company's own identity. These remain sovereign-level privileges reserved for the Owner.
 
 ---
 
@@ -276,7 +276,7 @@ so that if the project grows, we know exactly what to build — without having t
 
 ## 14. Removing a User
 
-If Ahmed decides to remove an Admin, he is **not deleting the User**. He is removing the User's relationship with the company. In the MVP, since the relationship is direct:
+If Ahmed decides to remove a Member, he is **not deleting the User**. He is removing the User's relationship with the company. In the MVP, since the relationship is direct:
 
 ```text
 User
@@ -311,7 +311,7 @@ Confirm
     ↓
 New Owner
     ↓
-Old Owner becomes Admin
+Old Owner becomes Member
 ```
 
 But this is outside the MVP scope.
