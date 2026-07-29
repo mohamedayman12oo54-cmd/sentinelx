@@ -47,6 +47,11 @@ return [
             'driver' => 'jwt',
             'provider' => 'users',
         ],
+
+        'agent' => [
+            'driver' => 'agent-api-key',
+            'provider' => null,
+        ],
     ],
 
     /*

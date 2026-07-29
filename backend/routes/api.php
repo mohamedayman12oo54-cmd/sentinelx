@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,13 @@ Route::middleware('auth:api')->group(function () {
 
     Route::post('/auth/email/resend', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:5,1');
+});
+
+// ======= Agent Routes =======
+
+// An authenticated Agent's one Capability is Submit Observation
+// (06-authorization.md §12) — the "agent" guard succeeding already implies
+// it, so no separate capability middleware exists for a single capability.
+Route::middleware('auth:agent')->group(function () {
+    Route::get('/agent/me', [AgentController::class, 'me']);
 });
