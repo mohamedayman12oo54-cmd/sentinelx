@@ -29,7 +29,7 @@ All diagrams are in **SVG** format. They are organized into four categories, exa
 |------|-------------|
 | [`invitation-state.svg`](./state/invitation-state.svg) | `PENDING → ACCEPTED / EXPIRED / CANCELLED` |
 | [`api-key-state.svg`](./state/api-key-state.svg) | `ACTIVE → REVOKED` |
-| [`human-identity-state.svg`](./state/human-identity-state.svg) | `ACTIVE → DISABLED` (also covers not-yet-verified, matching `users.status` — see [`02-domain.md`](../02-domain.md#9-does-identity-have-state)) |
+| [`human-identity-state.svg`](./state/human-identity-state.svg) | `ACTIVE → DISABLED`, matching `users.status` exactly — `DISABLED` means administratively deactivated only; it does not represent an unverified account (see the known limitation noted in [`03-authentication-flow.md`](../03-authentication-flow.md#3-human-authentication-flow)) |
 | [`agent-identity-state.svg`](./state/agent-identity-state.svg) | `ACTIVE → ARCHIVED` (matches `agents.status` exactly) |
 
 ---

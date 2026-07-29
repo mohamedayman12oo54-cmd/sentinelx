@@ -25,7 +25,8 @@ All authentication failures — regardless of the underlying, specific cause —
 | Malformed / missing API Key | `401 Unauthorized` — `"Authentication failed."` |
 | Revoked API Key | `401 Unauthorized` — `"Authentication failed."` |
 | Archived Agent (`agents.status = ARCHIVED`) | `401 Unauthorized` — `"Authentication failed."` |
-| Disabled User, including not-yet-verified (`users.status = DISABLED`) | `401 Unauthorized` — `"Authentication failed."` |
+| Disabled User (`users.status = DISABLED`) | `401 Unauthorized` — `"Authentication failed."` |
+| Unverified email | ⚠️ Not implementable under the current schema — see the known limitation in [`03-authentication-flow.md`](../03-authentication-flow.md#3-human-authentication-flow). Not a `DISABLED` cause. |
 
 ### Example Response Body
 
