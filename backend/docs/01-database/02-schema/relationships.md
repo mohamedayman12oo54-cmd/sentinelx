@@ -1,13 +1,13 @@
 # Relationships & Foreign Keys
 
-> كل علاقة هنا هي قرار **Frozen**. أي تغيير في الـ Cardinality أو الـ Delete Rule يعتبر تغيير معماري، ولازم يُوثَّق كـ ADR جديد.
+> Every relationship here is a **frozen** decision. Any change to its cardinality or delete rule counts as an architectural change and must be documented as a new ADR.
 
 ---
 
-## 1. خريطة العلاقات الكاملة
+## 1. Full Relationship Map
 
 ```text
-Company
+Organization
 │
 ├──── Users              (1 → ∞)
 │
@@ -24,124 +24,124 @@ Company
 
 ---
 
-## 2. جدول العلاقات التفصيلي
+## 2. Detailed Relationship Table
 
-| # | العلاقة | Cardinality | Foreign Key | Delete Rule |
-|---|---------|-------------|--------------|-------------|
-| 1 | Company → Users | 1 → ∞ | `users.company_id → companies.id` | `RESTRICT` |
-| 2 | Company → Agents | 1 → ∞ | `agents.company_id → companies.id` | `RESTRICT` |
+| # | Relationship | Cardinality | Foreign Key | Delete Rule |
+|---|--------------|-------------|--------------|-------------|
+| 1 | Organization → Users | 1 → ∞ | `users.organization_id → organizations.id` | `RESTRICT` |
+| 2 | Organization → Agents | 1 → ∞ | `agents.organization_id → organizations.id` | `RESTRICT` |
 | 3 | Agent → API Keys | 1 → ∞ | `api_keys.agent_id → agents.id` | `RESTRICT` |
 | 4 | Agent → Observations | 1 → ∞ | `observations.agent_id → agents.id` | `RESTRICT` |
-| 5 | Company → Observations | 1 → ∞ | `observations.company_id → companies.id` | `RESTRICT` |
+| 5 | Organization → Observations | 1 → ∞ | `observations.organization_id → organizations.id` | `RESTRICT` |
 | 6 | Observation → Prediction | 1 → 0..1 | `predictions.observation_id → observations.id` (UNIQUE) | `RESTRICT` |
 | 7 | Prediction → Alert | 1 → 0..1 | `alerts.prediction_id → predictions.id` (UNIQUE) | `RESTRICT` |
 
 ---
 
-## 3. شرح كل علاقة
+## 3. Explanation of Each Relationship
 
-### Company → Users
+### Organization → Users
 ```text
-Company (1) ──── Users (∞)
+Organization (1) ──── Users (∞)
 ```
-الشركة الواحدة فيها أكثر من مستخدم، والمستخدم ينتمي لشركة واحدة فقط. حذف شركة وعندها مستخدمون يعتبر **خطأ منطقي (Business Error)**، لذلك `RESTRICT`.
+One organization has many users, and a user belongs to exactly one organization. Deleting a organization that still has users is considered a **business error**, hence `RESTRICT`.
 
-### Company → Agents
+### Organization → Agents
 ```text
-Company (1) ──── Agents (∞)
+Organization (1) ──── Agents (∞)
 ```
-نفس المنطق تمامًا — لا يمكن حذف شركة طالما لديها Agents مرتبطة.
+Same logic exactly — a organization cannot be deleted while it still has agents attached.
 
 ### Agent → API Keys
 ```text
 Agent (1) ──── API Keys (∞)
 ```
-العلاقة **One-to-Many وليست One-to-One** عمدًا، لدعم الـ Key Rotation والاحتفاظ بالمفاتيح القديمة كسجل Audit (`REVOKED`).
+The relationship is **One-to-Many, not One-to-One**, on purpose, to support key rotation and preserve old keys as audit records (`REVOKED`).
 
-**Business Rule (على مستوى التطبيق، وليس القاعدة):** عدد المفاتيح بحالة `ACTIVE` لكل Agent ≤ 1 في أي وقت.
+**Business Rule (application layer, not the database):** the count of `ACTIVE` keys per Agent must be ≤ 1 at any time.
 
 ### Agent → Observations
 ```text
 Agent (1) ──── Observations (∞)
 ```
-كل Observation لازم يكون له Agent (لا يوجد Observation "يتيم"). الـ Agent لا يُحذَف فعليًا (Archive فقط)، لذا `RESTRICT` منطقي بالكامل.
+Every Observation must have an Agent (no "orphan" Observation is allowed). Agents are never physically deleted (Archive only), so `RESTRICT` makes complete logical sense.
 
-### Company → Observations (Denormalized)
+### Organization → Observations (Denormalized)
 ```text
-Company (1) ──── Observations (∞)
+Organization (1) ──── Observations (∞)
 ```
-رغم أن الشركة يمكن استنتاجها عبر `agent_id → agents.company_id`، تم تكرار `company_id` مباشرة داخل `observations` **لتحسين الأداء** — راجع الشرح الكامل في [`entities.md`](./entities.md#5-observations) وقسم الـ Denormalization في [`design-principles.md`](../architecture/design-principles.md#9-normalize-by-default-denormalize-with-purpose).
+Even though the organization can be derived via `agent_id → agents.organization_id`, `organization_id` is deliberately duplicated inside `observations` **to improve performance** — see the full explanation in [`entities.md`](./entities.md#5-observations) and the denormalization section in [`design-principles.md`](../architecture/design-principles.md#9-normalize-by-default-denormalize-with-purpose).
 
 ### Observation → Prediction
 ```text
 Observation (1) ──── Prediction (0..1)
 ```
-**ليست 1..1** — عند وصول الـ Observation لأول مرة تكون حالته `PENDING` بدون Prediction بعد. فقط بعد اكتمال تحليل الـ ML يظهر الـ Prediction المرتبط. الـ Constraint `UNIQUE(observation_id)` يضمن عدم وجود أكثر من Prediction واحد لكل Observation في V1.
+**Not 1..1** — when an Observation first arrives, its state is `PENDING` with no Prediction attached yet. Only after ML analysis completes does the linked Prediction appear. The `UNIQUE(observation_id)` constraint ensures at most one Prediction per Observation in V1.
 
 ### Prediction → Alert
 ```text
 Prediction (1) ──── Alert (0..1)
 ```
-**Optional** لأن نتيجة `SAFE` لن تُنتج Alert أبدًا. الـ Constraint `UNIQUE(prediction_id)` يضمن Alert واحد كحد أقصى لكل Prediction.
+**Optional**, because a `SAFE` verdict will never produce an Alert. The `UNIQUE(prediction_id)` constraint ensures at most one Alert per Prediction.
 
 ---
 
-## 4. سياسة الحذف (Delete Strategy)
+## 4. Delete Strategy
 
-### القرار: `RESTRICT` في كل مكان — بلا استثناء
+### The Decision: `RESTRICT` Everywhere — No Exceptions
 
 ```text
-✔ ON DELETE RESTRICT  (في كل الـ Foreign Keys)
-✘ لا يوجد CASCADE
-✘ لا يوجد SET NULL
+✔ ON DELETE RESTRICT  (on every foreign key)
+✘ No CASCADE
+✘ No SET NULL
 ```
 
-### لماذا لا CASCADE؟
+### Why not CASCADE?
 
-لو استخدمنا `CASCADE`، أي حذف خاطئ لسجل Company سيؤدي لحذف تسلسلي لكل شيء تحته:
+If we used `CASCADE`, any accidental deletion of a Organization record would trigger a cascading deletion of everything beneath it:
 
 ```text
-Company → Users → Agents → API Keys → Observations → Predictions → Alerts
+Organization → Users → Agents → API Keys → Observations → Predictions → Alerts
 ```
 
-بمعنى فقدان كامل تاريخ الشركة نتيجة خطأ واحد (Bug أو حذف بشري). في منصة أمنية، هذا كارثي. المنصة أصلًا تعتمد على **Archive** وليس **Delete**، فلا فائدة عملية من الـ Cascade أبدًا.
+That means an entire organization's history could disappear because of a single mistake (a bug or a human deletion). On a security platform, that's catastrophic. The platform already relies on **Archive**, not **Delete**, so cascading deletes serve no real purpose whatsoever.
 
-### لماذا لا SET NULL؟
+### Why not SET NULL?
 
-`SET NULL` يعني السماح بوجود سجلات "يتيمة" — مثل Observation بدون Agent، أو Alert بدون Prediction. هذا مرفوض تمامًا لأنه يخالف مبدأ [Parent Must Always Exist](../architecture/design-principles.md#10-parent-must-always-exist-referential-integrity).
+`SET NULL` would allow "orphan" records to exist — such as an Observation with no Agent, or an Alert with no Prediction. This is entirely rejected because it violates the [Parent Must Always Exist](../architecture/design-principles.md#10-parent-must-always-exist-referential-integrity) principle.
 
-### لماذا لا Soft Delete (`deleted_at`)؟
+### Why no Soft Delete (`deleted_at`)?
 
-المنصة لديها بالفعل Lifecycle واضح ومُعبِّر عن الحالة الفعلية للبيانات:
+The platform already has a clear lifecycle that accurately expresses the actual state of the data:
 
 ```text
-Company → SUSPENDED
+Organization → SUSPENDED
 Agent   → ARCHIVED
 Alert   → RESOLVED
 ```
 
-إضافة عمود `deleted_at` فوق ده هتدخل تعقيد إضافي بدون قيمة حقيقية. راجع [`decisions/adr-002-soft-delete-strategy.md`](../decisions/adr-002-soft-delete-strategy.md) للتفاصيل الكاملة.
+Adding a `deleted_at` column on top of this would introduce extra complexity without real value. See [`decisions/adr-002-soft-delete-strategy.md`](../decisions/adr-002-soft-delete-strategy.md) for full details.
 
 ---
 
-## 5. Referential Integrity — القاعدة الذهبية
+## 5. Referential Integrity — The Golden Rule
 
-> **أي Record في النظام لازم يكون له Parent صالح.**
+> **Every record in the system must have a valid parent.**
 
 ```text
-✘ Observation.agent_id       = NULL   → ممنوع
-✘ Prediction.observation_id  = NULL   → ممنوع
-✘ Alert.prediction_id        = NULL   → ممنوع
+✘ Observation.agent_id       = NULL   → not allowed
+✘ Prediction.observation_id  = NULL   → not allowed
+✘ Alert.prediction_id        = NULL   → not allowed
 ```
 
-كل العلاقات إلزامية (Mandatory) إلا ما اتفقنا عليه منطقيًا كـ Optional (وجود Prediction أو Alert من عدمه) — لكن **لو السجل موجود، فالـ Parent لازم يكون موجود دائمًا**.
+All relationships are mandatory except what was logically agreed to be optional (whether a Prediction or Alert exists at all) — but **if the record exists, its parent must always exist**.
 
 ---
 
-## 6. لماذا الأصل هو Denormalization محسوب وليس Normalization الأكاديمي الصرف؟
+## 6. Why Calculated Denormalization Rather Than Pure Academic Normalization?
 
-القرار المتكرر عبر القاعدة كلها:
+The recurring decision across the entire database:
 
 > Normalize by default... Denormalize only when it clearly improves real business queries.
 
-المثال الوحيد الفعلي لهذا في V1 هو `observations.company_id`. لا يوجد أي تكرار آخر في باقي الجداول — كل الحالات الأخرى Normalized بالكامل.
+The single actual instance of this in V1 is `observations.organization_id`. There is no other duplication anywhere else — every other case is fully normalized.

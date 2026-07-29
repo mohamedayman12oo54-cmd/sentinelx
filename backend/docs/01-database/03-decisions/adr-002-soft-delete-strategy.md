@@ -1,66 +1,66 @@
-# ADR-002: رفض Soft Delete (`deleted_at`) لصالح Business States صريحة
+# ADR-002: Rejecting Soft Delete (`deleted_at`) in Favor of Explicit Business States
 
 | | |
 |---|---|
-| **الحالة** | ✅ مُعتمد (Frozen) |
-| **الجلسة** | Session 3 (مبدئي) + Session 6 (تأكيد نهائي) |
-| **يؤثر على** | كل الجداول — بالأخص `companies`, `agents`, `alerts` |
+| **Status** | ✅ Accepted (Frozen) |
+| **Session** | Session 3 (initial) + Session 6 (final confirmation) |
+| **Affects** | All tables — especially `organizations`, `agents`, `alerts` |
 
 ---
 
-## السياق (Context)
+## Context
 
-النمط الشائع في كثير من الأنظمة هو إضافة عمود `deleted_at` (Soft Delete) في كل جدول، بحيث يظل السجل موجودًا فعليًا لكن يُستبعد من الاستعلامات العادية. تم تقييم هذا النمط لقاعدة بيانات SentinelX.
+A common pattern in many systems is adding a `deleted_at` column (Soft Delete) to every table, so a record remains physically present but is excluded from normal queries. This pattern was evaluated for the SentinelX database.
 
 ---
 
-## القرار (Decision)
+## Decision
 
-**لا يوجد عمود `deleted_at` في أي جدول عبر القاعدة بالكامل.** بدلاً منه، كل جدول يحتاج تمثيل "توقف" أو "إنهاء" يمتلك **Business State صريح** خاص به داخل عمود `status`:
+**No `deleted_at` column exists in any table across the entire database.** Instead, every table that needs to represent "stopping" or "ending" an entity has an explicit **Business State** inside a `status` column:
 
 ```text
-Company  → SUSPENDED   (بدلاً من DELETE)
-Agent    → ARCHIVED     (بدلاً من DELETE)
-Alert    → RESOLVED     (بدلاً من DELETE)
+Organization  → SUSPENDED   (instead of DELETE)
+Agent    → ARCHIVED     (instead of DELETE)
+Alert    → RESOLVED     (instead of DELETE)
 ```
 
-الجداول التي لا معنى فعلي لحذفها إطلاقًا (`observations`, `predictions`) لا تحتوي أي آلية حذف من أي نوع — لا Soft ولا Hard.
+Tables with no real-world reason to be deleted at all (`observations`, `predictions`) have no deletion mechanism of any kind — neither soft nor hard.
 
 ---
 
-## الأسباب (Rationale)
+## Rationale
 
-### 1. الـ Business State موجود بالفعل
-المنصة أصلًا صممت Lifecycle واضح لكل كيان يحتاج "إيقاف":
+### 1. The Business State Already Exists
+The platform already has a clear lifecycle defined for every entity that needs to be "stopped":
 
 ```text
 Agent  → ACTIVE → ARCHIVED
 Alert  → OPEN → ACKNOWLEDGED → RESOLVED
-Company → ACTIVE → SUSPENDED
+Organization → ACTIVE → SUSPENDED
 ```
 
-إضافة `deleted_at` فوق هذا يُنشئ **مصدرين للحقيقة (Two Sources of Truth)** حول حالة نفس السجل — هل السجل "متوقف" لأن `status = ARCHIVED`، أم لأن `deleted_at IS NOT NULL`؟ هذا تعقيد بدون قيمة مضافة.
+Adding `deleted_at` on top of this creates **two sources of truth** about the same record's state — is the record "inactive" because `status = ARCHIVED`, or because `deleted_at IS NOT NULL`? This is added complexity with no real value.
 
-### 2. طبيعة المنصة أمنية (Security & Audit)
-SentinelX منصة Security & Audit — **التاريخ أهم من المساحة**. سواء استخدمنا Soft Delete أو لا، البيانات لن تُحذف فعليًا أبدًا من الجداول الحرجة (`observations`, `predictions`). الفارق الوحيد هو أن الحالة الحقيقية تُمثَّل بوضوح عبر `status`، وليس عبر Flag إضافي غامض المعنى.
+### 2. The Platform's Nature Is Security & Audit
+SentinelX is a Security & Audit platform — **history matters more than disk space**. Whether or not we use soft delete, data in the critical tables (`observations`, `predictions`) will never actually be deleted. The only difference is that the true state is clearly represented via `status`, rather than through an extra, ambiguous flag.
 
-### 3. تجنب Over Engineering
-Soft Delete نمط مفيد في سياقات معينة (مثل حذف مستخدم لمحتواه بنفسه)، لكن في سياق SentinelX — حيث لا يوجد Delete من الأساس في أي Business Flow — إضافته تُدخل تعقيدًا (Query Scopes، استثناءات في كل استعلام) دون أن يخدم أي حالة استخدام فعلية.
-
----
-
-## البدائل المرفوضة
-
-| البديل | سبب الرفض |
-|--------|-----------|
-| `deleted_at` على كل الجداول | يخلق ازدواجية مع الـ Business States الموجودة أصلًا، ويُعقّد كل استعلام بشرط استثناء إضافي |
-| Physical Delete | غير مقبول إطلاقًا في منصة Security & Audit — يفقد الدليل التاريخي بشكل نهائي |
+### 3. Avoiding Over-Engineering
+Soft delete is a useful pattern in certain contexts (e.g., a user deleting their own content), but in SentinelX's context — where there's no deletion in any business flow to begin with — adding it introduces complexity (query scopes, exceptions in every query) without serving any real use case.
 
 ---
 
-## العواقب (Consequences)
+## Rejected Alternatives
 
-- ✅ استعلامات أبسط — لا حاجة لـ `WHERE deleted_at IS NULL` في كل مكان.
-- ✅ الحالة الحقيقية للسجل واضحة ومباشرة من عمود `status` نفسه.
-- ✅ يتماشى مع مبدأ [Archive Instead of Delete](../architecture/design-principles.md#4-archive-instead-of-delete).
-- ⚠️ يتطلب من فريق التطبيق (Backend) الالتزام الصارم بعدم تنفيذ أي `DELETE` فعلي على الجداول الحرجة — هذا القيد غير مفروض تقنيًا على مستوى القاعدة، بل هو اتفاق معماري يجب الالتزام به في طبقة الكود.
+| Alternative | Reason for Rejection |
+|-------------|------------------------|
+| `deleted_at` on every table | Creates duplication with the business states that already exist, and complicates every query with an extra exclusion condition |
+| Physical Delete | Entirely unacceptable on a Security & Audit platform — permanently loses the historical evidence trail |
+
+---
+
+## Consequences
+
+- ✅ Simpler queries — no need for `WHERE deleted_at IS NULL` everywhere.
+- ✅ The record's true state is clear and direct from the `status` column itself.
+- ✅ Aligns with the [Archive Instead of Delete](../architecture/design-principles.md#4-archive-instead-of-delete) principle.
+- ⚠️ Requires the application team (Backend) to strictly commit to never issuing an actual `DELETE` against the critical tables — this constraint is not technically enforced at the database level; it's an architectural agreement that must be honored in the code layer.

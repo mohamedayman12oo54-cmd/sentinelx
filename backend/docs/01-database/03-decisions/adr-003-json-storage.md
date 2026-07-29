@@ -1,78 +1,78 @@
-# ADR-003: تخزين Observation وPrediction كـ JSONB بدلاً من التفكيك لجداول
+# ADR-003: Storing Observation and Prediction as JSONB Instead of Decomposing into Tables
 
 | | |
 |---|---|
-| **الحالة** | ✅ مُعتمد (Frozen) |
-| **الجلسة** | Session 1 (القرار الأولي) + Session 6, 7 (تأكيد نهائي) |
-| **يؤثر على** | `observations.raw_ases_json`, `predictions.prediction_json` |
+| **Status** | ✅ Accepted (Frozen) |
+| **Session** | Session 1 (initial decision) + Session 6, 7 (final confirmation) |
+| **Affects** | `observations.raw_ases_json`, `predictions.prediction_json` |
 
 ---
 
-## السياق (Context)
+## Context
 
-الـ Observation (من الـ SDK) والـ Prediction (من الـ ML) كلاهما يحملان بيانات غنية ومعقدة نسبيًا: Events متتالية، Evidence، Reasons، Models، Datasets، تصنيفات MITRE/OWASP...إلخ.
+An Observation (from the SDK) and a Prediction (from ML) both carry rich, relatively complex data: sequential Events, Evidence, Reasons, Models, Datasets, MITRE/OWASP classifications, etc.
 
-كان يوجد خياران أساسيان:
+Two main options existed:
 
-1. **تفكيك كامل (Full Normalization):** كل Event وكل قطعة Evidence تصبح صفًا في جدول منفصل (`events`, `evidence`...).
-2. **تخزين كوثيقة (Document Storage):** حفظ الـ JSON بالكامل كما وصل، واستخراج فقط الأعمدة اللازمة فعليًا للاستعلام.
+1. **Full Decomposition (Full Normalization):** every Event and every piece of Evidence becomes a row in a separate table (`events`, `evidence`, etc.).
+2. **Document Storage:** save the full JSON exactly as received, and only extract columns actually needed for querying.
 
 ---
 
-## القرار (Decision)
+## Decision
 
-**JSON (تحديدًا JSONB في PostgreSQL) — وليس تفكيك لجداول.**
+**JSON (specifically JSONB in PostgreSQL) — not decomposition into tables.**
 
 ```text
-observations.raw_ases_json     → ASES JSON كامل (Source of Truth)
-predictions.prediction_json    → استجابة الـ ML كاملة (Evidence, Reasons, Models...)
+observations.raw_ases_json     → Full ASES JSON (Source of Truth)
+predictions.prediction_json    → Full ML response (Evidence, Reasons, Models...)
 ```
 
-مع استخراج فقط الأعمدة التي يُستعلَم أو يُفلتَر أو يُرتَّب عليها فعليًا بشكل متكرر:
+With only the columns that are actually and repeatedly queried, filtered, or sorted on extracted separately:
 
 ```text
 observations → analysis_status, received_at, processing_started_at, processed_at
 predictions   → verdict, confidence, risk_score, summary, model_version, analyzed_at
 ```
 
-هذا النموذج يُسمَّى **Hybrid Data Model**، ويحكمه المبدأ:
+This model is called a **Hybrid Data Model**, governed by the principle:
 
 > **Store for Query, Keep the Rest as Document.**
 
 ---
 
-## الأسباب (Rationale)
+## Rationale
 
-### 1. الحفاظ على الشكل الأصلي (Source of Truth)
-تفكيك ASES JSON لعشرات الصفوف في جداول Relational يفقدنا:
-- ترتيب الأحداث الأصلي بدقة.
-- سهولة إعادة التحليل (Re-analysis) بنفس البيانات بالضبط كما وصلت.
-- الحفاظ على الشكل الأصلي كدليل (Evidence) قابل للرجوع إليه في أي تحقيق أمني.
+### 1. Preserving the Original Shape (Source of Truth)
+Decomposing the ASES JSON into dozens of rows in relational tables would lose:
+- The precise original ordering of events.
+- The ease of re-analysis using exactly the same data as it originally arrived.
+- The original shape as evidence, retrievable for any future security investigation.
 
-### 2. مرونة أمام تغيّر الشكل (Schema Evolution)
-شكل الـ Evidence القادم من الـ ML "ممكن يتغير مع تطور الموديل". لو قيّدنا أنفسنا بجداول Relational محكمة الشكل، أي تغيير في مخرجات الموديل سيتطلب Migration جديدة في القاعدة. الـ JSON يمتص هذا التغيير دون أي تعديل هيكلي.
+### 2. Flexibility Against Schema Evolution
+The shape of Evidence coming from ML "can change as the model evolves." If we constrained ourselves to rigid relational tables, any change in model output would require a new database migration. JSON absorbs this change without any structural modification.
 
-### 3. لا حاجة استعلام فعلية داخل محتوى الـ JSON
-لا يوجد أي Endpoint في REST API يستعلم *داخل* محتوى الـ Evidence أو الـ Events نفسها. الاستعلامات الفعلية كلها على مستوى الـ Metadata (الحالة، التاريخ، الدرجة)، وهذه استُخرجت بالفعل كأعمدة منفصلة.
+### 3. No Real Need to Query Inside the JSON Content
+No endpoint in the REST API queries *inside* the content of the Evidence or Events themselves. All actual queries operate at the metadata level (status, dates, scores), and these have already been extracted as separate columns.
 
-### 4. هذا هو النمط المستخدم في أنظمة الـ Logging الحديثة
-تخزين الحدث الكامل كوثيقة، مع استخراج الحقول القابلة للاستعلام فقط كأعمدة، هو نمط ثابت ومُختبَر في أنظمة المراقبة والأمن الحديثة.
-
----
-
-## البدائل المرفوضة
-
-| البديل | سبب الرفض |
-|--------|-----------|
-| جدول `events` منفصل لكل حدث داخل الـ Observation | يفقد ترتيب وسياق الأحداث الأصلي، ويعقّد الاستعلام والصيانة بدون فائدة حقيقية |
-| جدول `evidence` منفصل لكل قطعة دليل في الـ Prediction | شكل الـ Evidence متغيّر مع تطور الموديل — تجميد شكله في جداول محكمة غير عملي |
-| JSON عادي (وليس JSONB) | JSONB في PostgreSQL أسرع في البحث، يدعم Indexing، وأفضل في التخزين |
+### 4. This Is the Pattern Used in Modern Logging Systems
+Storing the full event as a document, while extracting only queryable fields as columns, is a proven, well-established pattern in modern monitoring and security systems.
 
 ---
 
-## العواقب (Consequences)
+## Rejected Alternatives
 
-- ✅ حماية كاملة لسلامة البيانات الأصلية (Data Integrity) كدليل أمني.
-- ✅ لا حاجة لـ Migration جديدة كل مرة يتغيّر فيها شكل مخرجات الـ ML.
-- ✅ استعلامات الـ Dashboard سريعة لأنها تعتمد على الأعمدة المستخرجة، وليس على تفكيك JSON وقت القراءة.
-- ⚠️ لا يمكن حاليًا عمل Full Text Search أو استعلام مباشر *داخل* محتوى الـ JSON (قرار واعٍ — راجع [`schema/indexes.md`](../schema/indexes.md#5-قرارات-معمارية-أوسع-حول-الأداء)) — إذا ظهرت حاجة فعلية لهذا مستقبلاً، يمكن إضافة GIN Index على أعمدة الـ JSONB دون تغيير هيكلي.
+| Alternative | Reason for Rejection |
+|-------------|------------------------|
+| A separate `events` table for each event inside the Observation | Loses the original ordering and context of events, and complicates querying and maintenance with no real benefit |
+| A separate `evidence` table for each piece of evidence in the Prediction | The shape of Evidence changes as the model evolves — freezing its shape into rigid tables is impractical |
+| Plain JSON (instead of JSONB) | JSONB in PostgreSQL is faster for search, supports indexing, and is better for storage |
+
+---
+
+## Consequences
+
+- ✅ Full protection of the integrity of the original data as security evidence.
+- ✅ No need for a new migration every time ML's output shape changes.
+- ✅ Dashboard queries are fast because they rely on extracted columns, not decomposing JSON at read time.
+- ⚠️ Currently cannot perform Full Text Search or query directly *inside* the JSON content (a conscious decision — see [`schema/indexes.md`](../schema/indexes.md#5-broader-performance-related-decisions)) — if a real need arises in the future, a GIN index can be added on the JSONB columns without any structural change.

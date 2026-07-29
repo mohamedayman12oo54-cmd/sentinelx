@@ -1,79 +1,79 @@
 # Implementation Notes
 
-> ملاحظات عملية مباشرة يجب مراعاتها أثناء كتابة الـ Migrations والـ Models. هذا الملف تحديدًا موجّه لأي أداة أو مهندس ينفّذ الكود فعليًا (بما في ذلك Claude Code).
+> Direct, practical notes to keep in mind while writing migrations and models. This file specifically targets whoever is actually implementing the code (including Claude Code).
 
 ---
 
-## 1. قواعد عامة إلزامية
+## 1. General Mandatory Rules
 
 ```text
-✔ استخدم UUID v7 لكل id  (وليس Auto Increment، وليس UUID v4)
-✔ استخدم JSONB (وليس JSON) للأعمدة: raw_ases_json, prediction_json
-✔ لا تستخدم CASCADE في أي Foreign Key
-✔ لا تستخدم SET NULL في أي Foreign Key
-✔ استخدم RESTRICT في كل Foreign Key بدون استثناء
-✔ لا تُضف عمود deleted_at في أي جدول
-✔ Hash فقط لـ: api_keys.key_hash و users.password_hash — لا تخزين Plain Text أبدًا
-✔ كل الجداول (شامل api_keys) تحتوي created_at و updated_at
+✔ Use UUID v7 for every id  (not auto-increment, not UUID v4)
+✔ Use JSONB (not JSON) for the columns: raw_ases_json, prediction_json
+✔ Never use CASCADE on any foreign key
+✔ Never use SET NULL on any foreign key
+✔ Use RESTRICT on every foreign key, without exception
+✔ Never add a deleted_at column to any table
+✔ Hash only for: api_keys.key_hash and users.password_hash — never store plain text
+✔ Every table (including api_keys) contains created_at and updated_at
 ```
 
 ---
 
 ## 2. Database Engine
 
-**PostgreSQL** هو المُوصى به والمُعتمد للتصميم بالكامل، خصوصًا بسبب:
-- دعم `JSONB` الأصلي (أداء وفهرسة أفضل من `JSON` العادي).
-- دعم ممتاز لـ `UUID` كنوع بيانات أصلي.
-- نضج ودعم واسع لـ Composite Indexes.
+**PostgreSQL** is the recommended and adopted engine for the entire design, especially due to:
+- Native support for `JSONB` (better performance and indexing than plain `JSON`).
+- Excellent native support for `UUID` as a data type.
+- Mature, broad support for composite indexes.
 
 ---
 
-## 3. Naming — لا استثناءات
+## 3. Naming — No Exceptions
 
-راجع [`architecture/naming-conventions.md`](../architecture/naming-conventions.md) بالكامل قبل كتابة أي Migration. أهم النقاط:
+Review [`architecture/naming-conventions.md`](../architecture/naming-conventions.md) in full before writing any migration. Key points:
 
-- الجداول: جمع + `snake_case` (`companies`, `observations`).
-- الأعمدة: `snake_case`.
-- Foreign Keys: `<entity>_id` دائمًا.
-- Timestamps: تنتهي بـ `_at` دائمًا.
-- Enum Values: `UPPERCASE` Strings دائمًا (وليس أرقام).
-
----
-
-## 4. Business Rules غير مفروضة على مستوى الـ Database — يجب تطبيقها في الكود
-
-بعض القواعد التجارية **لا تُفرض تلقائيًا** عبر Constraints في القاعدة، ويجب تطبيقها صراحة في طبقة التطبيق (Backend):
-
-| القاعدة | أين تُطبَّق |
-|---------|-------------|
-| مفتاح `ACTIVE` واحد فقط لكل Agent في `api_keys` | Application Layer — عند إنشاء مفتاح جديد، يجب تعطيل القديم أولًا ضمن نفس Transaction |
-| تطابق `observations.company_id` مع `agents.company_id` الخاص بنفس الـ Observation | Application Layer — عند إدخال Observation جديد، اجلب `company_id` من الـ Agent نفسه، لا تعتمد على قيمة خارجية مُرسَلة |
+- Tables: plural + `snake_case` (`organizations`, `observations`).
+- Columns: `snake_case`.
+- Foreign Keys: always `<entity>_id`.
+- Timestamps: always end in `_at`.
+- Enum values: always `UPPERCASE` strings (never numbers).
 
 ---
 
-## 5. الأعمدة المستخرجة من JSON — لا تُكرر المصدر يدويًا
+## 4. Business Rules Not Enforced at the Database Level — Must Be Applied in Code
 
-الأعمدة زي `verdict`, `risk_score`, `confidence`, `summary`, `model_version` في `predictions` هي **نسخة مستخرجة** من `prediction_json` لأغراض الاستعلام السريع. عند إدخال Prediction جديد:
+Some business rules are **not automatically enforced** via constraints in the database, and must be explicitly applied at the application (Backend) layer:
+
+| Rule | Where It Must Be Applied |
+|------|---------------------------|
+| Only one `ACTIVE` key per Agent in `api_keys` | Application layer — when creating a new key, the old one must be disabled first within the same transaction |
+| `observations.organization_id` must match the `organization_id` of the Agent linked to that same Observation | Application layer — when inserting a new Observation, derive `organization_id` from the Agent itself; do not rely on an externally supplied value |
+
+---
+
+## 5. Columns Extracted From JSON — Don't Manually Duplicate the Source
+
+Columns like `verdict`, `risk_score`, `confidence`, `summary`, `model_version` in `predictions` are an **extracted copy** of `prediction_json`, kept for fast querying. When inserting a new Prediction:
 
 ```text
-1. خزّن الاستجابة الكاملة من الـ ML في prediction_json
-2. استخرج منها القيم المطلوبة وضعها في الأعمدة المخصصة
-3. تأكد أن القيم متطابقة دائمًا (لا تسمح بتباعد بين الاثنين)
+1. Store the full ML response in prediction_json
+2. Extract the required values from it into their dedicated columns
+3. Ensure the values always stay consistent (never let them diverge)
 ```
 
-نفس المبدأ لا ينطبق حرفيًا على `observations` لأن كل أعمدتها (عدا JSON) هي Metadata خاصة بدورة حياة السجل نفسه (`analysis_status`, `received_at`...) وليست مستخرجة من محتوى JSON.
+The same principle doesn't apply literally to `observations`, since all of its non-JSON columns (`analysis_status`, `received_at`...) are metadata about the record's own lifecycle, not values extracted from JSON content.
 
 ---
 
-## 6. Migrations — تسلسل التنفيذ الإلزامي
+## 6. Migrations — Mandatory Execution Sequence
 
-راجع [`implementation/migration-order.md`](./migration-order.md) للترتيب الكامل. تنفيذ الترتيب الخاطئ سيؤدي لفشل فوري بسبب Foreign Key Constraints.
+See [`implementation/migration-order.md`](./migration-order.md) for the full order. Running migrations out of order will fail immediately due to foreign key constraints.
 
 ---
 
-## 7. ما لا يجب تنفيذه في V1 (تذكير)
+## 7. What NOT to Implement in V1 (Reminder)
 
-هذه القرارات **مقصودة**، وليست نقصًا في المعرفة. لا تُضِف أي مما يلي إلا إذا كان هناك Business Requirement موثّق جديد يستدعي ذلك رسميًا:
+These decisions are **deliberate**, not a knowledge gap. Do not add any of the following unless there is a new, officially documented business requirement that calls for it:
 
 ```text
 ❌ Event Table                ❌ Roles Table
@@ -87,21 +87,21 @@
 
 ---
 
-## 8. الـ Redis Cache — ملاحظة مهمة
+## 8. Redis Cache — Important Note
 
-يوجد استخدام واحد فقط مسموح به لـ Redis في V1: **Dashboard Statistics**. هذا **ليس** جزءًا من تصميم قاعدة البيانات نفسها (لا Migration، لا Schema)، بل طبقة Cache منفصلة تمامًا فوق طبقة الاستعلام العادية. لا تعتمد عليه كمصدر حقيقة (Source of Truth) لأي بيانات.
+There is exactly one allowed use of Redis in V1: **Dashboard Statistics**. This is **not** part of the database design itself (no migration, no schema) — it's a caching layer entirely separate from the normal query layer. Do not rely on it as a source of truth for any data.
 
 ---
 
-## 9. قائمة تحقق سريعة قبل أي Pull Request على الـ Schema
+## 9. Quick Checklist Before Any Pull Request on the Schema
 
 ```text
-[ ] كل Primary Key هو UUID v7؟
-[ ] كل Foreign Key يستخدم ON DELETE RESTRICT؟
-[ ] كل Timestamp ينتهي بـ _at؟
-[ ] كل Enum يستخدم UPPERCASE Strings؟
-[ ] كل عمود JSON من نوع JSONB؟
-[ ] لا يوجد عمود deleted_at؟
-[ ] الـ Index الجديد (لو موجود) مربوط بـ Query حقيقي وموثّق في schema/indexes.md؟
-[ ] القرار موثّق في الملف المناسب (entities.md / relationships.md / ADR جديد لو قرار معماري كبير)؟
+[ ] Is every Primary Key a UUID v7?
+[ ] Does every Foreign Key use ON DELETE RESTRICT?
+[ ] Does every Timestamp end in _at?
+[ ] Does every Enum use UPPERCASE strings?
+[ ] Is every JSON column of type JSONB?
+[ ] There is no deleted_at column anywhere?
+[ ] Is the new index (if any) tied to a real query and documented in schema/indexes.md?
+[ ] Is the decision documented in the appropriate file (entities.md / relationships.md / a new ADR for a major architectural decision)?
 ```
