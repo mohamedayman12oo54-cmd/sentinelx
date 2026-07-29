@@ -54,7 +54,7 @@ The API Key alone resolves both `Agent` and `Organization` server-side. This kee
 | Issue JWTs to Agents, like Humans | Forces a login/session concept onto an entity that is inherently stateless and credential-stable — mismatched to the Agent's actual usage pattern |
 | Store the raw API Key in the database (even encrypted, not hashed) | Unacceptable risk — a database leak combined with a recoverable encryption key would expose live credentials |
 | Support multiple concurrent Active keys per Agent from day one | Adds SDK and rotation-logic complexity with no immediate MVP need — deferred to a future version |
-| Auto-expire API Keys after a fixed time | Doesn't fit the Agent's always-on nature; expiration is instead handled explicitly via Rotate/Revoke/Disable Agent |
+| Auto-expire API Keys after a fixed time | Doesn't fit the Agent's always-on nature; expiration is instead handled explicitly via Rotate/Revoke/Agent Archived |
 
 ---
 

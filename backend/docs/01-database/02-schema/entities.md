@@ -76,12 +76,14 @@ The people belonging to a organization. A User is **not** the client — it's si
 | `role` | Enum | ✅ | `OWNER` \| `MEMBER` only. No Admin/Viewer in V1 — to avoid over-engineering before building a full RBAC system |
 | `status` | Enum | ✅ | `ACTIVE` \| `DISABLED` |
 | `last_login_at` | Timestamp | ❌ Optional | Last login timestamp |
+| `email_verified_at` | Timestamp | ❌ Optional (Nullable) | `NULL` = email not yet verified. Set once, when verification succeeds via a signed URL. **Column added later** — see [`../../02-auth/adr/ADR-006-email-verified-at-column.md`](../../02-auth/adr/ADR-006-email-verified-at-column.md) |
 | `created_at` | Timestamp | ✅ | |
 | `updated_at` | Timestamp | ✅ | |
 
 ### Key Decisions
 - `email` is globally unique, not scoped per organization, because a person likely uses the same email regardless of the organization. Supporting a user belonging to more than one organization (if ever needed) will be solved via a separate Membership layer, not by relaxing the unique constraint.
 - No `deleted_at` — `DISABLED` is the state that represents a user no longer active.
+- `email_verified_at` is **fully independent** of `status` — a user can be `ACTIVE` and unverified at the same time (during registration), and `DISABLED` never implies "unverified." The two columns are unrelated. See [`ADR-006`](../../02-auth/adr/ADR-006-email-verified-at-column.md) for full context.
 
 ### Final Shape
 ```text
@@ -95,6 +97,7 @@ password_hash
 role                     OWNER | MEMBER
 status                   ACTIVE | DISABLED
 last_login_at
+email_verified_at        Nullable — ADR-006
 created_at
 updated_at
 ```

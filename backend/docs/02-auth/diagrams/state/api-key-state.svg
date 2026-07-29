@@ -15,5 +15,5 @@
 </g>
 <path d="M 240 120 L 420 120" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#stArrow)"/>
 <rect x="275.0" y="109.0" width="110" height="18" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="4"/>
-<text x="330.0" y="123.0" text-anchor="middle" font-size="9.5" fill="#475569" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Rotate / Revoke / Disable Agent</text>
+<text x="330.0" y="123.0" text-anchor="middle" font-size="9.5" fill="#475569" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Rotate / Revoke / Agent Archived</text>
 </svg>

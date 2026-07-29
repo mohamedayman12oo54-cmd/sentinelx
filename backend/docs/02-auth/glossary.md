@@ -23,7 +23,7 @@ The single output object produced by any successful authentication flow (Human o
 The process of determining whether an Authenticated Identity is allowed to perform a specific action on a specific resource. Answers "What are you allowed to do?" See [`06-authorization.md`](./06-authorization.md).
 
 **Role**
-A named grouping of permissions assigned to a Human Identity within an Organization: `Owner`, `Admin`, or `Member`. Always loaded from the database, never embedded in the JWT. See [`06-authorization.md`](./06-authorization.md) and [`adr/ADR-001-role-storage.md`](./adr/ADR-001-role-storage.md).
+A named grouping of permissions assigned to a Human Identity within an Organization: `Owner` or `Member` (see the reconciliation note in [`06-authorization.md`](./06-authorization.md#7-what-are-our-roles) — matches the database's `UserRole` enum exactly, with no third `Admin` tier). Always loaded from the database, never embedded in the JWT. See [`06-authorization.md`](./06-authorization.md) and [`adr/ADR-001-role-storage.md`](./adr/ADR-001-role-storage.md).
 
 **Permission**
 A specific, granular action a Role is allowed to perform (e.g., "Create Agent", "View Alerts"). See [`06-authorization.md`](./06-authorization.md).
@@ -32,13 +32,10 @@ A specific, granular action a Role is allowed to perform (e.g., "Create Agent", 
 The Agent-specific equivalent of a Permission. Agents do not have Roles — they have a fixed, minimal set of Capabilities (in V1, exactly one: `Submit Observation`). See [`06-authorization.md`](./06-authorization.md).
 
 **Owner**
-The Role automatically assigned to the very first User created within an Organization. Holds sovereign-level privileges (invite/remove users, change roles, delete the organization). Every Organization must always have at least one Owner. See [`08-identity-lifecycle.md`](./08-identity-lifecycle.md).
-
-**Admin**
-A Role that manages day-to-day platform operation but cannot alter the Organization's own identity (e.g., cannot delete the organization). See [`06-authorization.md`](./06-authorization.md) and [`08-identity-lifecycle.md`](./08-identity-lifecycle.md).
+The Role automatically assigned to the very first User created within an Organization. Holds both sovereign-level privileges (invite/remove users, change roles, delete the organization) and day-to-day platform operation (create Agents, rotate API Keys, view Alerts). Every Organization must always have at least one Owner. See [`08-identity-lifecycle.md`](./08-identity-lifecycle.md).
 
 **Member**
-A Role that views results and works within the platform without administrative privileges. See [`06-authorization.md`](./06-authorization.md).
+A Role that works within the platform day-to-day — viewing and working with results — without any organization-management privileges (cannot invite/remove users, change roles, or alter the organization's identity). See [`06-authorization.md`](./06-authorization.md).
 
 **Agent**
 An AI entity that is the platform's real client — an Identity + Security Principal that authenticates via API Key, has no password and no login screen, and is stateless (every request re-authenticates independently). See [`02-domain.md`](./02-domain.md).
@@ -62,7 +59,7 @@ In the context of a Human Identity, the logical continuity represented by a vali
 The check confirming that a previously established Identity is still valid at the moment of a new request (e.g., signature and expiration checks on a JWT, or hash comparison for an API Key). See [`01-overview.md`](./01-overview.md).
 
 **Invitation** 🟡 *(Future Version — not built in V1)*
-The mechanism by which a new team member joins an existing Organization, issued by an Owner (email + intended Role). Has its own lifecycle: `Pending → Accepted / Expired / Cancelled`. The User record is only created upon acceptance. See [`08-identity-lifecycle.md`](./08-identity-lifecycle.md) and [`adr/ADR-004-invitation-based-onboarding.md`](./adr/ADR-004-invitation-based-onboarding.md).
+The mechanism by which a new team member joins an existing Organization, issued by an Owner (email + intended Role). Has its own lifecycle: `Pending → Accepted / Expired / Cancelled`. The User record is only created upon acceptance. Persisted in an `invitations` table — an additive extension to the database schema, not part of the original 7 frozen entities. See [`08-identity-lifecycle.md`](./08-identity-lifecycle.md), [`adr/ADR-004-invitation-based-onboarding.md`](./adr/ADR-004-invitation-based-onboarding.md), and [`adr/ADR-005-invitations-table.md`](./adr/ADR-005-invitations-table.md).
 
 **Membership**
 The architectural concept — deliberately not implemented in V1 — of a User's relationship to a specific Organization carrying its own independent Role, allowing (in a future version) one User to belong to multiple Organizations with different Roles in each. See the *Future Evolution: Multi-Organization Membership* note in [`08-identity-lifecycle.md`](./08-identity-lifecycle.md).
