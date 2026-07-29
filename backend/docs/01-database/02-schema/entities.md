@@ -76,12 +76,14 @@ updated_at
 | `role` | Enum | ✅ | `OWNER` \| `MEMBER` فقط. لا يوجد Admin/Viewer في V1 — تجنبًا للـ Over Engineering قبل بناء RBAC كامل لاحقًا |
 | `status` | Enum | ✅ | `ACTIVE` \| `DISABLED` |
 | `last_login_at` | Timestamp | ❌ اختياري | آخر تسجيل دخول |
+| `email_verified_at` | Timestamp | ❌ اختياري (Nullable) | `NULL` = لم يتم التحقق من الإيميل بعد. يُملأ مرة واحدة عند نجاح التحقق عبر رابط موقّع (Signed URL). **عمود مضاف لاحقًا** — راجع [`../../02-auth/adr/ADR-006-email-verified-at-column.md`](../../02-auth/adr/ADR-006-email-verified-at-column.md) |
 | `created_at` | Timestamp | ✅ | |
 | `updated_at` | Timestamp | ✅ | |
 
 ### قرارات مهمة
 - `email` Unique عالميًا وليس داخل نطاق الشركة، لأن الشخص غالبًا يستخدم نفس الإيميل بغض النظر عن الشركة. دعم انتماء مستخدم لأكثر من شركة (لو احتجناه لاحقًا) سيُحل عبر طبقة Membership منفصلة، وليس بتخفيف الـ Unique Constraint.
 - لا يوجد `deleted_at` — `DISABLED` هي الحالة المعبّرة عن توقف المستخدم.
+- `email_verified_at` **مستقل تمامًا** عن `status` — مستخدم ممكن يكون `ACTIVE` وغير موثّق الإيميل بنفس الوقت (فترة التسجيل)، و`DISABLED` لا تعني ولا تتضمن أبدًا "غير موثّق". لا علاقة بين العمودين. راجع [`ADR-006`](../../02-auth/adr/ADR-006-email-verified-at-column.md) للسياق الكامل.
 
 ### الشكل النهائي
 ```text
@@ -95,6 +97,7 @@ password_hash
 role                     OWNER | MEMBER
 status                   ACTIVE | DISABLED
 last_login_at
+email_verified_at        Nullable — ADR-006
 created_at
 updated_at
 ```

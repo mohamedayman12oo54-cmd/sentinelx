@@ -40,11 +40,9 @@ Walking through the story: Ahmed opens the site for the first time and registers
 
 **No.** He must first **Verify Email**, because SentinelX is a B2B platform and we do not want fake or unverified emails on the platform.
 
-> **⚠️ Known limitation (reconciliation against `backend/docs/database/`):** `users` has no dedicated "email verified" column, timestamp, or status value — `users.status` is a two-value enum (`ACTIVE`/`DISABLED`), and `DISABLED` means exactly one thing in the database design: an administratively deactivated account (the replacement for deletion). It does **not**, and must not be reinterpreted to, mean "registered but not yet verified" — that would overload one column with two unrelated meanings and is a real semantic change to an already-frozen state, not a wording fix.
+> **Resolved via [`adr/ADR-006-email-verified-at-column.md`](./adr/ADR-006-email-verified-at-column.md):** `users.status` (`ACTIVE`/`DISABLED`) remains exactly as reconciled — `DISABLED` still means only "administratively deactivated," never "unverified." Verification state is tracked separately, on an additive, nullable `users.email_verified_at` timestamp: `NULL` until verified, set once to the verification time when the signed link is followed. A user is `ACTIVE` immediately at registration, but Login is rejected while `email_verified_at IS NULL`.
 >
-> As a direct consequence, **the current frozen schema cannot faithfully represent "login is blocked until email verification succeeds."** A registered-but-unverified User has no distinguishable status to hold: `ACTIVE` would incorrectly permit login before verification, and `DISABLED` would incorrectly conflate "not yet verified" with "administratively deactivated" (an Owner-disabled account would become indistinguishable from a pending signup). This is not resolved here. It requires a deliberate, approved schema decision — most plausibly a new nullable `email_verified_at` timestamp (mirroring the additive, non-modifying pattern used for the `invitations` table in [`adr/ADR-005-invitations-table.md`](./adr/ADR-005-invitations-table.md)) — which is out of scope for this documentation reconciliation pass and awaits a dedicated decision before implementation.
->
-> The **mechanism** for verifying a link's authenticity (a signed, expiring URL carrying the User's ID, checked by signature and expiry alone, nothing persisted) is unaffected by this gap and remains valid regardless of how — or whether — the *gating* is eventually implemented.
+> The mechanism for verifying the link's authenticity (a signed, expiring URL carrying the User's ID, checked by signature and expiry) is exactly as originally documented; `email_verified_at` is where its result is persisted.
 
 ### The Journey
 
