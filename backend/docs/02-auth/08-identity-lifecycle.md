@@ -1,5 +1,7 @@
 # 08 — Organization & Identity Lifecycle
 
+> **Scope Status (Baseline v2.0):** The Organization creation and single-Owner registration flow described below is **V1 scope**. The Invitation mechanism and multi-member Team Management described in this file are **deferred to a future version** — see [`adr/ADR-004-invitation-based-onboarding.md`](./adr/ADR-004-invitation-based-onboarding.md) for the resolved scope. In V1, every Organization is provisioned with exactly one User — its Owner — and there is no in-product flow yet for that Owner to add teammates. The design below is preserved in full because it is the intended design for when Invitations ship; nothing here should be built against V1 unless explicitly marked otherwise.
+
 > Source: the session originally added as "Identity Lifecycle," later renamed and finalized as **Organization & Identity Lifecycle** — the true final session of the Authentication design series (Session 9, Implementation Roadmap, was renumbered to come after it).
 > This file answers a question every prior session quietly assumed: **"The person already exists... but how did they get here in the first place?"**
 
@@ -29,7 +31,7 @@ This session is a natural end to the Authentication series, and a natural beginn
 
 ## 2. The First Entity That Is Ever Born
 
-Before Ahmed can log in, there must already be a Company. All along, we talked about `Users` — but the truth is, the very first entity born in the system is:
+Before Ahmed can log in, there must already be a Organization. All along, we talked about `Users` — but the truth is, the very first entity born in the system is:
 
 > **Organization**
 
@@ -49,7 +51,7 @@ He clicks it. The system asks for:
 
 ```text
 Organization Name
-Company Email
+Organization Email
 Owner Name
 Password
 ```
@@ -76,7 +78,7 @@ This is a fixed rule.
 
 ---
 
-## 4. Growing the Team
+## 4. Growing the Team 🟡 (Deferred to a Future Version)
 
 A few days later, Ahmed wants to add an engineer. Does the engineer go and `Register`?
 
@@ -101,7 +103,7 @@ Email
 Role
 ```
 
-For example: `mohamed@company.com`, `Admin`.
+For example: `mohamed@organization.com`, `Admin`.
 
 The system creates an **Invitation**, and sends an email.
 
@@ -112,9 +114,9 @@ Name
 Password
 ```
 
-...and becomes a user inside the company.
+...and becomes a user inside the organization.
 
-Note the difference: Mohamed never registered. He performed **Join Company** — an entirely different operation from `Register`.
+Note the difference: Mohamed never registered. He performed **Join Organization** — an entirely different operation from `Register`.
 
 ### Members Follow the Same Path
 
@@ -141,17 +143,17 @@ A decision that must be made explicitly. For the current project:
 ✔ Invite Users
 ✔ Remove Users
 ✔ Change Roles
-✔ Delete Company
+✔ Delete Organization
 ```
 
-**Admin:** manages day-to-day operations, but **cannot** change the company's own identity — because these are sovereign-level privileges reserved for the Owner.
+**Admin:** manages day-to-day operations, but **cannot** change the organization's own identity — because these are sovereign-level privileges reserved for the Owner.
 
 ---
 
 ## 6. The Full Onboarding Flow
 
 ```text
-Company Creation
+Organization Creation
     ↓
 Owner Created
     ↓
@@ -222,9 +224,9 @@ See the visual state diagram in [`diagrams/state/`](./diagrams/state).
 
 ---
 
-## 11. What Happens If a Member Leaves the Company?
+## 11. What Happens If a Member Leaves the Organization?
 
-Is the Account deleted? **No** — an elegant architectural point. The Account remains, but its **link to the company** is removed, because the same person might work for a different company a month later.
+Is the Account deleted? **No** — an elegant architectural point. The Account remains, but its **link to the organization** is removed, because the same person might work for a different organization a month later.
 
 ---
 
@@ -245,18 +247,18 @@ Membership
 One of the most beautiful SaaS concepts. That is: `User` is a **global entity**, but:
 
 ```text
-Company
+Organization
     ↓
 Membership
     ↓
 Role
 ```
 
-The Role does not live on the User — the Role lives **inside the company relationship**.
+The Role does not live on the User — the Role lives **inside the organization relationship**.
 
 ### Why This Matters
 
-Imagine Mohamed could be `Owner` in his own personal company and, at the same time, `Member` in a different company — the same User, but a different Membership per company.
+Imagine Mohamed could be `Owner` in his own personal organization and, at the same time, `Member` in a different organization — the same User, but a different Membership per organization.
 
 ---
 
@@ -264,7 +266,7 @@ Imagine Mohamed could be `Owner` in his own personal company and, at the same ti
 
 **No** — and this is an important scoping decision. We keep the idea on the shelf, because while it's architecturally correct, it would add unneeded complexity to the MVP.
 
-In V1, every User belongs to exactly one company, so having `company_id` and `role` directly on the User is entirely sufficient.
+In V1, every User belongs to exactly one organization, so having `organization_id` and `role` directly on the User is entirely sufficient.
 
 However, from day one, we officially name this part of the documentation:
 
@@ -276,7 +278,7 @@ so that if the project grows, we know exactly what to build — without having t
 
 ## 14. Removing a User
 
-If Ahmed decides to remove an Admin, he is **not deleting the User**. He is removing the User's relationship with the company. In the MVP, since the relationship is direct:
+If Ahmed decides to remove an Admin, he is **not deleting the User**. He is removing the User's relationship with the organization. In the MVP, since the relationship is direct:
 
 ```text
 User
@@ -298,7 +300,7 @@ The Owner opens `Team → Change Role → Save`. The system updates `User.role`.
 
 ## 16. Can the Owner Remove Themselves?
 
-**No.** Doing so could leave the company without an owner. So there's a simple rule:
+**No.** Doing so could leave the organization without an owner. So there's a simple rule:
 
 > **There must always be at least one Owner per Organization.**
 
@@ -368,13 +370,13 @@ Member Removal
 
 > Shifting the mental model from **User Registration** to **Organization Onboarding**.
 
-This is a huge shift, because we are not building a consumer (B2C) app — we are building a B2B SaaS platform for companies. Our real client is the company, and Users are simply members inside it.
+This is a huge shift, because we are not building a consumer (B2C) app — we are building a B2B SaaS platform for organizations. Our real client is the organization, and Users are simply members inside it.
 
 Once this shift is made, every flow becomes logically consistent:
 
 - The Owner is the one who begins the journey.
 - The team joins via Invitations.
-- Roles are managed from within the company.
+- Roles are managed from within the organization.
 - Identity has been tied to the Organization from the very first moment.
 
 This is, in our view, the final piece of the Authentication design puzzle, and after it, we can move confidently into Backend Architecture, knowing the foundation is solid.

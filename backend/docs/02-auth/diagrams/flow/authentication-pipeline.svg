@@ -30,7 +30,7 @@ every request, stateless</text>
   <rect x="323.0" y="377" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>
   <rect x="320.0" y="374" width="460" height="64" rx="10" fill="#166534" stroke="#22c55e" stroke-width="2.2"/>
   <text x="550.0" y="404.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Authenticated Identity</text>
-  <text x="550.0" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">{ id, type, company_id } — the only object seen downstream</text>
+  <text x="550.0" y="424.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#e2e8f0">{ id, type, organization_id } — the only object seen downstream</text>
 </g><path d="M 550.0 438 L 550.0 498" stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrowD)"/>
 <g>
   <rect x="323.0" y="501" width="460" height="64" rx="10" fill="#000" opacity="0.12"/>

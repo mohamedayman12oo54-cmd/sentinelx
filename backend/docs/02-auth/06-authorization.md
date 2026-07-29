@@ -83,7 +83,7 @@ Create Agent
 Rotate API Key
 View Alerts
 Manage Team
-Update Company
+Update Organization
 ```
 
 ### Agent Permissions
@@ -116,7 +116,7 @@ Simple, clear, and extensible. No ABAC, no Policy Engine, no OPA, no added compl
 
 ## 7. What Are Our Roles?
 
-SentinelX is not an ERP company — it's a security platform. It doesn't need twenty roles.
+SentinelX is not an ERP organization — it's a security platform. It doesn't need twenty roles.
 
 For the current project:
 
@@ -128,7 +128,7 @@ Member
 
 | Role | Meaning |
 |------|---------|
-| **Owner** | The company's founder/owner |
+| **Owner** | The organization's founder/owner |
 | **Admin** | Manages the platform's day-to-day operation |
 | **Member** | Views results and works with them |
 

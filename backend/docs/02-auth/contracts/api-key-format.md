@@ -54,7 +54,7 @@ Every incoming request authenticated via API Key must follow this exact sequence
 3. Look up a matching key_hash with status = ACTIVE
 4. If not found → Authentication failed (see auth-errors.md)
 5. If found → resolve Agent from the key's agent_id
-6. Resolve Company from the Agent's company_id
+6. Resolve Organization from the Agent's organization_id
 7. Build the Authenticated Identity object
 8. Pass it forward — the Controller never sees the raw key
 ```
@@ -67,7 +67,7 @@ Every incoming request authenticated via API Key must follow this exact sequence
 AuthenticatedIdentity {
   id: string          // Agent ID
   type: "AGENT"
-  company_id: string    // resolved via Agent → Company
+  organization_id: string    // resolved via Agent → Organization
 }
 ```
 
@@ -78,7 +78,7 @@ AuthenticatedIdentity {
 | Rule | Enforcement Point |
 |------|---------------------|
 | Only one `ACTIVE` key per Agent at any time | Application logic — when creating a new key, any existing `ACTIVE` key for that Agent must be transitioned first, within the same transaction |
-| `company_id` used in the Authenticated Identity must match the Agent's actual `company_id` | Application logic — always derived server-side from the Agent record, never accepted from client input |
+| `organization_id` used in the Authenticated Identity must match the Agent's actual `organization_id` | Application logic — always derived server-side from the Agent record, never accepted from client input |
 
 ---
 
@@ -91,7 +91,7 @@ API_KEY   = <the raw key, shown once at creation>
 API_URL   = <the platform's API endpoint>
 ```
 
-The SDK must **never** be configured with, or send, a `company_id` or `agent_id` — these are always resolved server-side from the API Key.
+The SDK must **never** be configured with, or send, a `organization_id` or `agent_id` — these are always resolved server-side from the API Key.
 
 ---
 

@@ -16,7 +16,7 @@ This contract applies only to **Human Identity** JWTs. Agents and Internal Servi
 |-------|------|----------|-------------|
 | `sub` | String (UUID) | ✅ | The Identity ID — the Human's unique identifier |
 | `identity_type` | String (Enum) | ✅ | Always `"HUMAN"` for this token type |
-| `company_id` | String (UUID) | ✅ | The Company this Identity belongs to |
+| `organization_id` | String (UUID) | ✅ | The Organization this Identity belongs to |
 | `iat` | Integer (Unix timestamp) | ✅ | Issued At — when the token was created |
 | `exp` | Integer (Unix timestamp) | ✅ | Expires At — must reflect a short-lived lifetime (see [`04-jwt.md`](../04-jwt.md#10-should-jwt-have-a-long-lifetime)) |
 
@@ -26,7 +26,7 @@ This contract applies only to **Human Identity** JWTs. Agents and Internal Servi
 {
   "sub": "018f1e2a-7c3b-7c3e-9c3e-1a2b3c4d5e6f",
   "identity_type": "HUMAN",
-  "company_id": "018f1e2a-1111-7c3e-9c3e-1a2b3c4d5e6f",
+  "organization_id": "018f1e2a-1111-7c3e-9c3e-1a2b3c4d5e6f",
   "iat": 1753660800,
   "exp": 1753664400
 }
@@ -45,7 +45,7 @@ avatar
 permissions
 role
 role_name
-company_name
+organization_name
 ```
 
 If a future requirement seems to need one of these embedded, that requirement must be resolved via a new ADR that explicitly supersedes ADR-003 — not by quietly adding a field.
@@ -60,7 +60,7 @@ Every request carrying a JWT must be processed through exactly this sequence (se
 1. Extract JWT from the Authorization header (Bearer scheme)
 2. Verify signature
 3. Verify expiration (exp)
-4. Build an Authenticated Identity object from { sub, identity_type, company_id }
+4. Build an Authenticated Identity object from { sub, identity_type, organization_id }
 5. Pass the Authenticated Identity forward — never the raw token
 ```
 
@@ -76,7 +76,7 @@ The object built from the verified JWT, and passed to every downstream layer, ha
 AuthenticatedIdentity {
   id: string          // from sub
   type: "HUMAN"        // from identity_type
-  company_id: string    // from company_id
+  organization_id: string    // from organization_id
 }
 ```
 

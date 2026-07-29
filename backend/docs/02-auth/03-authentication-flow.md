@@ -138,13 +138,13 @@ That means: no Business Logic, no Validation, no Database queries, no ML — not
 
 ---
 
-## 7. Does Authentication Know the Company?
+## 7. Does Authentication Know the Organization?
 
 **Indirectly.**
 
 ```text
-Human  → Company is known via the User.
-Agent  → Company is known via the API Key.
+Human  → Organization is known via the User.
+Agent  → Organization is known via the API Key.
 ```
 
 But the flow itself does not know business details — it only extracts the Identity.
@@ -166,7 +166,7 @@ Identity
     ↓
 Type: Human
 ID: xxx
-Company: xxx
+Organization: xxx
 Status: Active
 ```
 
@@ -177,7 +177,7 @@ Identity
     ↓
 Type: Agent
 ID: xxx
-Company: xxx
+Organization: xxx
 Status: Active
 ```
 

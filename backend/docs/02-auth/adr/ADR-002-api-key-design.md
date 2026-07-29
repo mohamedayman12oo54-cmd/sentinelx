@@ -22,7 +22,7 @@ Agents authenticate using an **API Key**: a long-lived credential, generated onc
 Generate → Display Once → Hash & Store → Use on every request → Rotate / Revoke
 ```
 
-The SDK is only ever configured with the API Key and the API URL — nothing else (no Company ID, no Agent ID).
+The SDK is only ever configured with the API Key and the API URL — nothing else (no Organization ID, no Agent ID).
 
 ---
 
@@ -42,8 +42,8 @@ This mirrors the industry-standard pattern used by GitHub, Stripe, and similar p
 ### Why One Active Key Per Agent (in V1)?
 Two schools of thought were considered — a single key per Agent, or support for multiple concurrent keys (to enable Blue/Green rotation or multi-environment setups). For the MVP, a single key per Agent was chosen because it is simpler, clearer, and avoids adding complexity to the SDK. Multiple keys remain a natural, non-breaking future addition.
 
-### Why Does the SDK Never Send Company ID or Agent ID?
-The API Key alone resolves both `Agent` and `Company` server-side. This keeps the SDK's configuration surface to exactly one secret value, and — just as importantly — keeps Company/Agent resolution as a server-derived fact rather than client-supplied data that could be forged or simply wrong.
+### Why Does the SDK Never Send Organization ID or Agent ID?
+The API Key alone resolves both `Agent` and `Organization` server-side. This keeps the SDK's configuration surface to exactly one secret value, and — just as importantly — keeps Organization/Agent resolution as a server-derived fact rather than client-supplied data that could be forged or simply wrong.
 
 ---
 

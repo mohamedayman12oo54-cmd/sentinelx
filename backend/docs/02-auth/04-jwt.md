@@ -94,7 +94,7 @@ A commonly mishandled question. There is exactly one rule:
 ```text
 Identity ID
 Identity Type
-Company ID
+Organization ID
 Issued At
 Expires At
 ```
@@ -109,7 +109,7 @@ Email
 Avatar
 Permissions
 Role Name
-Company Name
+Organization Name
 ```
 
 All of these are mutable business data.
@@ -252,7 +252,7 @@ Used By
 JWT Contains
 ✔ Identity ID
 ✔ Identity Type
-✔ Company ID
+✔ Organization ID
 ✔ Issued At
 ✔ Expiration
 
