@@ -5,15 +5,18 @@ namespace App\Models;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, MustVerifyEmail;
 
     protected $fillable = [
         'company_id',
@@ -39,6 +42,7 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'status' => UserStatus::class,
             'last_login_at' => 'datetime',
+            'email_verified_at' => 'datetime',
         ];
     }
 
@@ -49,6 +53,29 @@ class User extends Authenticatable
     public function getAuthPassword(): string
     {
         return $this->password_hash;
+    }
+
+    /**
+     * The JWT `sub` claim — the Identity ID (see contracts/jwt-claims.md).
+     */
+    public function getJWTIdentifier(): string
+    {
+        return (string) $this->getKey();
+    }
+
+    /**
+     * Custom JWT claims, restricted to exactly what contracts/jwt-claims.md
+     * allows: identity_type and company_id. Role, name, and email are never
+     * embedded — see adr/ADR-003-jwt-claims.md.
+     *
+     * @return array<string, string>
+     */
+    public function getJWTCustomClaims(): array
+    {
+        return [
+            'identity_type' => 'HUMAN',
+            'company_id' => (string) $this->company_id,
+        ];
     }
 
     // ======= Relationships =======
