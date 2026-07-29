@@ -28,9 +28,22 @@ Represents a customer organization.
 
 Owns:
 
+- Users
 - Agents
 - Observations
 - Alerts
+
+---
+
+# User
+
+Represents a human who authenticates to manage an Organization.
+
+Owns:
+
+- Nothing directly persisted beyond its own profile — acts upon entities owned by its Organization, subject to its Role.
+
+**V1 scope note:** one Owner User per Organization at registration; multi-member Team Management is deferred (see `docs/backend/authentication/08-identity-lifecycle.md`).
 
 ---
 

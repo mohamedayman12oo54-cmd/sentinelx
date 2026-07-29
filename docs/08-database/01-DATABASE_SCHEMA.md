@@ -2,7 +2,7 @@
 title: Database Schema
 category: Database Reference
 status: Approved
-version: 1.0
+version: 2.0
 
 depends_on:
   - DATABASE_DESIGN.md
@@ -16,6 +16,8 @@ related_diagrams:
 ---
 
 # Database Schema
+
+> **Baseline v2.0 note:** the `users` table was added to reflect the Human Identity layer designed in the Authentication series. Full column-level detail lives in `docs/backend/database/schema/entities.md`; this document remains a high-level reference.
 
 ## Overview
 
@@ -32,6 +34,7 @@ This document intentionally omits implementation-specific SQL syntax.
 Version 1 includes:
 
 - organizations
+- users
 - agents
 - api_keys
 - observations
@@ -41,6 +44,16 @@ Version 1 includes:
 ---
 
 # Relationship Summary
+
+Organization
+
+↓
+
+1:N
+
+↓
+
+User
 
 Organization
 
@@ -93,6 +106,7 @@ The schema follows:
 
 Future versions may introduce:
 
+- invitations (Team Management / Invitation-based onboarding — designed, see `docs/backend/authentication/08-identity-lifecycle.md`)
 - policies
 - behavioral_profiles
 - threat_feeds

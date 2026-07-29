@@ -3,7 +3,7 @@ title: Backend Components Diagram
 diagram_id: D-03
 diagram_type: Component Diagram
 status: Approved
-version: 1.0
+version: 2.0
 
 source_documents:
   - BACKEND_ARCHITECTURE.md
@@ -13,6 +13,8 @@ source_documents:
 # Purpose
 
 Describe the logical components inside the Backend API.
+
+> **Baseline v2.0 note:** updated from 6 components to the 8-module Baseline v2.0 set. `Authentication` now covers both Identity (Users, JWT) and API Key concerns as internal submodules; `Predictions` is renamed `Analysis`; `Organization` and `Audit` are added. Full detail: `docs/backend/backend-architecture/03-system-modules.md`.
 
 ---
 
@@ -31,12 +33,14 @@ How is the Backend API internally organized?
 
 # Includes
 
-- Authentication
-- Agents
-- Observations
-- Predictions
-- Alerts
+- Authentication (Identity + API Key submodules)
+- Organization
+- Agent
+- Observation
+- Analysis
+- Alert
 - Dashboard
+- Audit
 
 ---
 

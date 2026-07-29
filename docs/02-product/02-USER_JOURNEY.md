@@ -25,7 +25,7 @@ This document describes the complete journey of an organization using SentinelX 
 
 # Step 1 — Organization Registration
 
-A company creates a SentinelX account.
+An organization creates a SentinelX account.
 
 This account represents the organization within the platform.
 

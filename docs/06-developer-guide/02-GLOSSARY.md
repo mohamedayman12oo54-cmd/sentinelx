@@ -30,6 +30,12 @@ A customer using the SentinelX platform.
 
 ---
 
+## User
+
+A human who authenticates into SentinelX to manage an Organization and view its data, distinct from an Agent. Holds a Role (`Owner`, `Admin`, or `Member`). Added to the Baseline in v2.0 — full design in `docs/backend/authentication/`.
+
+---
+
 ## Agent
 
 An AI system registered by an Organization.
