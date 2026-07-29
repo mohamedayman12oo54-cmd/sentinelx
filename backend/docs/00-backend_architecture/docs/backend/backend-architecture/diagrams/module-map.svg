@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780"><defs>
+<marker id="arrowM" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+  <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1200" height="780" fill="#f1f5f9"/>
+<text x="600.0" y="34" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800" fill="#0f172a">SentinelX — Module Map (Baseline v2.0)</text>
+<text x="600.0" y="56" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#64748b">8 modules — Authentication consolidates the Identity and API Key submodules</text>
+
+<g>
+  <rect x="503" y="93" width="200" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="500" y="90" width="200" height="64" rx="10" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.2"/>
+  <text x="600.0" y="118.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Organization</text>
+  <text x="600.0" y="138.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif">Root Module</text>
+</g>
+<g>
+  <rect x="153" y="243" width="240" height="80" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="150" y="240" width="240" height="80" rx="10" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2.2"/>
+  <text x="270.0" y="276.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Authentication</text>
+  <text x="270.0" y="296.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif">Identity submodule</text><text x="270.0" y="309.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif">API Key submodule</text>
+</g>
+<g>
+  <rect x="563" y="243" width="200" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="560" y="240" width="200" height="64" rx="10" fill="#7c2d12" stroke="#f97316" stroke-width="2.2"/>
+  <text x="660.0" y="277.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Agent</text>
+  
+</g>
+<g>
+  <rect x="563" y="403" width="200" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="560" y="400" width="200" height="64" rx="10" fill="#166534" stroke="#22c55e" stroke-width="2.2"/>
+  <text x="660.0" y="437.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Observation</text>
+  
+</g>
+<g>
+  <rect x="563" y="543" width="200" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="560" y="540" width="200" height="64" rx="10" fill="#581c87" stroke="#a855f7" stroke-width="2.2"/>
+  <text x="660.0" y="577.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Analysis</text>
+  
+</g>
+<g>
+  <rect x="563" y="683" width="200" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="560" y="680" width="200" height="64" rx="10" fill="#7f1d1d" stroke="#ef4444" stroke-width="2.2"/>
+  <text x="660.0" y="717.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Alert</text>
+  
+</g>
+<g>
+  <rect x="883" y="403" width="220" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="880" y="400" width="220" height="64" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2.2"/>
+  <text x="990.0" y="428.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Dashboard</text>
+  <text x="990.0" y="448.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif">Read-only consumer</text>
+</g>
+<g>
+  <rect x="883" y="603" width="220" height="64" rx="10" fill="#000" opacity="0.12"/>
+  <rect x="880" y="600" width="220" height="64" rx="10" fill="#334155" stroke="#64748b" stroke-width="2.2"/>
+  <text x="990.0" y="628.0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">Audit</text>
+  <text x="990.0" y="648.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif">Receives events from all</text>
+</g><path d="M 540.0 154 L 310.0 240" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowM)"/><rect x="395.0" y="187.0" width="60" height="16" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="3"/><text x="425.0" y="199.0" text-anchor="middle" font-size="9" fill="#475569" font-weight="700" font-family="Segoe UI, Arial, sans-serif">1:N</text><path d="M 660.0 154 L 660.0 240" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowM)"/><rect x="630.0" y="187.0" width="60" height="16" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="3"/><text x="660.0" y="199.0" text-anchor="middle" font-size="9" fill="#475569" font-weight="700" font-family="Segoe UI, Arial, sans-serif">1:N</text><path d="M 660.0 304 L 660.0 400" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowM)"/><rect x="630.0" y="342.0" width="60" height="16" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="3"/><text x="660.0" y="354.0" text-anchor="middle" font-size="9" fill="#475569" font-weight="700" font-family="Segoe UI, Arial, sans-serif">1:N</text><path d="M 660.0 464 L 660.0 540" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowM)"/><rect x="630.0" y="492.0" width="60" height="16" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="3"/><text x="660.0" y="504.0" text-anchor="middle" font-size="9" fill="#475569" font-weight="700" font-family="Segoe UI, Arial, sans-serif">1:1</text><path d="M 660.0 604 L 660.0 680" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrowM)"/><rect x="630.0" y="632.0" width="60" height="16" fill="#ffffff" stroke="#475569" stroke-width="0.8" rx="3"/><text x="660.0" y="644.0" text-anchor="middle" font-size="9" fill="#475569" font-weight="700" font-family="Segoe UI, Arial, sans-serif">0:N</text><path d="M 760 432.0 L 880 432.0" stroke="#334155" stroke-width="1.6" fill="none" marker-end="url(#arrowM)" stroke-dasharray="5,3"/><path d="M 760 572.0 L 880 452.0" stroke="#334155" stroke-width="1.6" fill="none" marker-end="url(#arrowM)" stroke-dasharray="5,3"/><path d="M 760 712.0 L 880 492.0" stroke="#334155" stroke-width="1.6" fill="none" marker-end="url(#arrowM)" stroke-dasharray="5,3"/><path d="M 760 272.0 L 880 392.0" stroke="#334155" stroke-width="1.6" fill="none" marker-end="url(#arrowM)" stroke-dasharray="5,3"/><path d="M 700 144 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><path d="M 390 310 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><path d="M 760 294 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><path d="M 760 454 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><path d="M 760 594 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><path d="M 760 734 L 880 632.0" stroke="#94a3b8" stroke-width="1" fill="none" stroke-dasharray="3,3" opacity="0.6"/><text x="874" y="386" text-anchor="end" font-size="10" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-style="italic">reads (dashed)</text><text x="874" y="586" text-anchor="end" font-size="10" fill="#94a3b8" font-family="Segoe UI, Arial, sans-serif" font-style="italic">event stream (dotted)</text></svg>
