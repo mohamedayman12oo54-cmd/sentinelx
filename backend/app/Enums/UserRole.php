@@ -5,6 +5,7 @@ namespace App\Enums;
 enum UserRole: string
 {
     case Owner = 'OWNER';
+    case Admin = 'ADMIN';
     case Member = 'MEMBER';
 
     /**
