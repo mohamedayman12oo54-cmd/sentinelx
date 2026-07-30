@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
 
 /*
@@ -47,4 +49,13 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Issues a bearer JWT for a Human User — shared across Auth and Agent
+ * feature tests to avoid redeclaring the same helper in every file.
+ */
+function tokenFor(User $user): string
+{
+    return JWTAuth::fromUser($user);
 }
