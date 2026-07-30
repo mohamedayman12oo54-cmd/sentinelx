@@ -1,0 +1,19 @@
+flowchart LR
+
+ASES["ASES Observation"]
+
+Request["ML Request"]
+
+ML["ML Service"]
+
+Response["Prediction Response"]
+
+Prediction["Prediction"]
+
+ASES --> Request
+
+Request --> ML
+
+ML --> Response
+
+Response --> Prediction

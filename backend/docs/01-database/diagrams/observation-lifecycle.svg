@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1352" width="900" height="1352"><defs>
+<marker id="arrowD" markerWidth="12" markerHeight="12" refX="5" refY="9" orient="auto" markerUnits="strokeWidth">
+  <path d="M0,0 L10,0 L5,9 z" fill="#475569"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="900" height="1352" fill="#f1f5f9"/>
+<text x="450.0" y="38" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800" fill="#0f172a">SentinelX — Observation Lifecycle</text>
+<text x="450.0" y="60" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#64748b">From SDK to Dashboard — the core rule: Observation = Fact, Prediction = Opinion, Alert = Business Decision</text>
+<path d="M 450.0 182 L 450.0 228" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 320 L 450.0 366" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 458 L 450.0 504" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 596 L 450.0 642" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 734 L 450.0 780" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 872 L 450.0 918" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 1010 L 450.0 1056" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/><path d="M 450.0 1148 L 450.0 1194" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrowD)"/>
+<g>
+  <rect x="173.0" y="93" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="90" width="560" height="92" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="450.0" y="124" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">SDK</text>
+  <text x="450.0" y="142" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">Source Layer</text>
+  <text x="450.0" y="154.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Builds ASES JSON</text><text x="450.0" y="167.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Event, Metadata, Context</text>
+</g>
+<g>
+  <rect x="173.0" y="231" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="228" width="560" height="92" rx="12" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2.5"/>
+  <text x="450.0" y="262" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">POST /observations</text>
+  <text x="450.0" y="280" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">REST API Endpoint</text>
+  <text x="450.0" y="292.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Initial validation</text><text x="450.0" y="305.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">before storage</text>
+</g>
+<g>
+  <rect x="173.0" y="369" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="366" width="560" height="92" rx="12" fill="#166534" stroke="#22c55e" stroke-width="2.5"/>
+  <text x="450.0" y="400" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Observation</text>
+  <text x="450.0" y="418" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">analysis_status = PENDING</text>
+  <text x="450.0" y="430.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">raw_ases_json (JSONB)</text><text x="450.0" y="443.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">received_at</text>
+</g>
+<g>
+  <rect x="173.0" y="507" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="504" width="560" height="92" rx="12" fill="#78350f" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="450.0" y="538" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Queue / Worker</text>
+  <text x="450.0" y="556" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">Waiting for its turn</text>
+  <text x="450.0" y="568.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">WHERE analysis_status='PENDING'</text><text x="450.0" y="581.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">ORDER BY received_at ASC</text>
+</g>
+<g>
+  <rect x="173.0" y="645" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="642" width="560" height="92" rx="12" fill="#581c87" stroke="#a855f7" stroke-width="2.5"/>
+  <text x="450.0" y="676" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">ML Service</text>
+  <text x="450.0" y="694" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">analysis_status = PROCESSING</text>
+  <text x="450.0" y="706.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Analyzes raw_ases_json</text><text x="450.0" y="719.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">processing_started_at</text>
+</g>
+<g>
+  <rect x="173.0" y="783" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="780" width="560" height="92" rx="12" fill="#701a75" stroke="#d946ef" stroke-width="2.5"/>
+  <text x="450.0" y="814" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Prediction</text>
+  <text x="450.0" y="832" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">analysis_status = COMPLETED</text>
+  <text x="450.0" y="844.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">verdict, risk_score, confidence</text><text x="450.0" y="857.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">prediction_json (JSONB)</text>
+</g>
+<g>
+  <rect x="173.0" y="921" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="918" width="560" height="92" rx="12" fill="#7c2d12" stroke="#f97316" stroke-width="2.5"/>
+  <text x="450.0" y="952" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Platform Policy</text>
+  <text x="450.0" y="970" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">Operational decision</text>
+  <text x="450.0" y="982.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Triggered if risk_score/verdict warrants it</text>
+</g>
+<g>
+  <rect x="173.0" y="1059" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="1056" width="560" height="92" rx="12" fill="#7f1d1d" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="450.0" y="1090" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Alert (0..1)</text>
+  <text x="450.0" y="1108" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">status = OPEN</text>
+  <text x="450.0" y="1120.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">severity, prediction_id</text><text x="450.0" y="1133.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">may not be created if SAFE</text>
+</g>
+<g>
+  <rect x="173.0" y="1197" width="560" height="92" rx="12" fill="#000" opacity="0.12"/>
+  <rect x="170.0" y="1194" width="560" height="92" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="450.0" y="1228" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Dashboard</text>
+  <text x="450.0" y="1246" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#cbd5e1">Presentation Layer</text>
+  <text x="450.0" y="1258.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Reads extracted columns</text><text x="450.0" y="1271.0" text-anchor="middle" font-size="9.5" fill="#e2e8f0" font-family="Consolas, Menlo, monospace">Organization / Agent scoped</text>
+</g></svg>
