@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Analysis\Infrastructure\Persistence;
 
-use App\Enums\Verdict;
+use App\Modules\Alert\Infrastructure\Persistence\Alert;
+use App\Modules\Analysis\Domain\Verdict;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use Database\Factories\PredictionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
