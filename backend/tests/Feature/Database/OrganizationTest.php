@@ -1,54 +1,54 @@
 <?php
 
-use App\Enums\CompanyStatus;
-use App\Models\Company;
+use App\Enums\OrganizationStatus;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 
 // === HAPPY PATH ===
 
-test('a company can be created with a unique slug and defaults to ACTIVE', function () {
-    $company = Company::factory()->create(['slug' => 'acme-corp']);
+test('an organization can be created with a unique slug and defaults to ACTIVE', function () {
+    $organization = Organization::factory()->create(['slug' => 'acme-corp']);
 
-    expect($company->id)->toBeString()
-        ->and($company->slug)->toBe('acme-corp')
-        ->and($company->status)->toBe(CompanyStatus::Active);
+    expect($organization->id)->toBeString()
+        ->and($organization->slug)->toBe('acme-corp')
+        ->and($organization->status)->toBe(OrganizationStatus::Active);
 
-    $this->assertDatabaseHas('companies', [
-        'id' => $company->id,
+    $this->assertDatabaseHas('organizations', [
+        'id' => $organization->id,
         'slug' => 'acme-corp',
         'status' => 'ACTIVE',
     ]);
 });
 
-test('status is cast to the CompanyStatus enum', function () {
-    $company = Company::factory()->suspended()->create();
+test('status is cast to the OrganizationStatus enum', function () {
+    $organization = Organization::factory()->suspended()->create();
 
-    expect($company->status)->toBe(CompanyStatus::Suspended);
+    expect($organization->status)->toBe(OrganizationStatus::Suspended);
 });
 
 // === CONSTRAINTS ===
 
-test('two companies may share the same name', function () {
-    Company::factory()->create(['name' => 'Duplicate Inc']);
-    $second = Company::factory()->create(['name' => 'Duplicate Inc']);
+test('two organizations may share the same name', function () {
+    Organization::factory()->create(['name' => 'Duplicate Inc']);
+    $second = Organization::factory()->create(['name' => 'Duplicate Inc']);
 
     expect($second->exists)->toBeTrue();
 });
 
 test('slug must be unique', function () {
-    Company::factory()->create(['slug' => 'unique-slug']);
+    Organization::factory()->create(['slug' => 'unique-slug']);
 
-    expect(fn () => Company::factory()->create(['slug' => 'unique-slug']))
+    expect(fn () => Organization::factory()->create(['slug' => 'unique-slug']))
         ->toThrow(QueryException::class);
 });
 
 // === RELATIONSHIPS ===
 
-test('a company has many users, agents, and observations', function () {
-    $company = Company::factory()->create();
+test('an organization has many users, agents, and observations', function () {
+    $organization = Organization::factory()->create();
 
-    expect($company->users())->toBeInstanceOf(HasMany::class)
-        ->and($company->agents())->toBeInstanceOf(HasMany::class)
-        ->and($company->observations())->toBeInstanceOf(HasMany::class);
+    expect($organization->users())->toBeInstanceOf(HasMany::class)
+        ->and($organization->agents())->toBeInstanceOf(HasMany::class)
+        ->and($organization->observations())->toBeInstanceOf(HasMany::class);
 });

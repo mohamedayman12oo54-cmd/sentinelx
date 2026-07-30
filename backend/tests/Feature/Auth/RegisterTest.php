@@ -1,14 +1,14 @@
 <?php
 
 use App\Enums\UserRole;
-use App\Models\Company;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 
 // === HAPPY PATH ===
 
-test('registering creates a company and an owner user, and sends a verification email', function () {
+test('registering creates an organization and an owner user, and sends a verification email', function () {
     Notification::fake();
 
     $response = $this->postJson('/api/auth/register', [
@@ -27,9 +27,9 @@ test('registering creates a company and an owner user, and sends a verification 
         ->and($user->role)->toBe(UserRole::Owner)
         ->and($user->email_verified_at)->toBeNull();
 
-    $company = Company::where('name', 'Acme Security')->first();
-    expect($company)->not->toBeNull()
-        ->and($user->company_id)->toBe($company->id);
+    $organization = Organization::where('name', 'Acme Security')->first();
+    expect($organization)->not->toBeNull()
+        ->and($user->organization_id)->toBe($organization->id);
 
     Notification::assertSentTo($user, VerifyEmail::class);
 });
@@ -91,7 +91,7 @@ test('two organizations get distinct slugs even with the same name', function ()
         'password_confirmation' => 'password123',
     ])->assertCreated();
 
-    $slugs = Company::where('name', 'Acme Security')->pluck('slug');
+    $slugs = Organization::where('name', 'Acme Security')->pluck('slug');
 
     expect($slugs)->toHaveCount(2)
         ->and($slugs->unique())->toHaveCount(2);
