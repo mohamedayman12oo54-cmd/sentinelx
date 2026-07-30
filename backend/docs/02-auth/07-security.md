@@ -95,7 +95,7 @@ API Key Revoked
 Password Changed
 Role Changed
 Agent Created
-Agent Disabled
+Agent Archived
 ```
 
 **Why?** So that if an incident happens, we know how to trace it back.

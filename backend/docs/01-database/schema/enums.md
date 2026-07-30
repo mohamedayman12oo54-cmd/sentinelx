@@ -21,9 +21,10 @@
 | Value | Description |
 |-------|-------------|
 | `OWNER` | The primary owner of the organization account |
+| `ADMIN` | Manages day-to-day platform operation; cannot alter the organization's own identity |
 | `MEMBER` | A regular member within the organization |
 
-**Deliberately not added in V1:** `ADMIN`, `VIEWER` — to avoid over-engineering before a full RBAC system is built.
+**Deliberately not added in V1:** `VIEWER` — to avoid over-engineering before a full RBAC system is built. `ADMIN` is included per [`backend-architecture/adr/ADR-002-human-identity-baseline-update.md`](../../00-backend_architecture/adr/ADR-002-human-identity-baseline-update.md), which keeps the Role model future-proofed for Team Management ahead of its V1 build-out.
 
 ---
 
@@ -112,7 +113,7 @@
 
 ```text
 OrganizationStatus → ACTIVE, SUSPENDED
-UserRole           → OWNER, MEMBER
+UserRole           → OWNER, ADMIN, MEMBER
 UserStatus          → ACTIVE, DISABLED
 AgentStatus          → ACTIVE, ARCHIVED
 ApiKeyStatus          → ACTIVE, REVOKED

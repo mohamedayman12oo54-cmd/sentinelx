@@ -132,11 +132,15 @@ This means the Credential is **an attribute of Identity**, not Identity itself.
 
 ```text
 Human
-Pending Verification → Active → Suspended → Archived
+Active → Disabled
 
 Agent
-Active → Disabled → Archived
+Active → Archived
 ```
+
+> **Reconciliation note (aligned with `01-database/schema/enums.md`):** `users.status` and `agents.status` are each a deliberately minimal two-value enum — `ACTIVE`/`DISABLED` for `users`, `ACTIVE`/`ARCHIVED` for `agents` — and neither carries a third "pending" or "suspended" value.
+> - **Human**: `DISABLED` retains its original, sole meaning — an administratively deactivated account, the replacement for deletion. It is **not** used to represent "registered but not yet email-verified" — that is tracked independently via the additive `users.email_verified_at` column, see [`adr/ADR-005-email-verified-at-column.md`](./adr/ADR-005-email-verified-at-column.md) and [`03-authentication-flow.md`](./03-authentication-flow.md#3-human-authentication-flow).
+> - **Agent**: `DISABLED` does not exist as a separate value — the one real "stop this Agent" action is `ARCHIVED`, exactly as [`01-database/schema/enums.md`](../01-database/schema/enums.md#4-agentstatus--table-agentsstatus) already decided (Archive *is* the Business Action, not a lesser state before it).
 
 ---
 

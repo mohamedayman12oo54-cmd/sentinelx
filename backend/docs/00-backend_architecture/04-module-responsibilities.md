@@ -111,8 +111,7 @@ Agent Metadata
 ```text
 Create Agent
 Update Agent
-Disable Agent
-Delete Agent (Soft Delete / Archive)
+Archive Agent (Soft Delete)
 View Agent
 ```
 

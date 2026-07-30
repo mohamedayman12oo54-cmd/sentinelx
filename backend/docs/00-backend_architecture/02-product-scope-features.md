@@ -94,7 +94,7 @@ User Profile
 ```text
 Create Agent
 Update Agent
-Disable Agent
+Archive Agent
 View Agent Details
 List Agents
 ```

@@ -36,9 +36,7 @@ A full Cross-Review was performed against that baseline, six conflicts were iden
 ## 4. Folder Architecture
 
 ```text
-docs/
-└── backend/
-    └── backend-architecture/
+backend/docs/00-backend_architecture/
         │
         ├── README.md                                    ← you are here
         │

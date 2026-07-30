@@ -59,7 +59,8 @@ Root entity first → then everything that depends on it, in sequence
 ### `002_create_users_table`
 - `organization_id` FK → `organizations.id`, `ON DELETE RESTRICT`, NOT NULL.
 - `email` UNIQUE NOT NULL (global, not composite with `organization_id`).
-- `role` Enum (`OWNER`, `MEMBER`).
+- `role` Enum (`OWNER`, `ADMIN`, `MEMBER`).
+- `email_verified_at` Nullable Timestamp — see [`../../02-auth/adr/ADR-005-email-verified-at-column.md`](../../02-auth/adr/ADR-005-email-verified-at-column.md).
 
 ### `003_create_agents_table`
 - `organization_id` FK → `organizations.id`, `ON DELETE RESTRICT`, NOT NULL.

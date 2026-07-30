@@ -61,6 +61,9 @@ In the context of a Human Identity, the logical continuity represented by a vali
 **Verification**
 The check confirming that a previously established Identity is still valid at the moment of a new request (e.g., signature and expiration checks on a JWT, or hash comparison for an API Key). See [`01-overview.md`](./01-overview.md).
 
+**Email Verification**
+The one-time confirmation that a newly registered Human's email address is real, gating Login until complete. Tracked on an additive, nullable `users.email_verified_at` timestamp — deliberately **not** a `UserStatus` value (`UserStatus` stays exactly `ACTIVE`/`DISABLED`). See [`03-authentication-flow.md`](./03-authentication-flow.md) and [`adr/ADR-005-email-verified-at-column.md`](./adr/ADR-005-email-verified-at-column.md).
+
 **Invitation** 🟡 *(Future Version — not built in V1)*
 The mechanism by which a new team member joins an existing Organization, issued by an Owner (email + intended Role). Has its own lifecycle: `Pending → Accepted / Expired / Cancelled`. The User record is only created upon acceptance. See [`08-identity-lifecycle.md`](./08-identity-lifecycle.md) and [`adr/ADR-004-invitation-based-onboarding.md`](./adr/ADR-004-invitation-based-onboarding.md).
 
@@ -80,4 +83,4 @@ The security principle that every Identity is granted the minimum set of permiss
 The security principle that any new feature must be secure from the moment it is built, rather than relying on someone remembering to secure it later. See [`07-security.md`](./07-security.md).
 
 **Audit Log**
-The record of important security-relevant events (login, failed login, key creation/rotation/revocation, password change, role change, agent creation/disabling) kept so that any future incident can be traced. See [`07-security.md`](./07-security.md).
+The record of important security-relevant events (login, failed login, key creation/rotation/revocation, password change, role change, agent creation/archiving) kept so that any future incident can be traced. See [`07-security.md`](./07-security.md).
