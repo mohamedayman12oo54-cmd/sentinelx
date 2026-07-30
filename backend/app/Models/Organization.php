@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use App\Enums\CompanyStatus;
-use Database\Factories\CompanyFactory;
+use App\Enums\OrganizationStatus;
+use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Company extends Model
+class Organization extends Model
 {
-    /** @use HasFactory<CompanyFactory> */
+    /** @use HasFactory<OrganizationFactory> */
     use HasFactory, HasUuids;
 
     protected $fillable = [
@@ -21,13 +21,13 @@ class Company extends Model
     ];
 
     protected $attributes = [
-        'status' => CompanyStatus::Active->value,
+        'status' => OrganizationStatus::Active->value,
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => CompanyStatus::class,
+            'status' => OrganizationStatus::class,
         ];
     }
 

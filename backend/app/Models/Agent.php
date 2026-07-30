@@ -17,7 +17,7 @@ class Agent extends Model implements Authenticatable
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'company_id',
+        'organization_id',
         'name',
         'framework',
         'framework_version',
@@ -40,9 +40,9 @@ class Agent extends Model implements Authenticatable
 
     // ======= Relationships =======
 
-    public function company(): BelongsTo
+    public function organization(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Organization::class);
     }
 
     public function apiKeys(): HasMany

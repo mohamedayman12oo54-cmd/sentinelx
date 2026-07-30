@@ -16,7 +16,7 @@ class Observation extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'company_id',
+        'organization_id',
         'agent_id',
         'analysis_status',
         'raw_ases_json',
@@ -42,9 +42,9 @@ class Observation extends Model
 
     // ======= Relationships =======
 
-    public function company(): BelongsTo
+    public function organization(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Organization::class);
     }
 
     public function agent(): BelongsTo
