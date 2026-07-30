@@ -38,9 +38,9 @@ class DatabaseSeeder extends Seeder
 
         Agent::factory(5)
             ->for($organization)
-            ->has(ApiKey::factory())
             ->create()
             ->each(function (Agent $agent) {
+                ApiKey::factory()->for($agent)->create();
                 Observation::factory(3)->for($agent)->create();
             });
 

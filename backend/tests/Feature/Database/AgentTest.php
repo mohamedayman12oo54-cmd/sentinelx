@@ -40,9 +40,8 @@ test('two different organizations may each have an agent with the same name', fu
 
 // === RELATIONSHIPS ===
 
-test('an agent has many api keys and observations', function () {
+test('an agent has many observations', function () {
     $agent = Agent::factory()->create();
 
-    expect($agent->apiKeys())->toBeInstanceOf(HasMany::class)
-        ->and($agent->observations())->toBeInstanceOf(HasMany::class);
+    expect($agent->observations())->toBeInstanceOf(HasMany::class);
 });

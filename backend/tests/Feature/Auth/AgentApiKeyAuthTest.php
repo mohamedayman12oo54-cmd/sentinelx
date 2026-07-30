@@ -34,7 +34,7 @@ test('successful authentication touches last_used_at and last_seen_at', function
     $this->withHeader('X-API-Key', 'a-valid-raw-secret')->getJson('/api/agent/me')->assertOk();
 
     expect($agent->fresh()->last_seen_at)->not->toBeNull()
-        ->and($agent->apiKeys()->first()->last_used_at)->not->toBeNull();
+        ->and(ApiKey::where('agent_id', $agent->id)->first()->last_used_at)->not->toBeNull();
 });
 
 // === FAILURE CASES — all must return the exact same generic 401 shape ===
