@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Observation\Infrastructure\Persistence;
 
-use App\Enums\AnalysisStatus;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
+use App\Modules\Observation\Domain\AnalysisStatus;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Database\Factories\ObservationFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Enums\AnalysisStatus;
-use App\Models\Agent;
-use App\Models\Observation;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Observation\Domain\AnalysisStatus;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ObservationFactory extends Factory
 {
+    protected $model = Observation::class;
+
     /**
      * Define the model's default state.
      *
