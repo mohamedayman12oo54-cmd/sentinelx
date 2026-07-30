@@ -46,7 +46,7 @@ Some business rules are **not automatically enforced** via constraints in the da
 
 | Rule | Where It Must Be Applied |
 |------|---------------------------|
-| Only one `ACTIVE` key per Agent in `api_keys` | Application layer — when creating a new key, the old one must be disabled first within the same transaction |
+| Only one `ACTIVE` key per Agent in `api_keys` | Application layer — when creating a new key, the old one must be revoked (`REVOKED`) first within the same transaction |
 | `observations.organization_id` must match the `organization_id` of the Agent linked to that same Observation | Application layer — when inserting a new Observation, derive `organization_id` from the Agent itself; do not rely on an externally supplied value |
 
 ---

@@ -92,7 +92,7 @@ Covers:
 ```text
 Create Agent
 Update Agent
-Disable Agent
+Archive Agent
 Generate API Key
 Rotate Key
 Revoke Key

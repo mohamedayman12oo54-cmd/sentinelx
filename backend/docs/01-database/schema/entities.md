@@ -73,15 +73,18 @@ The people belonging to a organization. A User is **not** the client — it's si
 | `full_name` | String | ✅ | |
 | `email` | String | ✅ | **Globally unique** (not scoped per organization) — in V1, one user = one account |
 | `password_hash` | String | ✅ | Hash only, never plain text |
-| `role` | Enum | ✅ | `OWNER` \| `MEMBER` only. No Admin/Viewer in V1 — to avoid over-engineering before building a full RBAC system |
+| `role` | Enum | ✅ | `OWNER` \| `ADMIN` \| `MEMBER`. No `VIEWER` in V1 — to avoid over-engineering before building a full RBAC system. See [`backend-architecture/adr/ADR-002-human-identity-baseline-update.md`](../../00-backend_architecture/adr/ADR-002-human-identity-baseline-update.md) |
 | `status` | Enum | ✅ | `ACTIVE` \| `DISABLED` |
 | `last_login_at` | Timestamp | ❌ Optional | Last login timestamp |
+| `email_verified_at` | Timestamp | ❌ Optional (Nullable) | `NULL` = email not yet verified. Set once, when verification succeeds via a signed URL. **Deliberately independent of `status`** — email verification is tracked here, never by adding a status value. See [`../../02-auth/adr/ADR-005-email-verified-at-column.md`](../../02-auth/adr/ADR-005-email-verified-at-column.md) |
 | `created_at` | Timestamp | ✅ | |
 | `updated_at` | Timestamp | ✅ | |
 
 ### Key Decisions
 - `email` is globally unique, not scoped per organization, because a person likely uses the same email regardless of the organization. Supporting a user belonging to more than one organization (if ever needed) will be solved via a separate Membership layer, not by relaxing the unique constraint.
 - No `deleted_at` — `DISABLED` is the state that represents a user no longer active.
+- `role` includes `ADMIN` alongside `OWNER`/`MEMBER`, per the Backend Architecture Cross-Review (`ADR-002-human-identity-baseline-update.md`): the Role model is kept future-proofed for Team Management even though V1 ships single-Owner Organizations.
+- `email_verified_at` is **fully independent** of `status` — a user can be `ACTIVE` and unverified at the same time (during registration), and `DISABLED` never implies "unverified." The two columns are unrelated.
 
 ### Final Shape
 ```text
@@ -92,9 +95,10 @@ organization_id              FK → organizations.id
 full_name
 email                    UNIQUE (Global)
 password_hash
-role                     OWNER | MEMBER
+role                     OWNER | ADMIN | MEMBER
 status                   ACTIVE | DISABLED
 last_login_at
+email_verified_at        Nullable — ADR-005 (auth)
 created_at
 updated_at
 ```
