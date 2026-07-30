@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 372" width="1100" height="372"><defs>
+<marker id="spArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+  <path d="M0,0 L0,6 L8,3 z" fill="#475569"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1100" height="372" fill="#f1f5f9"/>
+<text x="550.0" y="34" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="800" fill="#0f172a">SentinelX — Sprint Roadmap</text>
+<text x="550.0" y="55" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" fill="#64748b">Every Sprint = Build → Test → Demo. Each Sprint ends in a Definition of Done, not partial work.</text>
+
+<g>
+  <rect x="43" y="103" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="40" y="100" width="250" height="76" rx="9" fill="#334155" stroke="#64748b" stroke-width="2"/>
+  <text x="56" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 0</text>
+  <text x="56" y="140" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Project Foundation</text>
+  <text x="56" y="158" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: SentinelX Skeleton runs, no features yet</text>
+</g>
+<g>
+  <rect x="323" y="103" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="320" y="100" width="250" height="76" rx="9" fill="#1e3a8a" stroke="#3b82f6" stroke-width="2"/>
+  <text x="336" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 1</text>
+  <text x="336" y="140" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Identity Foundation</text>
+  <text x="336" y="158" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: Register → Login → Profile → Logout</text>
+</g>
+<g>
+  <rect x="603" y="103" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="600" y="100" width="250" height="76" rx="9" fill="#7c2d12" stroke="#f97316" stroke-width="2"/>
+  <text x="616" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 2</text>
+  <text x="616" y="140" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Agent Management</text>
+  <text x="616" y="158" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: Create Agent → Generate API Key</text>
+</g>
+<g>
+  <rect x="883" y="103" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="880" y="100" width="250" height="76" rx="9" fill="#166534" stroke="#22c55e" stroke-width="2"/>
+  <text x="896" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 3</text>
+  <text x="896" y="140" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Observation Pipeline</text>
+  <text x="896" y="158" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: SDK sends a real Observation</text>
+</g>
+<g>
+  <rect x="43" y="229" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="40" y="226" width="250" height="76" rx="9" fill="#581c87" stroke="#a855f7" stroke-width="2"/>
+  <text x="56" y="248" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 4</text>
+  <text x="56" y="266" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">ML Integration</text>
+  <text x="56" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: First real Prediction exists</text>
+</g>
+<g>
+  <rect x="323" y="229" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="320" y="226" width="250" height="76" rx="9" fill="#7f1d1d" stroke="#ef4444" stroke-width="2"/>
+  <text x="336" y="248" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 5</text>
+  <text x="336" y="266" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Alert Engine</text>
+  <text x="336" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: First real Alert appears</text>
+</g>
+<g>
+  <rect x="603" y="229" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="600" y="226" width="250" height="76" rx="9" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="616" y="248" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 6</text>
+  <text x="616" y="266" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Dashboard</text>
+  <text x="616" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: User sees real data</text>
+</g>
+<g>
+  <rect x="883" y="229" width="250" height="76" rx="9" fill="#000" opacity="0.12"/>
+  <rect x="880" y="226" width="250" height="76" rx="9" fill="#334155" stroke="#64748b" stroke-width="2"/>
+  <text x="896" y="248" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">SPRINT 7</text>
+  <text x="896" y="266" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#ffffff">Audit + Settings</text>
+  <text x="896" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" fill="#cbd5e1">DoD: MVP is complete</text>
+</g><path d="M 290 138.0 L 320 138.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 570 138.0 L 600 138.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 850 138.0 L 880 138.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 1005.0 176 L 1005.0 186 L 165.0 186 L 165.0 226" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 290 264.0 L 320 264.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 570 264.0 L 600 264.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/><path d="M 850 264.0 L 880 264.0" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#spArrow)"/></svg>

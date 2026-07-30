@@ -1,0 +1,23 @@
+flowchart TD
+
+Internet["Internet"]
+
+Dashboard["Dashboard"]
+
+Backend["Backend API"]
+
+Queue["Queue"]
+
+ML["ML Service"]
+
+Database["Database"]
+
+Internet --> Dashboard
+
+Dashboard --> Backend
+
+Backend --> Database
+
+Backend --> Queue
+
+Queue --> ML
