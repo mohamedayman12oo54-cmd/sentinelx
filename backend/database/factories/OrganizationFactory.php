@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\OrganizationStatus;
-use App\Models\Organization;
+use App\Modules\Organization\Domain\OrganizationStatus;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
  */
 class OrganizationFactory extends Factory
 {
+    protected $model = Organization::class;
+
     /**
      * Define the model's default state.
      *
