@@ -1,12 +1,12 @@
 <?php
 
-use App\Models\Agent;
-use App\Models\Alert;
-use App\Models\ApiKey;
-use App\Models\Observation;
-use App\Models\Organization;
-use App\Models\Prediction;
-use App\Models\User;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Alert\Infrastructure\Persistence\Alert;
+use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
+use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\QueryException;
 
 // Every foreign key in the schema uses ON DELETE RESTRICT — no CASCADE,

@@ -1,8 +1,8 @@
 <?php
 
-use App\Enums\AgentStatus;
-use App\Models\Agent;
-use App\Models\Organization;
+use App\Modules\Agent\Domain\AgentStatus;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 
