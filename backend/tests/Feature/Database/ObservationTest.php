@@ -1,8 +1,8 @@
 <?php
 
-use App\Enums\AnalysisStatus;
-use App\Models\Agent;
-use App\Models\Observation;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Observation\Domain\AnalysisStatus;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 

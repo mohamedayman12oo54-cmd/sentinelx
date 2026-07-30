@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 // === HAPPY PATH ===

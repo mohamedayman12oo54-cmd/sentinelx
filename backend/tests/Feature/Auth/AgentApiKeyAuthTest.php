@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\AgentStatus;
-use App\Enums\ApiKeyStatus;
-use App\Models\Agent;
-use App\Models\ApiKey;
+use App\Modules\Agent\Domain\AgentStatus;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Authentication\ApiKey\Domain\ApiKeyStatus;
+use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
 
 function createAgentWithKey(string $rawKey, array $agentState = [], array $keyState = []): Agent
 {

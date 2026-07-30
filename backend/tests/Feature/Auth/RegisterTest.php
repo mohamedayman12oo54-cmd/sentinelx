@@ -1,8 +1,8 @@
 <?php
 
-use App\Enums\UserRole;
-use App\Models\Organization;
-use App\Models\User;
+use App\Modules\Authentication\Identity\Domain\UserRole;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 

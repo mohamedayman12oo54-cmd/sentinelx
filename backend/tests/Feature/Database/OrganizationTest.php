@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\OrganizationStatus;
-use App\Models\Organization;
+use App\Modules\Organization\Domain\OrganizationStatus;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 

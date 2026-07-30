@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\UserRole;
-use App\Enums\UserStatus;
-use App\Models\Organization;
-use App\Models\User;
+use App\Modules\Authentication\Identity\Domain\UserRole;
+use App\Modules\Authentication\Identity\Domain\UserStatus;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 
