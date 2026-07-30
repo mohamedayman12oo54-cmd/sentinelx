@@ -23,9 +23,9 @@ class ObservationFactory extends Factory
 
         return [
             'agent_id' => Agent::factory(),
-            // Denormalized to match the owning Agent's company (ADR-005) —
+            // Denormalized to match the owning Agent's organization (ADR-005) —
             // never sourced independently, even in tests.
-            'company_id' => fn (array $attributes) => Agent::find($attributes['agent_id'])->company_id,
+            'organization_id' => fn (array $attributes) => Agent::find($attributes['agent_id'])->organization_id,
             'analysis_status' => AnalysisStatus::Pending,
             'raw_ases_json' => $this->fakeAsesPayload(),
             'received_at' => $receivedAt,

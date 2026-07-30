@@ -2,17 +2,17 @@
 
 use App\Enums\AgentStatus;
 use App\Models\Agent;
-use App\Models\Company;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 
 // === HAPPY PATH ===
 
-test('an agent belongs to a company and defaults to ACTIVE', function () {
+test('an agent belongs to an organization and defaults to ACTIVE', function () {
     $agent = Agent::factory()->create();
 
     expect($agent->status)->toBe(AgentStatus::Active)
-        ->and($agent->company)->toBeInstanceOf(Company::class);
+        ->and($agent->organization)->toBeInstanceOf(Organization::class);
 });
 
 test('an agent can be archived', function () {
@@ -23,15 +23,15 @@ test('an agent can be archived', function () {
 
 // === CONSTRAINTS ===
 
-test('agent name must be unique within a company', function () {
-    $company = Company::factory()->create();
-    Agent::factory()->for($company)->create(['name' => 'Support Agent']);
+test('agent name must be unique within an organization', function () {
+    $organization = Organization::factory()->create();
+    Agent::factory()->for($organization)->create(['name' => 'Support Agent']);
 
-    expect(fn () => Agent::factory()->for($company)->create(['name' => 'Support Agent']))
+    expect(fn () => Agent::factory()->for($organization)->create(['name' => 'Support Agent']))
         ->toThrow(QueryException::class);
 });
 
-test('two different companies may each have an agent with the same name', function () {
+test('two different organizations may each have an agent with the same name', function () {
     Agent::factory()->create(['name' => 'Support Agent']);
     $second = Agent::factory()->create(['name' => 'Support Agent']);
 

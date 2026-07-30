@@ -18,7 +18,7 @@ class AgentResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'company_id' => $this->company_id,
+            'organization_id' => $this->organization_id,
             'type' => 'AGENT',
             'name' => $this->name,
             'framework' => $this->framework,

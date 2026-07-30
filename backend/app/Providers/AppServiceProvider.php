@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Implements the API Key verification contract exactly as specified in
      * contracts/api-key-format.md §3: extract -> hash -> look up an ACTIVE
-     * key -> resolve the Agent -> resolve the Company (via the Agent
+     * key -> resolve the Agent -> resolve the Organization (via the Agent
      * relationship). Returns null (authentication fails) unless every step
      * succeeds, including the Agent itself being ACTIVE (not ARCHIVED) -
      * see contracts/auth-errors.md.

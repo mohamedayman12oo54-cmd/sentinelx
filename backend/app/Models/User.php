@@ -20,7 +20,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmailContrac
     use HasFactory, HasUuids, MustVerifyEmail, Notifiable;
 
     protected $fillable = [
-        'company_id',
+        'organization_id',
         'full_name',
         'email',
         'password_hash',
@@ -66,8 +66,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmailContrac
 
     /**
      * Custom JWT claims, restricted to exactly what contracts/jwt-claims.md
-     * allows: identity_type and company_id. Role, name, and email are never
-     * embedded — see adr/ADR-003-jwt-claims.md.
+     * allows: identity_type and organization_id. Role, name, and email are
+     * never embedded — see adr/ADR-003-jwt-claims.md.
      *
      * @return array<string, string>
      */
@@ -75,14 +75,14 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmailContrac
     {
         return [
             'identity_type' => 'HUMAN',
-            'company_id' => (string) $this->company_id,
+            'organization_id' => (string) $this->organization_id,
         ];
     }
 
     // ======= Relationships =======
 
-    public function company(): BelongsTo
+    public function organization(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Organization::class);
     }
 }

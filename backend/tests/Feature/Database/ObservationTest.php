@@ -23,21 +23,21 @@ test('an observation can be marked completed', function () {
         ->and($observation->processed_at)->not->toBeNull();
 });
 
-// === BUSINESS RULE: company_id denormalization (ADR-005) ===
+// === BUSINESS RULE: organization_id denormalization (ADR-005) ===
 
-test('company_id always matches the owning agent\'s company', function () {
+test('organization_id always matches the owning agent\'s organization', function () {
     $agent = Agent::factory()->create();
     $observation = Observation::factory()->for($agent)->create();
 
-    expect($observation->company_id)->toBe($agent->company_id);
+    expect($observation->organization_id)->toBe($agent->organization_id);
 });
 
 // === RELATIONSHIPS ===
 
-test('an observation belongs to a company and an agent, and may have one prediction', function () {
+test('an observation belongs to an organization and an agent, and may have one prediction', function () {
     $observation = Observation::factory()->create();
 
-    expect($observation->company())->toBeInstanceOf(BelongsTo::class)
+    expect($observation->organization())->toBeInstanceOf(BelongsTo::class)
         ->and($observation->agent())->toBeInstanceOf(BelongsTo::class)
         ->and($observation->prediction())->toBeInstanceOf(HasOne::class)
         ->and($observation->prediction)->toBeNull();

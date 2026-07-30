@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Enums\CompanyStatus;
+use App\Enums\OrganizationStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Exceptions\AuthenticationFailedException;
-use App\Models\Company;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +18,7 @@ class AuthService
     // ======= Register =======
 
     /**
-     * Register creates a new Organization (Company) and its first User, who
+     * Register creates a new Organization and its first User, who
      * is always the Owner — never a bare User. See
      * 08-identity-lifecycle.md §2-3.
      *
@@ -27,14 +27,14 @@ class AuthService
     public function register(array $data): User
     {
         return DB::transaction(function () use ($data) {
-            $company = Company::create([
+            $organization = Organization::create([
                 'name' => $data['organization_name'],
                 'slug' => $this->uniqueSlug($data['organization_name']),
-                'status' => CompanyStatus::Active,
+                'status' => OrganizationStatus::Active,
             ]);
 
             /** @var User $user */
-            $user = $company->users()->create([
+            $user = $organization->users()->create([
                 'full_name' => $data['full_name'],
                 'email' => $data['email'],
                 'password_hash' => Hash::make($data['password']),
@@ -54,7 +54,7 @@ class AuthService
         $slug = $base;
         $suffix = 1;
 
-        while (Company::where('slug', $slug)->exists()) {
+        while (Organization::where('slug', $slug)->exists()) {
             $slug = "{$base}-{$suffix}";
             $suffix++;
         }

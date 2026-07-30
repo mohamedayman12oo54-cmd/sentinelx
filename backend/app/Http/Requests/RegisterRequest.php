@@ -8,7 +8,7 @@ use Illuminate\Validation\Rules\Password;
 class RegisterRequest extends FormRequest
 {
     /**
-     * Registration creates a new Organization (Company) plus its first
+     * Registration creates a new Organization plus its first
      * User, who is always the Owner — see 08-identity-lifecycle.md §2-3.
      * No authenticated identity is required to reach this endpoint.
      */
