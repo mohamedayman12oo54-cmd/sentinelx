@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Authentication\ApiKey\Infrastructure\Persistence;
 
-use App\Enums\ApiKeyStatus;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Authentication\ApiKey\Domain\ApiKeyStatus;
 use Database\Factories\ApiKeyFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

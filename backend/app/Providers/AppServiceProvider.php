@@ -2,12 +2,9 @@
 
 namespace App\Providers;
 
-use App\Enums\AgentStatus;
-use App\Enums\ApiKeyStatus;
-use App\Models\ApiKey;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,45 +21,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerAgentApiKeyGuard();
-    }
-
-    /**
-     * Implements the API Key verification contract exactly as specified in
-     * contracts/api-key-format.md §3: extract -> hash -> look up an ACTIVE
-     * key -> resolve the Agent -> resolve the Organization (via the Agent
-     * relationship). Returns null (authentication fails) unless every step
-     * succeeds, including the Agent itself being ACTIVE (not ARCHIVED) -
-     * see contracts/auth-errors.md.
-     */
-    private function registerAgentApiKeyGuard(): void
-    {
-        Auth::viaRequest('agent-api-key', function (Request $request) {
-            $rawKey = $request->header('X-API-Key');
-
-            if (! $rawKey) {
-                return null;
-            }
-
-            $apiKey = ApiKey::query()
-                ->where('key_hash', hash('sha256', $rawKey))
-                ->where('status', ApiKeyStatus::Active)
-                ->first();
-
-            if (! $apiKey || ($apiKey->expires_at && $apiKey->expires_at->isPast())) {
-                return null;
-            }
-
-            $agent = $apiKey->agent;
-
-            if (! $agent || $agent->status !== AgentStatus::Active) {
-                return null;
-            }
-
-            $apiKey->forceFill(['last_used_at' => now()])->save();
-            $agent->forceFill(['last_seen_at' => now()])->save();
-
-            return $agent;
-        });
+        // Models live under App\Modules\{Module}\Infrastructure\Persistence
+        // rather than App\Models, so Eloquent's default factory-name guesser
+        // (which only strips the App\Models\ or App\ prefix) can't find
+        // Database\Factories\{Model}Factory on its own — resolve by class
+        // basename instead, matching every existing factory's name.
+        Factory::guessFactoryNamesUsing(
+            fn (string $modelName): string => 'Database\\Factories\\'.Str::afterLast($modelName, '\\').'Factory'
+        );
     }
 }
