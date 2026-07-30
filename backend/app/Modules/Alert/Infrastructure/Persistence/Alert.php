@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Alert\Infrastructure\Persistence;
 
-use App\Enums\AlertStatus;
-use App\Enums\Severity;
+use App\Modules\Alert\Domain\AlertStatus;
+use App\Modules\Alert\Domain\Severity;
+use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use Database\Factories\AlertFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

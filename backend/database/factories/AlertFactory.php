@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Enums\AlertStatus;
-use App\Enums\Severity;
-use App\Models\Alert;
-use App\Models\Prediction;
+use App\Modules\Alert\Domain\AlertStatus;
+use App\Modules\Alert\Domain\Severity;
+use App\Modules\Alert\Infrastructure\Persistence\Alert;
+use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AlertFactory extends Factory
 {
+    protected $model = Alert::class;
+
     /**
      * Define the model's default state.
      *
