@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Enums\AgentStatus;
-use App\Models\Agent;
-use App\Models\Organization;
+use App\Modules\Agent\Domain\AgentStatus;
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AgentFactory extends Factory
 {
+    protected $model = Agent::class;
+
     /**
      * Frameworks observed in the ASES Context — see docs/03-specifications.
      *

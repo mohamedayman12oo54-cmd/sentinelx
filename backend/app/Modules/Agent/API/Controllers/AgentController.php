@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\Agent\API\Controllers;
 
-use App\Http\Resources\AgentResource;
+use App\Http\Controllers\Controller;
+use App\Modules\Agent\Presentation\AgentResource;
 use Illuminate\Http\Request;
 
 class AgentController extends Controller

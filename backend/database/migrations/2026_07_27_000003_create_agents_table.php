@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\AgentStatus;
+use App\Modules\Agent\Domain\AgentStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;

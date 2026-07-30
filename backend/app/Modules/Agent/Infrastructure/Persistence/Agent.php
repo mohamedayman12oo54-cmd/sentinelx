@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Agent\Infrastructure\Persistence;
 
-use App\Enums\AgentStatus;
+use App\Modules\Agent\Domain\AgentStatus;
+use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Database\Factories\AgentFactory;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -60,10 +63,10 @@ class Agent extends Model implements Authenticatable
     /**
      * An Agent has no password or remember-token concept — its Credential
      * is the API Key, hashed and verified entirely inside the
-     * "agent-api-key" guard (see AppServiceProvider::boot()), never through
-     * these framework-contract methods. They exist only so Agent can be
-     * returned from Auth::viaRequest() as a valid Authenticatable — see
-     * 05-api-keys.md.
+     * "agent-api-key" guard (see Authentication\AuthServiceProvider::boot()),
+     * never through these framework-contract methods. They exist only so
+     * Agent can be returned from Auth::viaRequest() as a valid
+     * Authenticatable — see 05-api-keys.md.
      */
     public function getAuthIdentifierName(): string
     {

@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\AgentController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EmailVerificationController;
+use App\Modules\Agent\API\Controllers\AgentController;
+use App\Modules\Authentication\Identity\API\Controllers\AuthController;
+use App\Modules\Authentication\Identity\API\Controllers\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
 
 // ======= Public Auth Routes =======
