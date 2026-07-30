@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\Authentication\Identity\API\Controllers;
 
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
-use App\Http\Resources\UserResource;
-use App\Services\AuthService;
+use App\Http\Controllers\Controller;
+use App\Modules\Authentication\Identity\API\Requests\LoginRequest;
+use App\Modules\Authentication\Identity\API\Requests\RegisterRequest;
+use App\Modules\Authentication\Identity\Application\GetCurrentUserAction;
+use App\Modules\Authentication\Identity\Application\LoginUserAction;
+use App\Modules\Authentication\Identity\Application\LogoutUserAction;
+use App\Modules\Authentication\Identity\Application\RefreshTokenAction;
+use App\Modules\Authentication\Identity\Application\RegisterUserAction;
+use App\Modules\Authentication\Identity\Presentation\UserResource;
 use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    public function __construct(
-        private readonly AuthService $authService,
-    ) {}
-
     // POST /api/auth/register
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(RegisterRequest $request, RegisterUserAction $action): JsonResponse
     {
-        $user = $this->authService->register($request->validated());
+        $user = $action->handle($request->validated());
 
         return (new UserResource($user))
             ->additional(['message' => 'Organization created. Please check your email to verify your account.'])
@@ -26,33 +27,33 @@ class AuthController extends Controller
     }
 
     // POST /api/auth/login
-    public function login(LoginRequest $request): JsonResponse
+    public function login(LoginRequest $request, LoginUserAction $action): JsonResponse
     {
-        $token = $this->authService->login($request->validated());
+        $token = $action->handle($request->validated());
 
         return $this->tokenResponse($token);
     }
 
     // POST /api/auth/logout
-    public function logout(): JsonResponse
+    public function logout(LogoutUserAction $action): JsonResponse
     {
-        $this->authService->logout();
+        $action->handle();
 
         return response()->json(['message' => 'Logged out.']);
     }
 
     // POST /api/auth/refresh
-    public function refresh(): JsonResponse
+    public function refresh(RefreshTokenAction $action): JsonResponse
     {
-        $token = $this->authService->refresh();
+        $token = $action->handle();
 
         return $this->tokenResponse($token);
     }
 
     // GET /api/auth/me
-    public function me(): UserResource
+    public function me(GetCurrentUserAction $action): UserResource
     {
-        return new UserResource($this->authService->me());
+        return new UserResource($action->handle());
     }
 
     private function tokenResponse(string $token): JsonResponse

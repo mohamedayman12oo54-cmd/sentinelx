@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\Authentication\Identity\Infrastructure\Persistence;
 
-use App\Enums\UserRole;
-use App\Enums\UserStatus;
+use App\Modules\Authentication\Identity\Domain\UserRole;
+use App\Modules\Authentication\Identity\Domain\UserStatus;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;

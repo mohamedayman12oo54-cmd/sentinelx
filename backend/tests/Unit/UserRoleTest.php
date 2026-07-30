@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\UserRole;
+use App\Modules\Authentication\Identity\Domain\UserRole;
 
 test('UserRole has exactly Owner, Admin, and Member', function () {
     expect(UserRole::values())->toBe(['OWNER', 'ADMIN', 'MEMBER']);

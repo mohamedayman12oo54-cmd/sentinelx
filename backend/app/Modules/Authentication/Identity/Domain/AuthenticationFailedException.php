@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exceptions;
+namespace App\Modules\Authentication\Identity\Domain;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

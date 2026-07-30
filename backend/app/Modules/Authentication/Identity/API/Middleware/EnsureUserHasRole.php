@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Modules\Authentication\Identity\API\Middleware;
 
-use App\Exceptions\AuthorizationFailedException;
-use App\Models\User;
+use App\Modules\Authentication\Identity\Domain\AuthorizationFailedException;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

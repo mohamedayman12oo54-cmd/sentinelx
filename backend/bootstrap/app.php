@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\EnsureUserHasRole;
+use App\Modules\Authentication\Identity\API\Middleware\EnsureUserHasRole;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
