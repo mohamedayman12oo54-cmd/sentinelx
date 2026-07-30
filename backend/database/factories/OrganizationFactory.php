@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Enums\CompanyStatus;
-use App\Models\Company;
+use App\Enums\OrganizationStatus;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<Company>
+ * @extends Factory<Organization>
  */
-class CompanyFactory extends Factory
+class OrganizationFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -24,17 +24,17 @@ class CompanyFactory extends Factory
         return [
             'name' => $name,
             'slug' => Str::slug($name).'-'.fake()->unique()->numerify('###'),
-            'status' => CompanyStatus::Active,
+            'status' => OrganizationStatus::Active,
         ];
     }
 
     /**
-     * Indicate that the company is suspended.
+     * Indicate that the organization is suspended.
      */
     public function suspended(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => CompanyStatus::Suspended,
+            'status' => OrganizationStatus::Suspended,
         ]);
     }
 }
