@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
 use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -52,10 +54,68 @@ function something()
 }
 
 /**
- * Issues a bearer JWT for a Human User — shared across Auth and Agent
- * feature tests to avoid redeclaring the same helper in every file.
+ * Issues a bearer JWT for a Human User — shared across Auth, Agent, and
+ * Observation feature tests to avoid redeclaring the same helper in every
+ * file.
  */
 function tokenFor(User $user): string
 {
     return JWTAuth::fromUser($user);
+}
+
+/**
+ * Creates an Agent with an ACTIVE API Key hashed from the given raw key,
+ * so tests can authenticate as that Agent via the X-API-Key header —
+ * shared across Auth and Observation feature tests.
+ *
+ * @param  array<string, mixed>  $agentState
+ * @param  array<string, mixed>  $keyState
+ */
+function createAgentWithKey(string $rawKey, array $agentState = [], array $keyState = []): Agent
+{
+    $agent = Agent::factory()->create($agentState);
+
+    ApiKey::factory()->for($agent)->create([
+        'key_hash' => hash('sha256', $rawKey),
+        ...$keyState,
+    ]);
+
+    return $agent;
+}
+
+/**
+ * A minimal but fully schema-conformant ASES payload, matching
+ * 07-api-contract.md §1's own example exactly. `context` and `metadata`
+ * overrides are shallow-merged into the defaults; `events`, being a list,
+ * is always replaced wholesale when provided — a recursive/keyed merge
+ * would silently keep the default event when a test passes `events: []`
+ * to exercise the "at least one event" check.
+ *
+ * @param  array{context?: array<string, mixed>, events?: array<int, mixed>, metadata?: array<string, mixed>}  $overrides
+ * @return array<string, mixed>
+ */
+function validAsesPayload(array $overrides = []): array
+{
+    return [
+        'context' => [
+            'framework' => 'CrewAI',
+            'agent_version' => '1.2.0',
+            'environment' => 'production',
+            'execution_start_time' => '2026-07-29T09:59:50Z',
+            'execution_finish_time' => '2026-07-29T10:00:00Z',
+            ...$overrides['context'] ?? [],
+        ],
+        'events' => $overrides['events'] ?? [
+            [
+                'header' => ['event_type' => 'api_call', 'timestamp' => '2026-07-29T09:59:52Z'],
+                'payload' => ['url' => 'https://api.example.com/v1/data', 'method' => 'GET'],
+            ],
+        ],
+        'metadata' => [
+            'spec_version' => '1.0',
+            'sdk_version' => '0.4.1',
+            'generated_at' => '2026-07-29T10:00:00Z',
+            ...$overrides['metadata'] ?? [],
+        ],
+    ];
 }

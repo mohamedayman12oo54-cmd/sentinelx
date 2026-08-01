@@ -1,21 +1,10 @@
 <?php
 
 use App\Modules\Agent\Domain\AgentStatus;
-use App\Modules\Agent\Infrastructure\Persistence\Agent;
 use App\Modules\Authentication\ApiKey\Domain\ApiKeyStatus;
 use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
 
-function createAgentWithKey(string $rawKey, array $agentState = [], array $keyState = []): Agent
-{
-    $agent = Agent::factory()->create($agentState);
-
-    ApiKey::factory()->for($agent)->create([
-        'key_hash' => hash('sha256', $rawKey),
-        ...$keyState,
-    ]);
-
-    return $agent;
-}
+// createAgentWithKey() is a shared helper — see tests/Pest.php.
 
 // === HAPPY PATH ===
 
