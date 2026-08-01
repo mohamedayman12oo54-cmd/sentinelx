@@ -2,9 +2,12 @@
 
 namespace App\Modules\Authentication;
 
+use App\Modules\Agent\Domain\Events\AgentArchived;
 use App\Modules\Authentication\ApiKey\Application\ValidateApiKeyAction;
+use App\Modules\Authentication\ApiKey\Listeners\RevokeKeysOnAgentArchived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -15,6 +18,11 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerAgentApiKeyGuard();
+
+        // The API Key submodule reacts to the Agent module's own event —
+        // Agent never imports this listener, never calls it, never knows
+        // it exists. See 04-api-key-coordination.md §4.
+        Event::listen(AgentArchived::class, RevokeKeysOnAgentArchived::class);
     }
 
     /**

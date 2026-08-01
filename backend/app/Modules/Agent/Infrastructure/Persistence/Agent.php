@@ -3,7 +3,6 @@
 namespace App\Modules\Agent\Infrastructure\Persistence;
 
 use App\Modules\Agent\Domain\AgentStatus;
-use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Database\Factories\AgentFactory;
@@ -46,11 +45,6 @@ class Agent extends Model implements Authenticatable
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
-    }
-
-    public function apiKeys(): HasMany
-    {
-        return $this->hasMany(ApiKey::class);
     }
 
     public function observations(): HasMany
