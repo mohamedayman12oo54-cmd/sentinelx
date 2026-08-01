@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Analysis\Infrastructure\Queue\PollPendingObservationsCommand;
 use App\Modules\Authentication\Identity\API\Middleware\EnsureUserHasRole;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -14,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        // Lives inside the Analysis module's own Infrastructure/Queue layer
+        // rather than app/Console/Commands — every module keeps its own
+        // pieces together, per 06-implementation-layers.md §2.
+        PollPendingObservationsCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
