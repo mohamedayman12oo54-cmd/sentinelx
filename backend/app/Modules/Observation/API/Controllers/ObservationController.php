@@ -3,6 +3,7 @@
 namespace App\Modules\Observation\API\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Analysis\Application\Contracts\PredictionLookupContract;
 use App\Modules\Observation\API\Requests\SubmitObservationRequest;
 use App\Modules\Observation\Application\GetObservationAction;
 use App\Modules\Observation\Application\ListObservationsAction;
@@ -49,9 +50,19 @@ class ObservationController extends Controller
     }
 
     // GET /api/v1/observations/{observationId} — JWT (Human) guard, any Role
-    public function show(Request $request, string $observationId, GetObservationAction $action): ObservationResource
-    {
-        return new ObservationResource($action->handle($this->organizationId($request), $observationId));
+    public function show(
+        Request $request,
+        string $observationId,
+        GetObservationAction $action,
+        PredictionLookupContract $predictions,
+    ): ObservationResource {
+        $observation = $action->handle($this->organizationId($request), $observationId);
+
+        // The one composition line Stage 4 adds here — see
+        // docs/backend/analysis/07-api-contract.md §2.
+        $prediction = $predictions->findByObservationId($observation->id);
+
+        return new ObservationResource($observation, $prediction);
     }
 
     private function organizationId(Request $request): string
