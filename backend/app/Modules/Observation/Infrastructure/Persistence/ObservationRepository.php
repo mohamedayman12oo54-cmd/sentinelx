@@ -6,6 +6,7 @@ use App\Modules\Observation\Application\Contracts\ObservationLookupContract;
 use App\Modules\Observation\Domain\AnalysisStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The only place inside the Observation module that touches the
@@ -83,5 +84,50 @@ class ObservationRepository implements ObservationLookupContract
     public function findByIdForOrganization(string $observationId, string $organizationId): ?Observation
     {
         return $this->findById($observationId, $organizationId);
+    }
+
+    /**
+     * Selects the oldest PENDING Observations and atomically transitions
+     * them to PROCESSING in the same transaction — the SELECT and the
+     * status flip must never be split into two separate steps, or two
+     * concurrent Poller runs could both claim the same row. See
+     * docs/backend/analysis/03-processing-pipeline.md §4 and
+     * 08-implementation-roadmap.md §3. Not part of ObservationLookupContract
+     * (that interface is read-only) — called directly by Analysis's
+     * ClaimPendingObservationsAction, the same direct-concrete-repository
+     * pattern already used for touchLastSeen().
+     *
+     * @return array<int, Observation>
+     */
+    public function claimNextPendingBatch(int $limit): array
+    {
+        return DB::transaction(function () use ($limit) {
+            $observations = Observation::query()
+                ->where('analysis_status', AnalysisStatus::Pending)
+                ->orderBy('received_at')
+                ->limit($limit)
+                ->lockForUpdate()
+                ->get();
+
+            if ($observations->isEmpty()) {
+                return [];
+            }
+
+            $claimedAt = now();
+
+            Observation::query()
+                ->whereIn('id', $observations->pluck('id'))
+                ->update([
+                    'analysis_status' => AnalysisStatus::Processing,
+                    'processing_started_at' => $claimedAt,
+                ]);
+
+            return $observations
+                ->each(function (Observation $observation) use ($claimedAt) {
+                    $observation->analysis_status = AnalysisStatus::Processing;
+                    $observation->processing_started_at = $claimedAt;
+                })
+                ->all();
+        });
     }
 }
