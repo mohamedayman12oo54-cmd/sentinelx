@@ -1,8 +1,13 @@
 <?php
 
 use App\Modules\Agent\Infrastructure\Persistence\Agent;
+use App\Modules\Alert\Domain\AlertStatus;
+use App\Modules\Alert\Infrastructure\Persistence\Alert;
+use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
 use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Observation\Infrastructure\Persistence\Observation;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\TestCase;
@@ -118,4 +123,29 @@ function validAsesPayload(array $overrides = []): array
             ...$overrides['metadata'] ?? [],
         ],
     ];
+}
+
+/**
+ * Builds a full Observation -> Prediction -> Alert chain scoped to the
+ * given Organization — shared across Alert feature tests to avoid
+ * redeclaring the same three-model chain in every file.
+ *
+ * @param  array<string, mixed>  $alertState
+ * @param  array<string, mixed>  $predictionState
+ */
+function alertFor(Organization $organization, array $alertState = [], array $predictionState = []): Alert
+{
+    $observation = Observation::factory()->for($organization)->create();
+    $prediction = Prediction::factory()->for($observation)->create($predictionState);
+
+    return Alert::factory()->for($prediction)->create($alertState);
+}
+
+/**
+ * Same as alertFor(), starting the Alert at a specific AlertStatus — the
+ * common shape needed by acknowledge/resolve tests.
+ */
+function alertWithStatusFor(Organization $organization, AlertStatus $status): Alert
+{
+    return alertFor($organization, ['status' => $status]);
 }
