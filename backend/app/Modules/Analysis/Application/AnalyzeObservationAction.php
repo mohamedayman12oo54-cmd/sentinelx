@@ -2,6 +2,7 @@
 
 namespace App\Modules\Analysis\Application;
 
+use App\Modules\Analysis\Domain\Events\PredictionStored;
 use App\Modules\Analysis\Domain\Exceptions\InvalidMlResponseException;
 use App\Modules\Analysis\Domain\Exceptions\MLCommunicationException;
 use App\Modules\Analysis\Domain\MLResponseValidator;
@@ -60,7 +61,7 @@ class AnalyzeObservationAction
             return;
         }
 
-        $this->predictions->create([
+        $prediction = $this->predictions->create([
             'observation_id' => $observation->id,
             'verdict' => $response['verdict'],
             'confidence' => $response['confidence'],
@@ -72,5 +73,11 @@ class AnalyzeObservationAction
         ]);
 
         $this->observations->markCompleted($observationId, now());
+
+        // The one new line this Sprint adds to Analysis — see
+        // docs/backend/alert/05-cross-module-boundaries.md §2. Analysis has
+        // zero reference to the Alert module and zero knowledge that
+        // anything listens.
+        PredictionStored::dispatch($prediction->id, $observation->id, $organizationId);
     }
 }
