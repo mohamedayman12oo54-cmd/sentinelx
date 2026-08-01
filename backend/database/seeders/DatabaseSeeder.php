@@ -44,15 +44,18 @@ class DatabaseSeeder extends Seeder
                 Observation::factory(3)->for($agent)->create();
             });
 
-        Observation::factory()
+        // Built from the Prediction/Alert side, not via Observation::has() —
+        // the Observation module has no relation onto `predictions` at all
+        // (Observation must never depend on Analysis; see
+        // 05-cross-module-boundaries.md §1 of the Observation docs).
+        $analyzedObservation = Observation::factory()
             ->for($organization)
             ->for(Agent::factory()->for($organization))
             ->completed()
-            ->has(
-                Prediction::factory()
-                    ->malicious()
-                    ->has(Alert::factory())
-            )
+            ->create();
+
+        Alert::factory()
+            ->for(Prediction::factory()->malicious()->for($analyzedObservation))
             ->create();
     }
 }

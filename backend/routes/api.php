@@ -5,6 +5,8 @@ use App\Modules\Agent\API\Middleware\EnsureOwnerRole;
 use App\Modules\Authentication\ApiKey\API\Controllers\ApiKeyController;
 use App\Modules\Authentication\Identity\API\Controllers\AuthController;
 use App\Modules\Authentication\Identity\API\Controllers\EmailVerificationController;
+use App\Modules\Observation\API\Controllers\AgentObservationController;
+use App\Modules\Observation\API\Controllers\ObservationController;
 use Illuminate\Support\Facades\Route;
 
 // ======= Public Auth Routes =======
@@ -34,6 +36,12 @@ Route::middleware('auth:api')->group(function () {
 // it, so no separate capability middleware exists for a single capability.
 Route::middleware('auth:agent')->group(function () {
     Route::get('/agent/me', [AgentController::class, 'me']);
+
+    // Owned by the Observation module. API Key guard only — a Human,
+    // regardless of Role, can never submit an Observation; there is no
+    // Role check to write here at all, the JWT guard simply never matches
+    // this route. See 06-authorization.md §2.
+    Route::post('/v1/observations', [ObservationController::class, 'store']);
 });
 
 // ======= Agent Management Routes (Stage 2) =======
@@ -46,6 +54,12 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     Route::get('/agents', [AgentController::class, 'index']);
     Route::get('/agents/{agentId}', [AgentController::class, 'show']);
 
+    // Owned by the Observation module (confirmed in
+    // docs/backend/agent/06-api-contract.md §7 as Observation-owned,
+    // despite sharing the /agents URL prefix — route grouping ≠ module
+    // ownership, same nuance as Stage 2's rotate-api-key).
+    Route::get('/agents/{agentId}/observations', [AgentObservationController::class, 'index']);
+
     Route::middleware(EnsureOwnerRole::class)->group(function () {
         Route::post('/agents', [AgentController::class, 'store']);
         Route::patch('/agents/{agentId}', [AgentController::class, 'update']);
@@ -56,4 +70,12 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
         // is allowed to depend on Agent (05-module-dependencies.md §4).
         Route::post('/agents/{agentId}/rotate-api-key', [ApiKeyController::class, 'rotate']);
     });
+
+    // ======= Observation Routes (Stage 3) =======
+
+    // Owner, Admin, and Member all have identical read access — no mutation
+    // is possible at all (Observations are immutable), so there is no Role
+    // tier to restrict. See 06-authorization.md §2.
+    Route::get('/observations', [ObservationController::class, 'index']);
+    Route::get('/observations/{observationId}', [ObservationController::class, 'show']);
 });

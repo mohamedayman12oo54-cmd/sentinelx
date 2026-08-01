@@ -3,7 +3,6 @@
 namespace App\Modules\Observation\Infrastructure\Persistence;
 
 use App\Modules\Agent\Infrastructure\Persistence\Agent;
-use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use App\Modules\Observation\Domain\AnalysisStatus;
 use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Database\Factories\ObservationFactory;
@@ -11,7 +10,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Observation extends Model
 {
@@ -53,10 +51,5 @@ class Observation extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
-    }
-
-    public function prediction(): HasOne
-    {
-        return $this->hasOne(Prediction::class);
     }
 }
