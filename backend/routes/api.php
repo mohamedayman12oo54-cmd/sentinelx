@@ -2,6 +2,7 @@
 
 use App\Modules\Agent\API\Controllers\AgentController;
 use App\Modules\Agent\API\Middleware\EnsureOwnerRole;
+use App\Modules\Alert\API\Controllers\AlertController;
 use App\Modules\Authentication\ApiKey\API\Controllers\ApiKeyController;
 use App\Modules\Authentication\Identity\API\Controllers\AuthController;
 use App\Modules\Authentication\Identity\API\Controllers\EmailVerificationController;
@@ -78,4 +79,14 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     // tier to restrict. See 06-authorization.md §2.
     Route::get('/observations', [ObservationController::class, 'index']);
     Route::get('/observations/{observationId}', [ObservationController::class, 'show']);
+
+    // ======= Alert Routes (Stage 5) =======
+
+    // Owner, Admin, and Member all have identical access to every action
+    // here — a deliberate, reasoned gap-fill, not an oversight. See
+    // 04-authorization.md and adr/ADR-003-all-roles-can-act-on-alerts.md.
+    Route::get('/alerts', [AlertController::class, 'index']);
+    Route::get('/alerts/{alertId}', [AlertController::class, 'show']);
+    Route::patch('/alerts/{alertId}/acknowledge', [AlertController::class, 'acknowledge']);
+    Route::patch('/alerts/{alertId}/resolve', [AlertController::class, 'resolve']);
 });
