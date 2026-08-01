@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Agent\AgentServiceProvider;
+use App\Modules\Alert\AlertServiceProvider;
 use App\Modules\Analysis\AnalysisServiceProvider;
 use App\Modules\Authentication\AuthServiceProvider;
 use App\Modules\Observation\ObservationServiceProvider;
@@ -12,4 +13,5 @@ return [
     AuthServiceProvider::class,
     ObservationServiceProvider::class,
     AnalysisServiceProvider::class,
+    AlertServiceProvider::class,
 ];

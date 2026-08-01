@@ -5,6 +5,7 @@ namespace App\Modules\Alert\Infrastructure\Persistence;
 use App\Modules\Alert\Domain\AlertStatus;
 use App\Modules\Alert\Domain\Severity;
 use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use Database\Factories\AlertFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +22,9 @@ class Alert extends Model
         'severity',
         'status',
         'acknowledged_at',
+        'acknowledged_by',
         'resolved_at',
+        'resolved_by',
     ];
 
     protected $attributes = [
@@ -43,5 +46,15 @@ class Alert extends Model
     public function prediction(): BelongsTo
     {
         return $this->belongsTo(Prediction::class);
+    }
+
+    public function acknowledgedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'acknowledged_by');
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
     }
 }

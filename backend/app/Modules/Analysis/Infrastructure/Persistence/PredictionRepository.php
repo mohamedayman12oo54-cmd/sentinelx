@@ -26,4 +26,9 @@ class PredictionRepository implements PredictionLookupContract
             ->where('observation_id', $observationId)
             ->first();
     }
+
+    public function findById(string $predictionId): ?Prediction
+    {
+        return Prediction::find($predictionId);
+    }
 }
