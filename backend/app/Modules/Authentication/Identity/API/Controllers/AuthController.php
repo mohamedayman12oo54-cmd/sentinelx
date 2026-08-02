@@ -3,13 +3,18 @@
 namespace App\Modules\Authentication\Identity\API\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Authentication\Identity\API\Requests\ChangePasswordRequest;
 use App\Modules\Authentication\Identity\API\Requests\LoginRequest;
 use App\Modules\Authentication\Identity\API\Requests\RegisterRequest;
+use App\Modules\Authentication\Identity\API\Requests\UpdateProfileRequest;
+use App\Modules\Authentication\Identity\Application\ChangePasswordAction;
 use App\Modules\Authentication\Identity\Application\GetCurrentUserAction;
 use App\Modules\Authentication\Identity\Application\LoginUserAction;
 use App\Modules\Authentication\Identity\Application\LogoutUserAction;
 use App\Modules\Authentication\Identity\Application\RefreshTokenAction;
 use App\Modules\Authentication\Identity\Application\RegisterUserAction;
+use App\Modules\Authentication\Identity\Application\UpdateProfileAction;
+use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
 use App\Modules\Authentication\Identity\Presentation\UserResource;
 use Illuminate\Http\JsonResponse;
 
@@ -54,6 +59,26 @@ class AuthController extends Controller
     public function me(GetCurrentUserAction $action): UserResource
     {
         return new UserResource($action->handle());
+    }
+
+    // PATCH /api/v1/me — any authenticated Human, own record only
+    public function updateProfile(UpdateProfileRequest $request, UpdateProfileAction $action): UserResource
+    {
+        /** @var User $user */
+        $user = $request->user('api');
+
+        return new UserResource($action->handle($user, $request->validated()));
+    }
+
+    // POST /api/v1/me/change-password — any authenticated Human, own record only
+    public function changePassword(ChangePasswordRequest $request, ChangePasswordAction $action): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user('api');
+
+        $action->handle($user, $request->validated());
+
+        return response()->json(['status' => 'success', 'message' => 'Password changed successfully']);
     }
 
     private function tokenResponse(string $token): JsonResponse
