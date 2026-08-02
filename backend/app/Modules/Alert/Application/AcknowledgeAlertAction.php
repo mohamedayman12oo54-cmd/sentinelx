@@ -3,6 +3,7 @@
 namespace App\Modules\Alert\Application;
 
 use App\Modules\Alert\Domain\AlertPolicy;
+use App\Modules\Alert\Domain\Events\AlertAcknowledged;
 use App\Modules\Alert\Domain\Exceptions\AlertAlreadyAcknowledgedException;
 use App\Modules\Alert\Domain\Exceptions\AlertNotFoundException;
 use App\Modules\Alert\Infrastructure\Persistence\Alert;
@@ -29,6 +30,10 @@ class AcknowledgeAlertAction
 
         $this->policy->ensureCanBeAcknowledged($alert->status);
 
-        return $this->alerts->acknowledge($alertId, $userId, now());
+        $alert = $this->alerts->acknowledge($alertId, $userId, now());
+
+        AlertAcknowledged::dispatch($alertId, $organizationId, $userId);
+
+        return $alert;
     }
 }
