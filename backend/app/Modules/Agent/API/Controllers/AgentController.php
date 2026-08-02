@@ -42,7 +42,11 @@ class AgentController extends Controller
     // POST /api/v1/agents
     public function store(StoreAgentRequest $request, CreateAgentAction $action): JsonResponse
     {
-        $agent = $action->handle($this->organizationId($request), $request->validated());
+        $agent = $action->handle(
+            $this->organizationId($request),
+            $request->validated(),
+            (string) $request->user('api')->id,
+        );
 
         return (new AgentResource($agent))->response()->setStatusCode(201);
     }
@@ -56,7 +60,12 @@ class AgentController extends Controller
     // PATCH /api/v1/agents/{agentId}
     public function update(UpdateAgentRequest $request, string $agentId, UpdateAgentAction $action): AgentResource
     {
-        $agent = $action->handle($this->organizationId($request), $agentId, $request->validated());
+        $agent = $action->handle(
+            $this->organizationId($request),
+            $agentId,
+            $request->validated(),
+            (string) $request->user('api')->id,
+        );
 
         return new AgentResource($agent);
     }
