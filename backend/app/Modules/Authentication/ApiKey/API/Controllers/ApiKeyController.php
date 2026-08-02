@@ -13,8 +13,9 @@ class ApiKeyController extends Controller
     public function rotate(Request $request, string $agentId, RotateApiKeyAction $action): JsonResponse
     {
         $organizationId = (string) $request->user('api')->organization_id;
+        $actorUserId = (string) $request->user('api')->id;
 
-        $result = $action->handle($organizationId, $agentId);
+        $result = $action->handle($organizationId, $agentId, $actorUserId);
 
         return response()->json([
             'data' => [

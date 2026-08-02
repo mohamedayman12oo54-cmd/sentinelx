@@ -3,6 +3,7 @@
 namespace App\Modules\Agent\Application;
 
 use App\Modules\Agent\Domain\AgentPolicy;
+use App\Modules\Agent\Domain\Events\AgentUpdated;
 use App\Modules\Agent\Domain\Exceptions\AgentNotFoundException;
 use App\Modules\Agent\Infrastructure\Persistence\Agent;
 use App\Modules\Agent\Infrastructure\Persistence\AgentRepository;
@@ -19,7 +20,7 @@ class UpdateAgentAction
      *
      * @throws AgentNotFoundException
      */
-    public function handle(string $organizationId, string $agentId, array $data): Agent
+    public function handle(string $organizationId, string $agentId, array $data, string $actorUserId): Agent
     {
         $agent = $this->agents->findById($agentId, $organizationId);
 
@@ -33,6 +34,10 @@ class UpdateAgentAction
             );
         }
 
-        return $this->agents->update($agent, $data);
+        $agent = $this->agents->update($agent, $data);
+
+        AgentUpdated::dispatch($agent->id, $organizationId, $actorUserId);
+
+        return $agent;
     }
 }

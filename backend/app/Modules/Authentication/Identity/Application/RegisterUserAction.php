@@ -2,17 +2,23 @@
 
 namespace App\Modules\Authentication\Identity\Application;
 
+use App\Modules\Authentication\Identity\Domain\Events\UserRegistered;
 use App\Modules\Authentication\Identity\Domain\UserRole;
 use App\Modules\Authentication\Identity\Domain\UserStatus;
 use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
-use App\Modules\Organization\Domain\OrganizationStatus;
-use App\Modules\Organization\Infrastructure\Persistence\Organization;
+use App\Modules\Organization\Application\CreateOrganizationAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class RegisterUserAction
 {
+    public function __construct(
+        // Direct use of Organization's own Action — Authentication is
+        // allowed to depend on Organization (05-module-dependencies.md's
+        // "Complete Picture" diagram). See 04-organization-settings.md §4.
+        private readonly CreateOrganizationAction $createOrganization,
+    ) {}
+
     /**
      * Register creates a new Organization and its first User, who
      * is always the Owner — never a bare User. See
@@ -22,12 +28,8 @@ class RegisterUserAction
      */
     public function handle(array $data): User
     {
-        return DB::transaction(function () use ($data) {
-            $organization = Organization::create([
-                'name' => $data['organization_name'],
-                'slug' => $this->uniqueSlug($data['organization_name']),
-                'status' => OrganizationStatus::Active,
-            ]);
+        $user = DB::transaction(function () use ($data) {
+            $organization = $this->createOrganization->handle(['name' => $data['organization_name']]);
 
             /** @var User $user */
             $user = $organization->users()->create([
@@ -42,19 +44,9 @@ class RegisterUserAction
 
             return $user;
         });
-    }
 
-    private function uniqueSlug(string $organizationName): string
-    {
-        $base = Str::slug($organizationName);
-        $slug = $base;
-        $suffix = 1;
+        UserRegistered::dispatch($user->id, $user->organization_id);
 
-        while (Organization::where('slug', $slug)->exists()) {
-            $slug = "{$base}-{$suffix}";
-            $suffix++;
-        }
-
-        return $slug;
+        return $user;
     }
 }

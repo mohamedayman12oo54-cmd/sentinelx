@@ -3,6 +3,7 @@
 namespace App\Modules\Alert\Application;
 
 use App\Modules\Alert\Domain\AlertPolicy;
+use App\Modules\Alert\Domain\Events\AlertResolved;
 use App\Modules\Alert\Domain\Exceptions\AlertAlreadyResolvedException;
 use App\Modules\Alert\Domain\Exceptions\AlertNotFoundException;
 use App\Modules\Alert\Infrastructure\Persistence\Alert;
@@ -29,6 +30,10 @@ class ResolveAlertAction
 
         $this->policy->ensureCanBeResolved($alert->status);
 
-        return $this->alerts->resolve($alertId, $userId, now());
+        $alert = $this->alerts->resolve($alertId, $userId, now());
+
+        AlertResolved::dispatch($alertId, $organizationId, $userId);
+
+        return $alert;
     }
 }

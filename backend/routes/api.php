@@ -3,12 +3,17 @@
 use App\Modules\Agent\API\Controllers\AgentController;
 use App\Modules\Agent\API\Middleware\EnsureOwnerRole;
 use App\Modules\Alert\API\Controllers\AlertController;
+use App\Modules\Audit\API\Controllers\AuditController;
+use App\Modules\Audit\API\Controllers\SecurityLogController;
+use App\Modules\Audit\API\Middleware\EnsureOwnerOrAdminRole;
 use App\Modules\Authentication\ApiKey\API\Controllers\ApiKeyController;
 use App\Modules\Authentication\Identity\API\Controllers\AuthController;
 use App\Modules\Authentication\Identity\API\Controllers\EmailVerificationController;
 use App\Modules\Dashboard\API\Controllers\DashboardController;
 use App\Modules\Observation\API\Controllers\AgentObservationController;
 use App\Modules\Observation\API\Controllers\ObservationController;
+use App\Modules\Organization\API\Controllers\OrganizationController;
+use App\Modules\Organization\API\Middleware\EnsureOwnerRole as OrganizationEnsureOwnerRole;
 use Illuminate\Support\Facades\Route;
 
 // ======= Public Auth Routes =======
@@ -53,6 +58,15 @@ Route::middleware('auth:agent')->group(function () {
 // not inside a permission check). Owner-only routes additionally require
 // EnsureOwnerRole; Owner+Member routes only require authentication.
 Route::prefix('v1')->middleware('auth:api')->group(function () {
+    // ======= Profile Routes (Stage 7) =======
+
+    // No Role gate at all — every authenticated Human always manages their
+    // own profile. See 07-authorization.md §2. Deliberately distinct from
+    // GET /api/auth/me (untouched, Stage 1) — this is a separate,
+    // documented v1 path, not a rename of the existing route.
+    Route::patch('/me', [AuthController::class, 'updateProfile']);
+    Route::post('/me/change-password', [AuthController::class, 'changePassword']);
+
     Route::get('/agents', [AgentController::class, 'index']);
     Route::get('/agents/{agentId}', [AgentController::class, 'show']);
 
@@ -98,4 +112,24 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     // Roles through its own underlying endpoint. See 05-authorization.md
     // and adr/ADR-003-all-roles-can-view-dashboard.md.
     Route::get('/dashboard', [DashboardController::class, 'show']);
+
+    // ======= Organization Routes (Stage 7) =======
+
+    // GET is Owner/Admin/Member (harmless to view); PATCH is Owner only —
+    // the first genuinely asymmetric Role decision in this series. See
+    // 07-authorization.md §3 and adr/ADR-004-audit-and-org-settings-restricted-access.md.
+    Route::get('/organization', [OrganizationController::class, 'show']);
+    Route::patch('/organization', [OrganizationController::class, 'update'])
+        ->middleware(OrganizationEnsureOwnerRole::class);
+
+    // ======= Audit Routes (Stage 7) =======
+
+    // Owner, Admin only — Member deliberately excluded, the first
+    // Member-gets-403-on-a-GET decision in this series. See
+    // 07-authorization.md §4 and adr/ADR-004-audit-and-org-settings-restricted-access.md.
+    Route::middleware(EnsureOwnerOrAdminRole::class)->group(function () {
+        Route::get('/audit-logs', [AuditController::class, 'index']);
+        Route::get('/audit-logs/{auditLogId}', [AuditController::class, 'show']);
+        Route::get('/security-logs', [SecurityLogController::class, 'index']);
+    });
 });
