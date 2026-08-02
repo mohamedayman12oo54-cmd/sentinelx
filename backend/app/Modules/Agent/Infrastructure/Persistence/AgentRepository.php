@@ -3,6 +3,7 @@
 namespace App\Modules\Agent\Infrastructure\Persistence;
 
 use App\Modules\Agent\Application\Contracts\AgentLookupContract;
+use App\Modules\Agent\Application\Contracts\AgentSummaryContract;
 use App\Modules\Agent\Domain\AgentStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
  * directly. Every method is scoped to an organization_id — see
  * 05-authorization.md §4 ("Scoped Queries", 404 not 403 for cross-tenant).
  */
-class AgentRepository implements AgentLookupContract
+class AgentRepository implements AgentLookupContract, AgentSummaryContract
 {
     public function create(string $organizationId, array $attributes): Agent
     {
@@ -71,5 +72,33 @@ class AgentRepository implements AgentLookupContract
     public function findActiveAgentForOrganization(string $agentId, string $organizationId): ?Agent
     {
         return $this->findById($agentId, $organizationId);
+    }
+
+    public function countTotalForOrganization(string $organizationId): int
+    {
+        return Agent::query()->where('organization_id', $organizationId)->count();
+    }
+
+    public function countActiveForOrganization(string $organizationId): int
+    {
+        return Agent::query()
+            ->where('organization_id', $organizationId)
+            ->where('status', AgentStatus::Active)
+            ->count();
+    }
+
+    /**
+     * @return array<int, Agent>
+     */
+    public function listRecentlyActiveForOrganization(string $organizationId, int $limit): array
+    {
+        return Agent::query()
+            ->where('organization_id', $organizationId)
+            ->where('status', AgentStatus::Active)
+            ->whereNotNull('last_seen_at')
+            ->orderByDesc('last_seen_at')
+            ->limit($limit)
+            ->get()
+            ->all();
     }
 }

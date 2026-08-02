@@ -6,6 +6,7 @@ use App\Modules\Alert\API\Controllers\AlertController;
 use App\Modules\Authentication\ApiKey\API\Controllers\ApiKeyController;
 use App\Modules\Authentication\Identity\API\Controllers\AuthController;
 use App\Modules\Authentication\Identity\API\Controllers\EmailVerificationController;
+use App\Modules\Dashboard\API\Controllers\DashboardController;
 use App\Modules\Observation\API\Controllers\AgentObservationController;
 use App\Modules\Observation\API\Controllers\ObservationController;
 use Illuminate\Support\Facades\Route;
@@ -89,4 +90,12 @@ Route::prefix('v1')->middleware('auth:api')->group(function () {
     Route::get('/alerts/{alertId}', [AlertController::class, 'show']);
     Route::patch('/alerts/{alertId}/acknowledge', [AlertController::class, 'acknowledge']);
     Route::patch('/alerts/{alertId}/resolve', [AlertController::class, 'resolve']);
+
+    // ======= Dashboard Routes (Stage 6) =======
+
+    // Owner, Admin, and Member all have identical, full access — every
+    // value in the response is already independently visible to all three
+    // Roles through its own underlying endpoint. See 05-authorization.md
+    // and adr/ADR-003-all-roles-can-view-dashboard.md.
+    Route::get('/dashboard', [DashboardController::class, 'show']);
 });

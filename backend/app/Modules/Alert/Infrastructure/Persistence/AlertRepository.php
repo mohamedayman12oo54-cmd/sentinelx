@@ -99,6 +99,18 @@ class AlertRepository implements AlertSummaryContract
     }
 
     /**
+     * @return array<int, Alert>
+     */
+    public function listRecentForOrganization(string $organizationId, int $limit): array
+    {
+        return $this->scopedToOrganization($organizationId)
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get()
+            ->all();
+    }
+
+    /**
      * @return Builder<Alert>
      */
     private function scopedToOrganization(string $organizationId): Builder
