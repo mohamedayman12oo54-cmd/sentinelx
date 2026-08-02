@@ -3,7 +3,9 @@
 namespace App\Modules\Observation\Infrastructure\Persistence;
 
 use App\Modules\Observation\Application\Contracts\ObservationLookupContract;
+use App\Modules\Observation\Application\Contracts\ObservationSummaryContract;
 use App\Modules\Observation\Domain\AnalysisStatus;
+use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  * cross-tenant). The three mark*() methods are exposed now for Analysis
  * (Stage 4) to consume later — see 05-cross-module-boundaries.md §2.
  */
-class ObservationRepository implements ObservationLookupContract
+class ObservationRepository implements ObservationLookupContract, ObservationSummaryContract
 {
     public function create(array $attributes): Observation
     {
@@ -129,5 +131,25 @@ class ObservationRepository implements ObservationLookupContract
                 })
                 ->all();
         });
+    }
+
+    public function countForOrganizationSince(string $organizationId, DateTimeInterface $since): int
+    {
+        return Observation::query()
+            ->where('organization_id', $organizationId)
+            ->where('received_at', '>=', $since)
+            ->count();
+    }
+
+    /**
+     * A thin wrapper over the existing listForOrganization(), without
+     * pagination metadata — see docs/backend/dashboard/04-aggregation-contracts.md §3.
+     *
+     * @return array<int, Observation>
+     */
+    public function listRecentForOrganization(string $organizationId, int $limit): array
+    {
+        return $this->listForOrganization($organizationId, agentId: null, status: null, perPage: $limit, page: 1)
+            ->items();
     }
 }
