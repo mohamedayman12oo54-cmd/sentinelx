@@ -11,10 +11,12 @@ GET  /health       -- liveness check.
 """
 import os
 import sys
+import time
 import traceback
+import uuid
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +36,15 @@ def health():
 
 
 @app.post("/v1/analyze")
-def analyze(payload: AnalyzeRequest):
+def analyze(payload: AnalyzeRequest, request: Request):
+    # Reused from the Backend's own X-Request-Id header when present (see
+    # MLClient::analyze()) so a single Backend->ML call reads as one
+    # correlated line in both services' logs. Generated locally when absent,
+    # so this service is never correlation-blind even when called by
+    # something other than this project's Backend. See Phase 1.5 / OBS-001.
+    request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
+    started_at = time.monotonic()
+
     obs = payload.observation
 
     if "context" not in obs:
@@ -74,11 +84,25 @@ def analyze(payload: AnalyzeRequest):
         # bypassing the structured "pipeline error" response entirely and surfacing
         # as a bare, undocumented Internal Server Error. It now lives inside the
         # try block so any failure here is caught and reported consistently.
-        return result["debug"] if debug else result["public"]
+        response = result["debug"] if debug else result["public"]
+
+        # This service previously logged nothing at all on success (OBS-002)
+        # — the only way to know a call succeeded was to inspect the
+        # Backend's database. duration_ms lets a slow call be spotted from
+        # the log alone, without cross-referencing timestamps by hand.
+        duration_ms = round((time.monotonic() - started_at) * 1000, 1)
+        print(
+            f"[analyze] request_id={request_id} verdict={result['public'].get('verdict')} "
+            f"risk_score={result['public'].get('risk_score')} duration_ms={duration_ms}",
+            file=sys.stdout,
+        )
+
+        return response
     except Exception as e:
         # Full traceback goes to the server console (visible in your uvicorn
         # terminal) -- the caller only ever sees the exception type, not
         # internals.
-        print("=== Pipeline error ===", file=sys.stderr)
+        duration_ms = round((time.monotonic() - started_at) * 1000, 1)
+        print(f"=== Pipeline error === request_id={request_id} duration_ms={duration_ms}", file=sys.stderr)
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"pipeline error: {type(e).__name__}") from e
