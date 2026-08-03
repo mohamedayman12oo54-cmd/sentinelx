@@ -52,7 +52,11 @@ class AlertRepository implements AlertSummaryContract
         int $perPage,
         int $page,
     ): LengthAwarePaginator {
+        // Eager-loaded: AlertSummaryResource now reads reasons off the
+        // related Prediction (RC-3) — without this, that would be an N+1
+        // query, once per Alert in the page.
         return $this->scopedToOrganization($organizationId)
+            ->with('prediction')
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($severity, fn ($query) => $query->where('severity', $severity))
             ->orderByDesc('created_at')
@@ -103,7 +107,11 @@ class AlertRepository implements AlertSummaryContract
      */
     public function listRecentForOrganization(string $organizationId, int $limit): array
     {
+        // Eager-loaded: DashboardResource now reads reasons off the related
+        // Prediction for each recent Alert (RC-3) — same N+1 reasoning as
+        // listForOrganization() above.
         return $this->scopedToOrganization($organizationId)
+            ->with('prediction')
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get()
