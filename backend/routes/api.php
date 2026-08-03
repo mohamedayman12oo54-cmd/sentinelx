@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Route;
 // universally, so Auth was the one inconsistent exception) =======
 
 Route::prefix('v1')->group(function () {
-    Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
-    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:auth-register');
+    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
 
     Route::get('/auth/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware('signed')
@@ -34,7 +34,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
 
         Route::post('/auth/email/resend', [EmailVerificationController::class, 'resend'])
-            ->middleware('throttle:5,1');
+            ->middleware('throttle:auth-email-resend');
     });
 });
 
@@ -50,7 +50,11 @@ Route::middleware('auth:agent')->group(function () {
     // regardless of Role, can never submit an Observation; there is no
     // Role check to write here at all, the JWT guard simply never matches
     // this route. See 06-authorization.md §2.
-    Route::post('/v1/observations', [ObservationController::class, 'store']);
+    //
+    // SECURITY-002: the system's single highest-volume, externally-reachable
+    // endpoint — previously the only unthrottled route in the entire API.
+    Route::post('/v1/observations', [ObservationController::class, 'store'])
+        ->middleware('throttle:observation-ingestion');
 });
 
 // ======= Agent Management Routes (Stage 2) =======
@@ -59,7 +63,7 @@ Route::middleware('auth:agent')->group(function () {
 // can never reach these, per 05-authorization.md §3 (enforced at routing,
 // not inside a permission check). Owner-only routes additionally require
 // EnsureOwnerRole; Owner+Member routes only require authentication.
-Route::prefix('v1')->middleware('auth:api')->group(function () {
+Route::prefix('v1')->middleware(['auth:api', 'throttle:api'])->group(function () {
     // ======= Profile Routes (Stage 7) =======
 
     // No Role gate at all — every authenticated Human always manages their
