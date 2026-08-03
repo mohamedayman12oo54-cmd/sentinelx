@@ -8,7 +8,7 @@ and is intentionally excluded rather than assumed.
 
 Fixes vs. the backend's example response:
 1. Events with no free-text `description` field (file_access, network_connection
-   using structured fields like path/access_mode/destination/protocol) are
+   using structured fields like path/access_mode/details) are
    converted to a synthesized sentence before embedding, instead of being
    unmatchable.
 2. A similarity threshold gates the match -- below threshold, the matcher
@@ -16,7 +16,16 @@ Fixes vs. the backend's example response:
    was missing when AML.T0053 (Training Data Poisoning) got attached to a
    /etc/shadow file read, and AML.T0048 (LLM Jailbreak) got attached to an
    outbound network connection -- both real IDs, both wrong matches.
+
+Both taxonomy CSVs are OPTIONAL (see config.py's module docstring): if
+either is missing, load_taxonomy() falls back to an empty, correctly-shaped
+table instead of crashing, and match() skips straight to "no data available"
+for anything that would otherwise need the embedding index. The
+dataset-independent sensitive-path rule (SENSITIVE_PATH_PATTERNS, below)
+is entirely unaffected either way -- it never touches these CSVs.
 """
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -26,23 +35,47 @@ import config
 
 SIMILARITY_THRESHOLD = 0.15  # tuned below against the validation set
 
+TAXONOMY_COLUMNS = ['attack_type', 'description', 'mitre_ref', 'target_component', 'severity_score', 'source_dataset']
+
+
+def _read_taxonomy_csv(path: str, rename: dict, keep: list, source_label: str):
+    """Reads one taxonomy CSV, or returns None (not an empty DataFrame --
+    concat needs to know the difference) if the file isn't present locally.
+    """
+    try:
+        df = pd.read_csv(path)
+    except FileNotFoundError:
+        print(f"[taxonomy_matcher] {path} not found -- skipping this dataset "
+              f"(optional, see config.py). Matches this source would have "
+              f"provided will report as unclassified instead.", file=sys.stderr)
+        return None
+
+    rows = df.rename(columns=rename)[keep].copy()
+    rows['source_dataset'] = source_label
+    return rows
+
 
 def load_taxonomy():
-    core = pd.read_csv(config.AI_AGENT_CORE_THREATS_CSV)
-    core_rows = core.rename(columns={'mitre_atlas_id': 'mitre_ref'})
-    core_rows = core_rows[['attack_name', 'description', 'mitre_ref', 'target_component', 'severity_score']].copy()
-    core_rows = core_rows.rename(columns={'attack_name': 'attack_type'})
-    core_rows['source_dataset'] = 'ai_agent_core_threats.csv'
-    core_rows['severity_score'] = core_rows['severity_score'].astype(float)
+    core_rows = _read_taxonomy_csv(
+        config.AI_AGENT_CORE_THREATS_CSV,
+        rename={'mitre_atlas_id': 'mitre_ref', 'attack_name': 'attack_type'},
+        keep=['attack_type', 'description', 'mitre_ref', 'target_component', 'severity_score'],
+        source_label='ai_agent_core_threats.csv',
+    )
+    if core_rows is not None:
+        core_rows['severity_score'] = core_rows['severity_score'].astype(float)
 
-    tax = pd.read_csv(config.AGENT_ATTACK_TAXONOMY_CSV)
-    tax_rows = tax.rename(columns={'mitre_atlas_ref': 'mitre_ref'})
-    tax_rows = tax_rows[['attack_type', 'description', 'mitre_ref', 'target_component']].copy()
-    # Explicit float NaN (not None) so this column's dtype matches core_rows'
-    # severity_score dtype going into concat -- avoids the pandas FutureWarning
-    # about all-NA columns being excluded from dtype inference.
-    tax_rows['severity_score'] = np.nan
-    tax_rows['source_dataset'] = 'agent_attack_taxonomy.csv'
+    tax_rows = _read_taxonomy_csv(
+        config.AGENT_ATTACK_TAXONOMY_CSV,
+        rename={'mitre_atlas_ref': 'mitre_ref'},
+        keep=['attack_type', 'description', 'mitre_ref', 'target_component'],
+        source_label='agent_attack_taxonomy.csv',
+    )
+    if tax_rows is not None:
+        # Explicit float NaN (not None) so this column's dtype matches core_rows'
+        # severity_score dtype going into concat -- avoids the pandas FutureWarning
+        # about all-NA columns being excluded from dtype inference.
+        tax_rows['severity_score'] = np.nan
 
     # NOTE: tried folding mitre_attack_mapping.csv in as a third source to cover
     # network-exfiltration events (T1048 "Exfiltration Over Alternative Protocol"
@@ -53,8 +86,11 @@ def load_taxonomy():
     # outbound-network-connection events, and TF-IDF similarity alone isn't
     # reliable enough here to widen the corpus without re-validating every
     # existing case. See KNOWN_GAPS below for how this is handled instead.
-    combined = pd.concat([core_rows, tax_rows], ignore_index=True)
-    return combined
+    present = [df for df in (core_rows, tax_rows) if df is not None]
+    if not present:
+        return pd.DataFrame(columns=TAXONOMY_COLUMNS)
+
+    return pd.concat(present, ignore_index=True)
 
 
 # Known coverage gaps in the taxonomy data, found via validation, not guessed.
@@ -73,8 +109,17 @@ SENSITIVE_PATH_PATTERNS = ('/etc/shadow', '/etc/passwd', '.ssh/', '.aws/credenti
 
 
 TAXONOMY = load_taxonomy()
-_vectorizer = TfidfVectorizer(stop_words='english')
-_matrix = _vectorizer.fit_transform(TAXONOMY['description'])
+
+# TfidfVectorizer can't fit on zero documents -- if both CSVs were missing,
+# skip the embedding index entirely rather than crashing at import time.
+# match() checks this and falls back to "no data available" for anything
+# that isn't the dataset-independent sensitive-path rule.
+if len(TAXONOMY) > 0:
+    _vectorizer = TfidfVectorizer(stop_words='english')
+    _matrix = _vectorizer.fit_transform(TAXONOMY['description'])
+else:
+    _vectorizer = None
+    _matrix = None
 
 
 def event_to_text(event_type: str, resource: str, operation: str, details: dict) -> str:
@@ -111,6 +156,15 @@ def match(event_type: str, resource: str, operation: str, details: dict) -> dict
                 'similarity_score': None,
                 'note': 'Matched by explicit rule on sensitive path pattern, not embedding similarity.',
             }
+
+    if _vectorizer is None:
+        return {
+            'matched': False,
+            'similarity_score': None,
+            'note': 'Taxonomy dataset not available locally (ai_agent_core_threats.csv / '
+                    'agent_attack_taxonomy.csv not found) -- treat as unclassified, not as '
+                    'confirmed-safe. See config.py.',
+        }
 
     text = event_to_text(event_type, resource, operation, details)
     vec = _vectorizer.transform([text])
