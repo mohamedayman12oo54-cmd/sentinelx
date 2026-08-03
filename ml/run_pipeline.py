@@ -30,6 +30,31 @@ def classify_injection(text: str) -> dict:
     return {'raw_label': label, 'label': 'injection' if label == 1 else 'benign', 'classifier_confidence': prob}
 
 
+def derive_verdict(risk_score: int) -> str:
+    """See docs/ADR-ml-001-verdict-thresholds.md -- an explicitly flagged
+    engineering default, not a frozen business rule."""
+    if risk_score >= config.SUSPICIOUS_MALICIOUS_BOUNDARY:
+        return 'MALICIOUS'
+    if risk_score >= config.SAFE_SUSPICIOUS_BOUNDARY:
+        return 'SUSPICIOUS'
+    return 'SAFE'
+
+
+def compute_confidence(risk_score: int) -> float:
+    """First-pass heuristic (docs/ADR-ml-001-verdict-thresholds.md): no
+    calibrated confidence signal exists yet, so this derives one from how far
+    risk_score sits from the nearest verdict boundary -- a score sitting
+    exactly on a boundary is the least certain classification a threshold
+    rule can make; a score deep inside a band is the most certain. Clamped so
+    a boundary-sitting score still reads as "somewhat confident" (0.5) rather
+    than 0 -- a verdict is still being asserted, just a more ambiguous one."""
+    distance = min(
+        abs(risk_score - config.SAFE_SUSPICIOUS_BOUNDARY),
+        abs(risk_score - config.SUSPICIOUS_MALICIOUS_BOUNDARY),
+    )
+    return round(min(1.0, 0.5 + distance / 50), 3)
+
+
 def run(observation: dict) -> dict:
     context = observation['context']
     events = observation['events']
@@ -37,8 +62,15 @@ def run(observation: dict) -> dict:
     debug_evidence = []
     reasons = []
 
-    for event in events:
-        seq = event['header']['sequence']
+    for idx, event in enumerate(events):
+        # `sequence` is not a required ASES field (docs/03-specifications/
+        # 03-ASES_JSON_SCHEMA.md never names it; the Backend's own
+        # ObservationValidator never checks for it) -- the Events array's own
+        # position already guarantees execution order, per ADR-001's
+        # canonical-observation reasoning. Fall back to that array position
+        # rather than assuming a header field the Backend never promised to
+        # provide. See integration audit DATAFLOW-001.
+        seq = event.get('header', {}).get('sequence', idx)
         etype = event['header']['event_type']
         payload = event['payload']
         details = payload.get('details', {})
@@ -96,16 +128,22 @@ def run(observation: dict) -> dict:
             matched_confidences.append(conf)
 
     risk_score = round(min(100, sum(c * 30 for c in matched_confidences))) if matched_confidences else 10
-    verdict = 'SUSPICIOUS' if risk_score >= 50 else 'LOW_RISK'
+    verdict = derive_verdict(risk_score)
+    confidence = compute_confidence(risk_score)
 
+    # Flat, at the response root -- matching backend/docs/05-analysis/
+    # 04-ml-client-contract.md:47-57 exactly, and what MLResponseValidator
+    # actually reads (MLResponseValidator.php:25,31,37,43,47). Previously
+    # nested one level down under a "prediction" key, which the Backend never
+    # read. See integration audit CONTRACT-002.
     debug_response = {
-        'prediction': {
-            'verdict': verdict,
-            'risk_score': risk_score,
-            'summary': f"{len([e for e in debug_evidence if e.get('matched') or e.get('label')=='injection'])} of {len(debug_evidence)} signals indicated risk.",
-            'reasons': reasons,
-            'evidence': debug_evidence,
-        }
+        'verdict': verdict,
+        'risk_score': risk_score,
+        'confidence': confidence,
+        'summary': f"{len([e for e in debug_evidence if e.get('matched') or e.get('label')=='injection'])} of {len(debug_evidence)} signals indicated risk.",
+        'model_version': config.MODEL_VERSION,
+        'reasons': reasons,
+        'evidence': debug_evidence,
     }
 
     public_evidence = []
@@ -151,11 +189,13 @@ def run(observation: dict) -> dict:
                 })
 
     public_response = {
-        'prediction': {
-            'verdict': verdict, 'risk_score': risk_score,
-            'summary': debug_response['prediction']['summary'],
-            'reasons': reasons, 'evidence': public_evidence,
-        }
+        'verdict': verdict,
+        'risk_score': risk_score,
+        'confidence': confidence,
+        'summary': debug_response['summary'],
+        'model_version': config.MODEL_VERSION,
+        'reasons': reasons,
+        'evidence': public_evidence,
     }
 
     return {'debug': debug_response, 'public': public_response}
@@ -182,4 +222,4 @@ if __name__ == '__main__':
     print("=== PUBLIC RESPONSE ===")
     print(json.dumps(result['public'], indent=2, default=str))
     print("\n=== DEBUG RESPONSE (excerpt: evidence[3], the CVE lookup) ===")
-    print(json.dumps(result['debug']['prediction']['evidence'][3], indent=2, default=str))
+    print(json.dumps(result['debug']['evidence'][3], indent=2, default=str))
