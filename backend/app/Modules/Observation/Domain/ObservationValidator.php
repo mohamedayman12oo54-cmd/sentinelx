@@ -20,6 +20,16 @@ use Throwable;
 class ObservationValidator
 {
     /**
+     * PERF-004: a structural upper bound on payload size — no maximum
+     * existed anywhere in the Backend or ML Service (see
+     * docs/integration-audit/06-performance-assumptions-audit.md). An
+     * adjustable engineering default, not a frozen business rule; large
+     * enough for legitimate batched SDK submissions, small enough to bound
+     * worst-case ML Service processing cost per Observation.
+     */
+    private const MAX_EVENTS = 1000;
+
+    /**
      * The ten canonical event types — see 02-domain.md §2 and
      * docs.zip/03-specifications/02-EVENT_DICTIONARY.md.
      *
@@ -95,6 +105,10 @@ class ObservationValidator
 
         if (count($events) < 1) {
             throw new ObservationValidationFailedException('events', 'at least one event is required');
+        }
+
+        if (count($events) > self::MAX_EVENTS) {
+            throw new ObservationValidationFailedException('events', 'events must not exceed '.self::MAX_EVENTS.' per Observation');
         }
 
         $previousTimestamp = null;
