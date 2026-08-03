@@ -28,8 +28,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-crewai = ["crewai>=1.0"]
-
+crewai = ["crewai==0.11.2"]
 [project.urls]
 Homepage = "https://sentinelx.example.com"
 Documentation = "https://docs.sentinelx.example.com"
