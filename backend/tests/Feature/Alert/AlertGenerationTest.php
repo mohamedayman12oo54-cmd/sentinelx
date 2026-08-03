@@ -9,6 +9,7 @@ use App\Modules\Analysis\Domain\Verdict;
 use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Log;
 
 function dispatchPredictionStored(Prediction $prediction): void
 {
@@ -43,6 +44,27 @@ test('a SUSPICIOUS prediction creates an Alert with the correct severity', funct
 
     expect($alert->severity)->toBe(Severity::Medium)
         ->and($alert->status)->toBe(AlertStatus::Open);
+});
+
+test('a successfully created Alert logs its generation (OBS-002/OBS-005)', function () {
+    Log::spy();
+
+    $prediction = Prediction::factory()->for(Observation::factory())->create([
+        'verdict' => Verdict::Malicious,
+        'risk_score' => 90,
+    ]);
+
+    dispatchPredictionStored($prediction);
+
+    $alert = Alert::where('prediction_id', $prediction->id)->firstOrFail();
+
+    Log::shouldHaveReceived('info')
+        ->once()
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Alert generated.'
+            && ($context['alert_id'] ?? null) === $alert->id
+            && ($context['prediction_id'] ?? null) === $prediction->id
+            && ($context['severity'] ?? null) === Severity::Critical->value
+        );
 });
 
 // === EDGE CASE ===
