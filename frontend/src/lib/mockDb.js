@@ -36,9 +36,16 @@ let agents = [
   },
 ];
 
+// `analysis_status` mirrors the real Backend's AnalysisStatus lifecycle
+// (PENDING/PROCESSING/COMPLETED/FAILED) — see PERF-001. Both mock
+// observations below already carry a verdict/prediction, so they are
+// COMPLETED; the mock does not simulate a live PENDING->COMPLETED
+// transition, so ObservationDetails.jsx's polling behavior is only fully
+// exercisable against a real Backend, not MOCK_MODE.
 let observations = [
   {
     id: "obs_001", agent_id: "agt_789", agent_name: "Finance Assistant",
+    analysis_status: "COMPLETED",
     verdict: "Benign", confidence: 0.97, risk_score: 8, created_at: "2026-07-25T09:00:00Z",
     context: { framework: "CrewAI", agent_version: "1.2.0", environment: "production", started_at: "2026-07-21T10:15:00Z", finished_at: "2026-07-21T10:15:08Z" },
     events: [
@@ -48,6 +55,7 @@ let observations = [
   },
   {
     id: "obs_002", agent_id: "agt_790", agent_name: "Support Agent",
+    analysis_status: "COMPLETED",
     verdict: "Suspicious", confidence: 0.91, risk_score: 78, created_at: "2026-07-25T09:50:00Z",
     context: { framework: "LangChain", agent_version: "0.9.4", environment: "production", started_at: "2026-07-25T09:49:52Z", finished_at: "2026-07-25T09:50:00Z" },
     events: [

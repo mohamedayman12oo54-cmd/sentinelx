@@ -8,14 +8,24 @@ import { PageLoader, PageError } from "../components/ui/PageState.jsx";
 import { getObservation } from "../lib/api/observations.js";
 import { Activity } from "lucide-react";
 
+// Analysis is explicitly asynchronous on the Backend — an Observation can
+// sit at PENDING/PROCESSING for a real amount of time after this page's
+// initial load. Poll while unresolved, stop once a terminal status is
+// reached. See PERF-001. Not a frozen value — adjustable per operational
+// needs, the same way the Backend's own queue retry/backoff values are
+// flagged as engineering defaults, not frozen business rules.
+const POLL_INTERVAL_MS = 5000;
+const UNRESOLVED_STATUSES = ["PENDING", "PROCESSING"];
+
 export default function ObservationDetails() {
   const { observationId } = useParams();
   const [obs, setObs] = useState(null);
   const [error, setError] = useState(null);
 
-  async function load() {
-    setError(null);
-    setObs(null);
+  // Refetch only — does not reset obs/error to null first, unlike the
+  // initial load(), so a background poll never flashes the page back to a
+  // loading state.
+  async function refetch() {
     try {
       const res = await getObservation(observationId);
       setObs(res);
@@ -24,10 +34,23 @@ export default function ObservationDetails() {
     }
   }
 
+  async function load() {
+    setError(null);
+    setObs(null);
+    await refetch();
+  }
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [observationId]);
+
+  useEffect(() => {
+    if (!obs || !UNRESOLVED_STATUSES.includes(obs.analysis_status)) return;
+    const intervalId = setInterval(refetch, POLL_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obs?.analysis_status, observationId]);
 
   if (error) return <PageError message={error} onRetry={load} />;
   if (!obs) return <PageLoader />;

@@ -19,6 +19,13 @@ import {
 
 const RISK_COLORS = { benign: "#34d399", suspicious: "#fbbf24", malicious: "#f87171" };
 
+// The Dashboard's risk_summary/recent_alerts can change from actions the
+// current user never took (another Agent's Observation completing analysis
+// elsewhere) — a lightweight periodic refresh, not a one-shot fetch, so
+// this view doesn't silently go stale for the length of the visit. See
+// PERF-001. Not a frozen value, adjustable per operational needs.
+const REFRESH_INTERVAL_MS = 60000;
+
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -65,6 +72,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     load();
+    // Background refresh only — does not reset dash to null, so a periodic
+    // tick never flashes the page back to a loading state.
+    const intervalId = setInterval(() => {
+      Promise.all([
+        getDashboard(),
+        listAgents({ status: "ACTIVE", sort: "-total_alerts", per_page: 4 }),
+      ])
+        .then(([dashRes, agentsRes]) => {
+          setDash(dashRes);
+          setTopRiskyAgents(agentsRes.data);
+        })
+        .catch((e) => setError(e.message));
+    }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totalAgents = useCountUp(dash?.stats.total_agents || 0);
