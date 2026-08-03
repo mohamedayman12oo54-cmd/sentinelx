@@ -69,7 +69,7 @@ export default function Agents() {
                       </Link>
                     </td>
                     <td className="px-5 py-4 text-white/50">{a.framework}</td>
-                    <td className="px-5 py-4"><Badge tone={a.status}>{a.status}</Badge></td>
+                    <td className="px-5 py-4"><Badge tone={a.status?.toLowerCase()}>{a.status?.toLowerCase()}</Badge></td>
                     <td className="px-5 py-4"><Badge tone={a.risk_level}>{a.risk_level}</Badge></td>
                     <td className="px-5 py-4 text-white/35">{new Date(a.last_activity_at).toLocaleString()}</td>
                   </tr>

@@ -35,7 +35,9 @@ export async function getAlert(alertId) {
 export async function acknowledgeAlert(alertId) {
   if (MOCK_MODE) {
     await delay();
-    return db.updateAlertStatus(alertId, "acknowledged");
+    // Uppercase to match the real Backend's AlertStatus enum — see
+    // CONTRACT-010/STATE-007.
+    return db.updateAlertStatus(alertId, "ACKNOWLEDGED");
   }
   return apiFetch(`/alerts/${alertId}/acknowledge`, { method: "PATCH" });
 }
@@ -43,7 +45,7 @@ export async function acknowledgeAlert(alertId) {
 export async function resolveAlert(alertId) {
   if (MOCK_MODE) {
     await delay();
-    return db.updateAlertStatus(alertId, "resolved");
+    return db.updateAlertStatus(alertId, "RESOLVED");
   }
   return apiFetch(`/alerts/${alertId}/resolve`, { method: "PATCH" });
 }

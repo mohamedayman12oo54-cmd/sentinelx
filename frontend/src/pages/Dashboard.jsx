@@ -54,7 +54,7 @@ export default function Dashboard() {
     try {
       const [dashRes, agentsRes] = await Promise.all([
         getDashboard(),
-        listAgents({ status: "active", sort: "-total_alerts", per_page: 4 }),
+        listAgents({ status: "ACTIVE", sort: "-total_alerts", per_page: 4 }),
       ]);
       setDash(dashRes);
       setTopRiskyAgents(agentsRes.data);
