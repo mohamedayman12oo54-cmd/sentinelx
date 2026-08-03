@@ -8,10 +8,16 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * The `prediction` field embedded inside GET /observations/{id} — see
- * 07-api-contract.md §1. Deliberately exposes only the five promoted
- * columns plus id/analyzed_at, never the full prediction_json blob
- * (Evidence, Reasons, Models) — see that file's note on Dashboard's future
- * role for the full detail.
+ * 07-api-contract.md §1. Exposes the five promoted columns plus
+ * id/analyzed_at, plus `reasons` (RC-3 / DATAFLOW-002) — the human-readable
+ * justification strings, small enough not to meaningfully violate this
+ * Resource's original "stay minimal" design, and needed everywhere this
+ * Resource is already embedded (also AlertDetailResource, prior to RC-3;
+ * see PredictionDetailResource for where that embed now points instead).
+ *
+ * Still deliberately excludes the fuller `evidence` field and the rest of
+ * prediction_json — see PredictionDetailResource, used only by
+ * AlertDetailResource's Evidence-tab need, for that.
  *
  * @mixin Prediction
  */
@@ -30,6 +36,7 @@ class PredictionSummaryResource extends JsonResource
             'summary' => $this->summary,
             'model_version' => $this->model_version,
             'analyzed_at' => $this->analyzed_at,
+            'reasons' => $this->prediction_json['reasons'] ?? [],
         ];
     }
 }

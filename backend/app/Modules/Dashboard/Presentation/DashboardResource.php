@@ -67,11 +67,18 @@ class DashboardResource extends JsonResource
                 $this->snapshot->recentObservations,
             ),
             'recent_alerts' => array_map(
+                // `reasons` added per RC-3 / DATAFLOW-002 / WALK-003 --
+                // frontend/src/pages/Dashboard.jsx's spotlightAlert reads
+                // `.reasons[0]` directly off this list. Requires `prediction`
+                // to already be eager-loaded (AlertRepository::
+                // listRecentForOrganization() does this) -- same N+1
+                // reasoning as AlertSummaryResource.
                 fn (Alert $alert) => [
                     'id' => $alert->id,
                     'severity' => $alert->severity,
                     'status' => $alert->status,
                     'created_at' => $alert->created_at,
+                    'reasons' => $alert->prediction?->prediction_json['reasons'] ?? [],
                 ],
                 $this->snapshot->recentAlerts,
             ),

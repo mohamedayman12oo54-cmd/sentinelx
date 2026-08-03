@@ -3,16 +3,20 @@
 namespace App\Modules\Alert\Presentation;
 
 use App\Modules\Alert\Application\AlertDetail;
-use App\Modules\Analysis\Presentation\PredictionSummaryResource;
+use App\Modules\Analysis\Presentation\PredictionDetailResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Single detail view — GET /alerts/{id}. Composes the Alert with its
- * related Prediction (reusing Analysis's own PredictionSummaryResource —
- * same 5-promoted-field shape already used inside
- * GET /observations/{id}) and a minimal Observation embed. See
+ * related Prediction and a minimal Observation embed. See
  * 06-api-contract.md §2.
+ *
+ * The Prediction embed uses PredictionDetailResource, not
+ * PredictionSummaryResource (RC-3 / DATAFLOW-002 / WALK-003) — this is the
+ * one confirmed place the Frontend needs the fuller `evidence` field
+ * (frontend/src/pages/AlertDetails.jsx's Evidence tab), in addition to the
+ * `reasons` field every Prediction embed now carries.
  *
  * @mixin AlertDetail
  */
@@ -41,7 +45,7 @@ class AlertDetailResource extends JsonResource
             'resolved_by' => $alert->resolved_by,
             'created_at' => $alert->created_at,
             'updated_at' => $alert->updated_at,
-            'prediction' => new PredictionSummaryResource($this->detail->prediction),
+            'prediction' => new PredictionDetailResource($this->detail->prediction),
             'observation' => [
                 'id' => $observation->id,
                 'agent_id' => $observation->agent_id,
