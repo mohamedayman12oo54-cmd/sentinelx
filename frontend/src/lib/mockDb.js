@@ -188,8 +188,9 @@ export const db = {
     agents = agents.map((a) => (a.id === id ? { ...a, ...payload } : a));
     return db.getAgent(id);
   },
+  // One-way — Agent archival has no reverse transition on the real Backend
+  // (AgentPolicy), so the mock does not offer one either. See CONTRACT-008.
   archiveAgent: (id) => db.updateAgent(id, { status: "archived", archived_at: new Date().toISOString() }),
-  reactivateAgent: (id) => db.updateAgent(id, { status: "active" }),
   rotateApiKey: (id) => {
     const api_key = `ases_live_${Math.random().toString(36).slice(2, 14)}`;
     db.updateAgent(id, { api_key });
