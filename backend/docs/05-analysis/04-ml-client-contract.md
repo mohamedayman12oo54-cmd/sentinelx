@@ -56,6 +56,8 @@ Per [`ML_CONTRACT.md`](../docs/docs/05-integration/02-ML_CONTRACT.md) §"Respons
 }
 ```
 
+**`verdict` is genuinely produced as all three documented values.** As of the integration audit's CONTRACT-003/DATAFLOW-003 resolution, the ML Service's own `risk_score`→`verdict` thresholds (see `ml/docs/ADR-ml-001-verdict-thresholds.md` — an explicitly flagged engineering default, not a frozen business rule) actually emit `SAFE`, `SUSPICIOUS`, and `MALICIOUS`, not just accept them structurally on the Backend side. Previously this document listed the vocabulary the Backend accepts without confirming the ML Service ever produced the full set.
+
 **Mapping to the `predictions` table** (per [`02-domain.md`](./02-domain.md) §1 and §4):
 
 ```text
@@ -79,10 +81,11 @@ Per [`ML_CONTRACT.md`](../docs/docs/05-integration/02-ML_CONTRACT.md), the ML En
 POST {ML_SERVICE_URL}/analyze     (exact path is an ML Engine implementation detail,
                                       configured, not hardcoded, in this module)
 Content-Type: application/json
+Authorization: Bearer <ML_SERVICE_TOKEN>
 Body: { observation, analysis_options }
 ```
 
-No authentication scheme for this internal Backend↔ML call is specified in any frozen document — per [`SECURITY_MODEL.md`](../docs/docs/05-integration/03-SECURITY_MODEL.md), only Human (JWT) and Agent (API Key) authentication are defined; Backend↔ML is described in [`DEPLOYMENT_ARCHITECTURE.md`](../docs/docs/10-operational-architecture/01-DEPLOYMENT_ARCHITECTURE.md) only as "Isolated ML execution" over an internal, presumably network-restricted channel. This module's `MLClient` should be built with a pluggable auth header (e.g., a shared internal token from configuration) so a real mechanism can be dropped in without a code change — but no specific scheme is mandated by any frozen document, so none is invented here.
+**Authentication is credential-enforced, not merely network-topology-trusted.** No authentication scheme for this internal Backend↔ML call was specified in any frozen document at the time this module was first built — per [`SECURITY_MODEL.md`](../docs/docs/05-integration/03-SECURITY_MODEL.md), only Human (JWT) and Agent (API Key) authentication were defined there. The integration audit's SECURITY-004 finding made this gap explicit: relying solely on network topology (`DEPLOYMENT_ARCHITECTURE.md`'s "Isolated ML execution") is not verifiable or testable from this repository. This is now resolved with a genuine, if intentionally simple, decision: a required shared bearer token (`ML_SERVICE_TOKEN`, configured identically on both sides). `MLClient` fails loudly (`MLConfigurationException`) at first use if unset, rather than silently omitting the header; the ML Service itself rejects any `/analyze` request whose `Authorization` header doesn't match. This is a shared-secret scheme appropriate for an internal service boundary — not a full OAuth/JWT scheme, which would be disproportionate here.
 
 ---
 
