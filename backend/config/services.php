@@ -36,8 +36,10 @@ return [
     ],
 
     // Backend -> ML Engine, per docs/backend/analysis/04-ml-client-contract.md
-    // §3. No authentication scheme is mandated by any frozen document, so
-    // `token` is nullable and simply omitted from the request when unset.
+    // §3. No authentication scheme is mandated by any frozen document, so this
+    // phase makes an explicit, flagged decision (SECURITY-004): a shared
+    // bearer token, required, not optional. MLClient fails loudly at first
+    // use if `token` is unset, rather than silently omitting the header.
     'ml_engine' => [
         'url' => env('ML_SERVICE_URL', 'http://localhost:8001'),
         'token' => env('ML_SERVICE_TOKEN'),

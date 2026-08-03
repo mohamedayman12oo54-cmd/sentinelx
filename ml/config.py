@@ -25,3 +25,18 @@ AGENT_ATTACK_TAXONOMY_CSV = os.path.join(CORE_DIR, "agent_attack_taxonomy.csv")
 # Model artifact paths
 VECTORIZER_PATH = os.path.join(PIPELINE_DIR, "injection_vectorizer.joblib")
 CLASSIFIER_PATH = os.path.join(PIPELINE_DIR, "injection_classifier.joblib")
+
+# Identifies which pipeline/model produced a given response -- stored verbatim
+# in predictions.model_version on the Backend. Bump this whenever the scoring
+# logic, thresholds, or underlying model artifacts change meaningfully, so a
+# stored Prediction can always be traced back to the logic that produced it.
+MODEL_VERSION = "sentinelx-ml-1.2.0"
+
+# risk_score -> verdict decision boundaries. An explicitly flagged engineering
+# default, not a frozen business rule -- see docs/ADR-ml-001-verdict-thresholds.md
+# for the full reasoning (mirrors backend/docs/06-alert/adrs/ADR-001's own
+# treatment of SeverityMapper's thresholds). Kept here, as two named constants,
+# so recalibrating either boundary later is a one-line change, not a hunt
+# through run_pipeline.py's scoring logic.
+SAFE_SUSPICIOUS_BOUNDARY = 50
+SUSPICIOUS_MALICIOUS_BOUNDARY = 85

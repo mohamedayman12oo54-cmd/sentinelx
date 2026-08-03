@@ -3,6 +3,7 @@
 namespace App\Modules\Analysis\Infrastructure\MLClient;
 
 use App\Modules\Analysis\Domain\Exceptions\MLCommunicationException;
+use App\Modules\Analysis\Domain\Exceptions\MLConfigurationException;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -20,9 +21,22 @@ class MLClient
      *                              unvalidated — MLResponseValidator checks it next
      *
      * @throws MLCommunicationException
+     * @throws MLConfigurationException
      */
     public function analyze(Observation $observation, string $requestId): array
     {
+        $token = config('services.ml_engine.token');
+
+        // Credential-enforced, not silently-omitted: a deployment that
+        // forgot to configure ML_SERVICE_TOKEN fails loudly here, at first
+        // use, rather than sending an unauthenticated request the ML
+        // Service (post SECURITY-004) will simply reject with a 401 that's
+        // harder to trace back to "nobody set an env var." See integration
+        // audit SECURITY-004.
+        if (! $token) {
+            throw new MLConfigurationException('ML_SERVICE_TOKEN is not configured.');
+        }
+
         try {
             $response = Http::baseUrl(config('services.ml_engine.url'))
                 ->timeout(10)
@@ -34,10 +48,7 @@ class MLClient
                 // asynchronously, via a queued Job with no HTTP request
                 // context of its own. See Phase 1.5 / OBS-001.
                 ->withHeader('X-Request-Id', $requestId)
-                ->when(
-                    config('services.ml_engine.token'),
-                    fn ($http, $token) => $http->withToken($token),
-                )
+                ->withToken($token)
                 ->post('/analyze', [
                     // `id` is spread AFTER raw_ases_json, deliberately — so
                     // it always wins even if a payload ever contained a
@@ -48,7 +59,15 @@ class MLClient
                         ...$observation->raw_ases_json,
                         'id' => $observation->id,
                     ],
-                    'analysis_options' => [],
+                    // Cast to stdClass, not a bare []: PHP can't distinguish
+                    // an empty array from an empty object, and json_encode()
+                    // resolves that ambiguity to `[]` (a JSON array) unless
+                    // told otherwise. The ML Service's Pydantic model types
+                    // this field as a dict and rejects a JSON array with a
+                    // 422 -- caught only by this phase's live-wire test
+                    // (LiveMlServiceIntegrationTest), never by Http::fake(),
+                    // which never round-trips through real JSON encoding.
+                    'analysis_options' => (object) [],
                 ]);
         } catch (ConnectionException $e) {
             throw new MLCommunicationException('Unable to reach the ML Engine.', previous: $e);

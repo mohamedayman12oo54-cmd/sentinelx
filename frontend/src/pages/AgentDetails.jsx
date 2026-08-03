@@ -157,7 +157,7 @@ export default function AgentDetails() {
                   className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 text-sm transition hover:bg-white/[0.05]"
                 >
                   <span className="text-white/60">{new Date(o.created_at).toLocaleString()}</span>
-                  <Badge tone={o.verdict === "Benign" ? "low" : o.verdict === "Suspicious" ? "medium" : "high"}>{o.verdict}</Badge>
+                  <Badge tone={o.verdict === "SAFE" ? "low" : o.verdict === "SUSPICIOUS" ? "medium" : "high"}>{o.verdict}</Badge>
                 </Link>
               ))}
             </div>

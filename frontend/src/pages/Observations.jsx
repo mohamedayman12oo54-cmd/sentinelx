@@ -61,7 +61,7 @@ export default function Observations() {
                         {o.agent_name}
                       </Link>
                     </td>
-                    <td className="px-5 py-4"><Badge tone={o.verdict === "Benign" ? "low" : o.verdict === "Suspicious" ? "medium" : "high"}>{o.verdict}</Badge></td>
+                    <td className="px-5 py-4"><Badge tone={o.verdict === "SAFE" ? "low" : o.verdict === "SUSPICIOUS" ? "medium" : "high"}>{o.verdict}</Badge></td>
                     <td className="px-5 py-4 text-white/50">{Math.round(o.confidence * 100)}%</td>
                     <td className="px-5 py-4 text-white/50">{o.risk_score}</td>
                     <td className="px-5 py-4 text-white/35">{new Date(o.created_at).toLocaleString()}</td>

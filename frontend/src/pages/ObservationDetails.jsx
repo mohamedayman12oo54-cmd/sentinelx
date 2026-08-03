@@ -82,7 +82,7 @@ export default function ObservationDetails() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-white/40">Verdict</span>
-                <Badge tone={obs.verdict === "Benign" ? "low" : obs.verdict === "Suspicious" ? "medium" : "high"}>{obs.verdict}</Badge>
+                <Badge tone={obs.verdict === "SAFE" ? "low" : obs.verdict === "SUSPICIOUS" ? "medium" : "high"}>{obs.verdict}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-white/40">Confidence</span>

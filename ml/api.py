@@ -1,13 +1,19 @@
 """
 HTTP API for the agent risk pipeline.
 
-POST /v1/analyze  -- body: {"observation": {...}, "options": {...}}
-                     matches the request contract designed earlier in this project.
-                     options.debug=true returns the debug tier (full provenance);
-                     default returns the public tier (evidence_type/description/
-                     reference/confidence only).
+POST /analyze  -- body: {"observation": {...}, "analysis_options": {...}}
+                  matches the frozen contract (backend/docs/05-analysis/
+                  04-ml-client-contract.md) and the Backend's own MLClient --
+                  see integration audit CONTRACT-001/CONTRACT-004.
+                  analysis_options.debug=true returns the debug tier (full
+                  provenance); default returns the public tier (evidence_type/
+                  description/reference/confidence only).
 
-GET  /health       -- liveness check.
+GET  /health   -- liveness check.
+
+Authorization: Bearer <ML_SERVICE_TOKEN> is required on /analyze -- see
+SECURITY-004. A shared secret appropriate for an internal service boundary,
+not a full OAuth/JWT scheme, which would be disproportionate here.
 """
 import os
 import sys
@@ -16,7 +22,7 @@ import traceback
 import uuid
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -24,10 +30,12 @@ from run_pipeline import run
 
 app = FastAPI(title="Agent Risk Pipeline API", version="1.2.0")
 
+ML_SERVICE_TOKEN = os.environ.get("ML_SERVICE_TOKEN")
+
 
 class AnalyzeRequest(BaseModel):
     observation: Dict[str, Any]
-    options: Dict[str, Any] = Field(default_factory=dict)
+    analysis_options: Dict[str, Any] = Field(default_factory=dict)
 
 
 @app.get("/health")
@@ -35,8 +43,16 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/v1/analyze")
-def analyze(payload: AnalyzeRequest, request: Request):
+@app.post("/analyze")
+def analyze(payload: AnalyzeRequest, request: Request, authorization: str | None = Header(default=None)):
+    # See SECURITY-004: matches the Backend's own MLClient, which now fails
+    # loudly at first use if ML_SERVICE_TOKEN is unset, rather than silently
+    # omitting the header. A missing/wrong token here is rejected before the
+    # pipeline ever runs.
+    if ML_SERVICE_TOKEN:
+        expected = f"Bearer {ML_SERVICE_TOKEN}"
+        if authorization != expected:
+            raise HTTPException(status_code=401, detail="Missing or invalid bearer token.")
     # Reused from the Backend's own X-Request-Id header when present (see
     # MLClient::analyze()) so a single Backend->ML call reads as one
     # correlated line in both services' logs. Generated locally when absent,
@@ -77,7 +93,7 @@ def analyze(payload: AnalyzeRequest, request: Request):
             # TypeError that isn't even caught by this except block.
             raise RuntimeError("pipeline run() returned no result")
 
-        debug = bool(payload.options.get("debug", False))
+        debug = bool(payload.analysis_options.get("debug", False))
         # FIXED (bug #2): this used to sit *outside* the try/except, so if `result`
         # was ever None (as it was while bug #1 was present) this line raised
         # `TypeError: 'NoneType' object is not subscriptable` completely uncaught --
