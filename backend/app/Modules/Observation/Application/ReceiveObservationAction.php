@@ -10,6 +10,7 @@ use App\Modules\Observation\Domain\ObservationValidator;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use App\Modules\Observation\Infrastructure\Persistence\ObservationRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 
 class ReceiveObservationAction
@@ -49,6 +50,11 @@ class ReceiveObservationAction
             // table — same transaction, so a rolled-back Observation insert
             // never leaves last_seen_at moved. See 05-cross-module-boundaries.md §1.
             $this->agents->touchLastSeen($agentId, $receivedAt);
+
+            Log::info('Observation received.', [
+                'observation_id' => $observation->id,
+                'agent_id' => $agentId,
+            ]);
 
             return $observation;
         });

@@ -8,6 +8,7 @@ use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use App\Modules\Observation\Infrastructure\Persistence\ObservationRepository;
 use Illuminate\Http\Client\Request as HttpClientRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 function fakeMlResponse(array $overrides = []): array
 {
@@ -66,6 +67,17 @@ test('the ML request sends raw_ases_json unmodified plus an empty analysis_optio
     });
 });
 
+test('the ML request carries a non-empty X-Request-Id header', function () {
+    Http::preventStrayRequests();
+    Http::fake(['*/analyze' => Http::response(fakeMlResponse())]);
+
+    $observation = Observation::factory()->create();
+
+    app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
+
+    Http::assertSent(fn (HttpClientRequest $request) => filled($request->header('X-Request-Id')[0] ?? null));
+});
+
 // === EDGE CASE ===
 
 test('an ML response missing verdict marks the observation FAILED with no Prediction row', function () {
@@ -82,6 +94,25 @@ test('an ML response missing verdict marks the observation FAILED with no Predic
 
     expect($observation->analysis_status)->toBe(AnalysisStatus::Failed)
         ->and(Prediction::where('observation_id', $observation->id)->exists())->toBeFalse();
+});
+
+test('an invalid ML response logs a warning with the observation id and the validation reason (ERROR-002)', function () {
+    Log::spy();
+    Http::preventStrayRequests();
+    $response = fakeMlResponse();
+    unset($response['verdict']);
+    Http::fake(['*/analyze' => Http::response($response)]);
+
+    $observation = Observation::factory()->create();
+
+    app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
+
+    Log::shouldHaveReceived('warning')
+        ->once()
+        ->withArgs(fn (string $message, array $context = []) => $message === 'Analysis failed: ML response failed contract validation.'
+            && ($context['observation_id'] ?? null) === $observation->id
+            && filled($context['reason'] ?? null)
+        );
 });
 
 test('an ML response with risk_score outside 0-100 marks the observation FAILED with no Prediction row', function () {

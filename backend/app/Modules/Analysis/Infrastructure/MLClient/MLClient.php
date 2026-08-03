@@ -21,12 +21,19 @@ class MLClient
      *
      * @throws MLCommunicationException
      */
-    public function analyze(Observation $observation): array
+    public function analyze(Observation $observation, string $requestId): array
     {
         try {
             $response = Http::baseUrl(config('services.ml_engine.url'))
                 ->timeout(10)
                 ->connectTimeout(3)
+                // Correlates this specific Backend->ML call with both sides'
+                // logs for it. Generated per analysis attempt by the caller
+                // (AnalyzeObservationAction), not threaded from the original
+                // observation-submission HTTP request — analysis runs later,
+                // asynchronously, via a queued Job with no HTTP request
+                // context of its own. See Phase 1.5 / OBS-001.
+                ->withHeader('X-Request-Id', $requestId)
                 ->when(
                     config('services.ml_engine.token'),
                     fn ($http, $token) => $http->withToken($token),
