@@ -20,7 +20,7 @@ use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
-    // POST /api/auth/register
+    // POST /api/v1/auth/register
     public function register(RegisterRequest $request, RegisterUserAction $action): JsonResponse
     {
         $user = $action->handle($request->validated());
@@ -31,7 +31,7 @@ class AuthController extends Controller
             ->setStatusCode(201);
     }
 
-    // POST /api/auth/login
+    // POST /api/v1/auth/login
     public function login(LoginRequest $request, LoginUserAction $action): JsonResponse
     {
         $token = $action->handle($request->validated());
@@ -39,7 +39,7 @@ class AuthController extends Controller
         return $this->tokenResponse($token);
     }
 
-    // POST /api/auth/logout
+    // POST /api/v1/auth/logout
     public function logout(LogoutUserAction $action): JsonResponse
     {
         $action->handle();
@@ -47,7 +47,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out.']);
     }
 
-    // POST /api/auth/refresh
+    // POST /api/v1/auth/refresh
     public function refresh(RefreshTokenAction $action): JsonResponse
     {
         $token = $action->handle();
@@ -55,7 +55,7 @@ class AuthController extends Controller
         return $this->tokenResponse($token);
     }
 
-    // GET /api/auth/me
+    // GET /api/v1/auth/me
     public function me(GetCurrentUserAction $action): UserResource
     {
         return new UserResource($action->handle());

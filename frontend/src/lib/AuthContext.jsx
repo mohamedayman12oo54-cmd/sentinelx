@@ -3,9 +3,11 @@ import * as authApi from "./api/auth.js";
 
 const AuthContext = createContext(null);
 
+// No stored refresh token — the real Backend issues a single JWT access
+// token only, re-issued via the Authorization header itself, never a
+// second, separately-stored token. See CONTRACT-007.
 const STORAGE_KEYS = {
   accessToken: "sentinelx_access_token",
-  refreshToken: "sentinelx_refresh_token",
   user: "sentinelx_user",
 };
 
@@ -39,9 +41,8 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function persistSession({ access_token, refresh_token, user: u }) {
+  function persistSession({ access_token, user: u }) {
     localStorage.setItem(STORAGE_KEYS.accessToken, access_token);
-    if (refresh_token) localStorage.setItem(STORAGE_KEYS.refreshToken, refresh_token);
     localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(u));
     setAccessToken(access_token);
     setUser(u);
@@ -49,7 +50,7 @@ export function AuthProvider({ children }) {
 
   function clearSession() {
     localStorage.removeItem(STORAGE_KEYS.accessToken);
-    localStorage.removeItem(STORAGE_KEYS.refreshToken);
+    localStorage.removeItem("sentinelx_refresh_token"); // one-time cleanup of the removed key for existing sessions
     localStorage.removeItem(STORAGE_KEYS.user);
     setAccessToken(null);
     setUser(null);

@@ -61,7 +61,7 @@ export default function Alerts() {
                     </td>
                     <td className="px-5 py-4"><Badge tone={a.severity}>{a.severity}</Badge></td>
                     <td className="px-5 py-4 text-white/50">{a.risk_score}</td>
-                    <td className="px-5 py-4"><Badge tone={a.status}>{a.status}</Badge></td>
+                    <td className="px-5 py-4"><Badge tone={a.status?.toLowerCase()}>{a.status?.toLowerCase()}</Badge></td>
                     <td className="px-5 py-4 text-white/35">{new Date(a.detected_at).toLocaleString()}</td>
                   </tr>
                 ))}

@@ -96,10 +96,11 @@ export default function Signup() {
     if (!validateStep(step)) return;
     setSubmitting(true);
     const result = await signup({
-      company_name: companyName,
-      admin_name: adminName,
-      admin_email: email,
+      organization_name: companyName,
+      full_name: adminName,
+      email,
       password,
+      password_confirmation: confirmPassword,
     });
     setSubmitting(false);
     if (result.ok) {

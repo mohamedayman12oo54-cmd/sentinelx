@@ -4,36 +4,48 @@
 // session, and real pagination/filtering/sorting — so the pages behave
 // exactly as they will against the real Backend.
 
+// Agent/Alert `status` values below are uppercase to match the real
+// Backend's actual AgentStatus/AlertStatus enums exactly — see
+// CONTRACT-010/STATE-007. Kept consistent here rather than normalized away
+// in apiClient.js so a future real mismatch would still surface, not be
+// silently masked.
 let agents = [
   {
     id: "agt_789", name: "Finance Assistant", framework: "CrewAI", version: "1.2.0",
-    status: "active", risk_level: "low", last_activity_at: "2026-07-25T09:45:00Z",
+    status: "ACTIVE", risk_level: "low", last_activity_at: "2026-07-25T09:45:00Z",
     total_observations: 3200, total_alerts: 2, description: "Reviews invoices and generates financial reports.",
     api_key: "ases_live_a1b2c3d4e5f6",
   },
   {
     id: "agt_790", name: "Support Agent", framework: "LangChain", version: "0.9.4",
-    status: "active", risk_level: "medium", last_activity_at: "2026-07-25T10:02:00Z",
+    status: "ACTIVE", risk_level: "medium", last_activity_at: "2026-07-25T10:02:00Z",
     total_observations: 1890, total_alerts: 1, description: "Handles customer support tickets and refunds.",
     api_key: "ases_live_f6e5d4c3b2a1",
   },
   {
     id: "agt_791", name: "Sales Agent", framework: "CrewAI", version: "1.1.0",
-    status: "active", risk_level: "low", last_activity_at: "2026-07-25T08:30:00Z",
+    status: "ACTIVE", risk_level: "low", last_activity_at: "2026-07-25T08:30:00Z",
     total_observations: 980, total_alerts: 0, description: "Qualifies leads and drafts outbound emails.",
     api_key: "ases_live_9z8y7x6w5v4u",
   },
   {
     id: "agt_792", name: "Research Agent", framework: "Custom", version: "0.4.1",
-    status: "archived", risk_level: "low", last_activity_at: "2026-06-01T00:00:00Z",
+    status: "ARCHIVED", risk_level: "low", last_activity_at: "2026-06-01T00:00:00Z",
     total_observations: 210, total_alerts: 0, description: "Summarizes market research documents.",
     api_key: "ases_live_1a2b3c4d5e6f",
   },
 ];
 
+// `analysis_status` mirrors the real Backend's AnalysisStatus lifecycle
+// (PENDING/PROCESSING/COMPLETED/FAILED) — see PERF-001. Both mock
+// observations below already carry a verdict/prediction, so they are
+// COMPLETED; the mock does not simulate a live PENDING->COMPLETED
+// transition, so ObservationDetails.jsx's polling behavior is only fully
+// exercisable against a real Backend, not MOCK_MODE.
 let observations = [
   {
     id: "obs_001", agent_id: "agt_789", agent_name: "Finance Assistant",
+    analysis_status: "COMPLETED",
     verdict: "Benign", confidence: 0.97, risk_score: 8, created_at: "2026-07-25T09:00:00Z",
     context: { framework: "CrewAI", agent_version: "1.2.0", environment: "production", started_at: "2026-07-21T10:15:00Z", finished_at: "2026-07-21T10:15:08Z" },
     events: [
@@ -43,6 +55,7 @@ let observations = [
   },
   {
     id: "obs_002", agent_id: "agt_790", agent_name: "Support Agent",
+    analysis_status: "COMPLETED",
     verdict: "Suspicious", confidence: 0.91, risk_score: 78, created_at: "2026-07-25T09:50:00Z",
     context: { framework: "LangChain", agent_version: "0.9.4", environment: "production", started_at: "2026-07-25T09:49:52Z", finished_at: "2026-07-25T09:50:00Z" },
     events: [
@@ -57,7 +70,7 @@ let alerts = [
   {
     id: "alt_555", agent_id: "agt_790", agent_name: "Support Agent",
     severity: "critical", prediction: "Malicious", confidence: 0.98, risk_score: 92,
-    status: "open", detected_at: "2026-07-25T09:50:00Z",
+    status: "OPEN", detected_at: "2026-07-25T09:50:00Z",
     reasons: [
       "Prompt injection attempt detected in LLM API call",
       "Sensitive file accessed outside expected scope",
@@ -73,7 +86,7 @@ let alerts = [
   {
     id: "alt_556", agent_id: "agt_789", agent_name: "Finance Assistant",
     severity: "medium", prediction: "Suspicious", confidence: 0.72, risk_score: 54,
-    status: "acknowledged", detected_at: "2026-07-24T14:10:00Z",
+    status: "ACKNOWLEDGED", detected_at: "2026-07-24T14:10:00Z",
     reasons: ["Unusual tool usage detected"],
     evidence: [{ sequence: 1, evidence_type: "Threat Match", reference: "AML.T0031", confidence: 0.61 }],
     related_cves: [], recommended_actions: ["Confirm with the agent owner this was expected"],
@@ -176,7 +189,7 @@ export const db = {
   createAgent: (payload) => {
     const agent = {
       id: `agt_${Math.random().toString(36).slice(2, 8)}`,
-      status: "active", risk_level: "low", last_activity_at: new Date().toISOString(),
+      status: "ACTIVE", risk_level: "low", last_activity_at: new Date().toISOString(),
       total_observations: 0, total_alerts: 0,
       api_key: `ases_live_${Math.random().toString(36).slice(2, 14)}`,
       ...payload,
@@ -188,8 +201,9 @@ export const db = {
     agents = agents.map((a) => (a.id === id ? { ...a, ...payload } : a));
     return db.getAgent(id);
   },
-  archiveAgent: (id) => db.updateAgent(id, { status: "archived", archived_at: new Date().toISOString() }),
-  reactivateAgent: (id) => db.updateAgent(id, { status: "active" }),
+  // One-way — Agent archival has no reverse transition on the real Backend
+  // (AgentPolicy), so the mock does not offer one either. See CONTRACT-008.
+  archiveAgent: (id) => db.updateAgent(id, { status: "ARCHIVED", archived_at: new Date().toISOString() }),
   rotateApiKey: (id) => {
     const api_key = `ases_live_${Math.random().toString(36).slice(2, 14)}`;
     db.updateAgent(id, { api_key });
@@ -217,9 +231,9 @@ export const db = {
   },
   getAlert: (id) => alerts.find((a) => a.id === id) || null,
   updateAlertStatus: (id, status) => {
-    const extra = status === "acknowledged"
+    const extra = status === "ACKNOWLEDGED"
       ? { acknowledged_by: "usr_123", acknowledged_at: new Date().toISOString() }
-      : status === "resolved"
+      : status === "RESOLVED"
       ? { resolved_by: "usr_123", resolved_at: new Date().toISOString() }
       : {};
     alerts = alerts.map((a) => (a.id === id ? { ...a, status, ...extra } : a));
@@ -228,8 +242,8 @@ export const db = {
 
   // Dashboard (aggregate)
   getDashboard: () => {
-    const openAlerts = alerts.filter((a) => a.status === "open").length;
-    const activeAgents = agents.filter((a) => a.status === "active").length;
+    const openAlerts = alerts.filter((a) => a.status === "OPEN").length;
+    const activeAgents = agents.filter((a) => a.status === "ACTIVE").length;
     return {
       stats: {
         total_agents: agents.length,

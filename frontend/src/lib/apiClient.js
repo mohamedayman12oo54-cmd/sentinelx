@@ -8,12 +8,17 @@
 //   - DELETE is not used for business entities in V1   (API_CONVENTIONS.md)
 //
 // MOCK_MODE lets the whole frontend run against realistic in-memory data
-// (src/lib/mockDb.js) until the real Backend is ready. Every resource module
-// under src/lib/api/*.js has two code paths — mock and real — gated by this
-// flag, so flipping it is the only step needed to point the app at the real
-// API once it exists.
-
-export const MOCK_MODE = true; // flip to false once VITE_API_BASE_URL points at a live Backend
+// (src/lib/mockDb.js) instead of a live Backend. Every resource module under
+// src/lib/api/*.js has two code paths — mock and real — gated by this flag.
+//
+// Driven by VITE_MOCK_MODE (see .env.example) rather than hardcoded, so the
+// real code path is actually exercised in normal development instead of
+// silently going untested indefinitely — see integration audit CONTRACT-005
+// through CONTRACT-010 / PERF-001, all of which trace back to this flag
+// never having been disabled in this codebase's history. Defaults to real
+// mode (false) when unset; set VITE_MOCK_MODE=true locally for demo/offline
+// use.
+export const MOCK_MODE = (import.meta.env?.VITE_MOCK_MODE ?? "false") === "true";
 
 export const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || "/api/v1";
 

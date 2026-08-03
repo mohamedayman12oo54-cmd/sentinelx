@@ -9,6 +9,10 @@
 //
 // No DELETE — archiving preserves agents for historical integrity (per
 // API_CONVENTIONS.md: "DELETE | Not used for business entities in Version 1").
+//
+// No reactivate — Agent archival is a deliberate, one-way transition on the
+// Backend (AgentPolicy has no reverse path, and no /agents/{id}/reactivate
+// route exists). See CONTRACT-008 / STATE-001.
 
 import { apiFetch, toQueryString, MOCK_MODE, ApiError } from "../apiClient.js";
 import { db } from "../mockDb.js";
@@ -58,14 +62,6 @@ export async function archiveAgent(agentId) {
     return db.archiveAgent(agentId);
   }
   return apiFetch(`/agents/${agentId}/archive`, { method: "PATCH" });
-}
-
-export async function reactivateAgent(agentId) {
-  if (MOCK_MODE) {
-    await delay();
-    return db.reactivateAgent(agentId);
-  }
-  return apiFetch(`/agents/${agentId}/reactivate`, { method: "PATCH" });
 }
 
 export async function rotateApiKey(agentId) {

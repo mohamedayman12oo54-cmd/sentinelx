@@ -11,13 +11,13 @@ use Illuminate\Http\Request;
 
 class EmailVerificationController extends Controller
 {
-    // GET /api/auth/verify-email/{id}/{hash}
+    // GET /api/v1/auth/verify-email/{id}/{hash}
     public function verify(Request $request, string $id, string $hash, VerifyEmailAction $action): JsonResponse
     {
         return response()->json(['message' => $action->handle($id, $hash)]);
     }
 
-    // POST /api/auth/email/resend
+    // POST /api/v1/auth/email/resend
     public function resend(Request $request, ResendVerificationEmailAction $action): JsonResponse
     {
         /** @var User $user */

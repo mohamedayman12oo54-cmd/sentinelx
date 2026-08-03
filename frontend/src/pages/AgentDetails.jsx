@@ -5,9 +5,9 @@ import GlassCard from "../components/ui/GlassCard.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import Reveal from "../components/ui/Reveal.jsx";
 import { PageLoader, PageError } from "../components/ui/PageState.jsx";
-import { getAgent, archiveAgent, reactivateAgent, rotateApiKey, listAgentObservations } from "../lib/api/agents.js";
+import { getAgent, archiveAgent, rotateApiKey, listAgentObservations } from "../lib/api/agents.js";
 import { listAlerts } from "../lib/api/alerts.js";
-import { Bot, ArrowRight, KeyRound, Archive, RotateCcw, Copy, CheckCircle2 } from "lucide-react";
+import { Bot, ArrowRight, KeyRound, Archive, Copy, CheckCircle2 } from "lucide-react";
 
 export default function AgentDetails() {
   const { agentId } = useParams();
@@ -42,10 +42,12 @@ export default function AgentDetails() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentId]);
 
-  async function handleArchiveToggle() {
+  // One-way — Agent archival has no reverse transition on the real Backend
+  // (AgentPolicy), so there is nothing to toggle back. See CONTRACT-008.
+  async function handleArchive() {
     setBusy(true);
     try {
-      const updated = agent.status === "archived" ? await reactivateAgent(agentId) : await archiveAgent(agentId);
+      const updated = await archiveAgent(agentId);
       setAgent((prev) => ({ ...prev, ...updated }));
     } finally {
       setBusy(false);
@@ -88,14 +90,19 @@ export default function AgentDetails() {
             >
               <KeyRound className="h-3.5 w-3.5" /> Rotate API Key
             </button>
-            <button
-              onClick={handleArchiveToggle}
-              disabled={busy}
-              className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3.5 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.05] disabled:opacity-50"
-            >
-              {agent.status === "archived" ? <RotateCcw className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-              {agent.status === "archived" ? "Reactivate" : "Archive"}
-            </button>
+            {/* Archival is one-way (CONTRACT-008/STATE-001) — an already-Archived
+                Agent gets no action button to leave that state, matching the
+                real Backend's actual, deliberate state machine. Compared against
+                the Backend's real (uppercase) enum value — see CONTRACT-010. */}
+            {agent.status !== "ARCHIVED" && (
+              <button
+                onClick={handleArchive}
+                disabled={busy}
+                className="flex items-center gap-1.5 rounded-lg border border-white/[0.1] px-3.5 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.05] disabled:opacity-50"
+              >
+                <Archive className="h-3.5 w-3.5" /> Archive
+              </button>
+            )}
           </>
         }
       />
@@ -123,7 +130,10 @@ export default function AgentDetails() {
         </GlassCard>
         <GlassCard className="p-4">
           <div className="text-[10px] text-white/35">Status</div>
-          <div className="mt-1"><Badge tone={agent.status}>{agent.status}</Badge></div>
+          {/* Badge's style tokens are lowercase; the Backend's real status
+              values are uppercase (CONTRACT-010/STATE-007) — normalized here
+              at the display call site, not hidden in the API client. */}
+          <div className="mt-1"><Badge tone={agent.status?.toLowerCase()}>{agent.status?.toLowerCase()}</Badge></div>
         </GlassCard>
         <GlassCard className="p-4">
           <div className="text-[10px] text-white/35">Risk Level</div>
