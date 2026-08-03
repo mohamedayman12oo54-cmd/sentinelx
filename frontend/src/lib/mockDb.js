@@ -46,7 +46,7 @@ let observations = [
   {
     id: "obs_001", agent_id: "agt_789", agent_name: "Finance Assistant",
     analysis_status: "COMPLETED",
-    verdict: "Benign", confidence: 0.97, risk_score: 8, created_at: "2026-07-25T09:00:00Z",
+    verdict: "SAFE", confidence: 0.97, risk_score: 8, created_at: "2026-07-25T09:00:00Z",
     context: { framework: "CrewAI", agent_version: "1.2.0", environment: "production", started_at: "2026-07-21T10:15:00Z", finished_at: "2026-07-21T10:15:08Z" },
     events: [
       { sequence: 1, timestamp: "2026-07-21T10:15:01Z", event_type: "api_call", resource: "OpenAI API", operation: "POST", result: "success" },
@@ -56,7 +56,7 @@ let observations = [
   {
     id: "obs_002", agent_id: "agt_790", agent_name: "Support Agent",
     analysis_status: "COMPLETED",
-    verdict: "Suspicious", confidence: 0.91, risk_score: 78, created_at: "2026-07-25T09:50:00Z",
+    verdict: "SUSPICIOUS", confidence: 0.91, risk_score: 78, created_at: "2026-07-25T09:50:00Z",
     context: { framework: "LangChain", agent_version: "0.9.4", environment: "production", started_at: "2026-07-25T09:49:52Z", finished_at: "2026-07-25T09:50:00Z" },
     events: [
       { sequence: 1, timestamp: "2026-07-25T09:49:53Z", event_type: "api_call", resource: "OpenAI API", operation: "POST", result: "success" },
