@@ -44,7 +44,8 @@ test('PATCH /organization attempting to set slug is rejected with 422, not silen
     $this->withHeader('Authorization', 'Bearer '.tokenFor($owner))
         ->patchJson('/api/v1/organization', ['name' => 'New Name', 'slug' => 'new-slug'])
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('slug');
+        ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+        ->assertJsonStructure(['error' => ['details' => ['slug']]]);
 
     expect($organization->fresh()->slug)->toBe($organization->slug);
 });
@@ -56,7 +57,8 @@ test('PATCH /organization attempting to set status is rejected with 422, not sil
     $this->withHeader('Authorization', 'Bearer '.tokenFor($owner))
         ->patchJson('/api/v1/organization', ['name' => 'New Name', 'status' => 'SUSPENDED'])
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('status');
+        ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+        ->assertJsonStructure(['error' => ['details' => ['status']]]);
 
     expect($organization->fresh()->status->value)->toBe('ACTIVE');
 });
