@@ -85,6 +85,14 @@ This is exactly why `markProcessing` must happen **synchronously, inside the Pol
 
 ---
 
+## 4a. Capacity (PERF-002)
+
+The Poller runs `->everyMinute()` (`routes/console.php`) and claims at most `config('analysis.poll_batch_limit')` Observations per run (`ANALYSIS_POLL_BATCH_LIMIT`, defaulting to 10 — see `.env.example`). This is the platform's real, current throughput ceiling: **at most `ANALYSIS_POLL_BATCH_LIMIT` Observations are claimed for analysis per minute, globally, across every Organization** — not a per-Organization allowance. An adjustable engineering default, not a frozen business rule; raise it directly via the environment variable as real throughput needs become clearer.
+
+**Deliberately not built in this pass:** per-Organization fairness (so one high-volume Organization can't starve every other Organization's queue of the shared batch). The current FIFO-by-`received_at` claim order (Index 5, `01-database/schema/indexes.md`) has no such guarantee. This is real architectural work — a fairness scheme needs its own design pass (round-robin per Organization? a per-Organization minimum reservation?) — and is flagged here as a follow-up decision, not silently deferred without a record.
+
+---
+
 ## 5. Success and Failure Paths
 
 ```text

@@ -49,6 +49,17 @@ test('the poller respects the --limit option', function () {
     Bus::assertDispatchedTimes(AnalyzeObservationJob::class, 2);
 });
 
+test('the poller falls back to the configurable global capacity ceiling when --limit is omitted (PERF-002)', function () {
+    Bus::fake();
+
+    config(['analysis.poll_batch_limit' => 3]);
+    Observation::factory(5)->create();
+
+    $this->artisan('analysis:poll-pending-observations')->assertSuccessful();
+
+    Bus::assertDispatchedTimes(AnalyzeObservationJob::class, 3);
+});
+
 test('the poller dispatches nothing when there is no PENDING work', function () {
     Bus::fake();
 
