@@ -32,7 +32,7 @@ test('the full MVP scenario runs end to end, with every step producing a correct
     ])]);
 
     // 1. Organization Registration
-    $this->postJson('/api/auth/register', [
+    $this->postJson('/api/v1/auth/register', [
         'organization_name' => 'MVP Security Co',
         'full_name' => 'MVP Owner',
         'email' => 'mvp-owner@acme.example',
@@ -51,7 +51,7 @@ test('the full MVP scenario runs end to end, with every step producing a correct
     $owner->forceFill(['email_verified_at' => now()])->save();
 
     // 2. Login
-    $this->postJson('/api/auth/login', [
+    $this->postJson('/api/v1/auth/login', [
         'email' => 'mvp-owner@acme.example',
         'password' => 'password123',
     ])->assertOk();

@@ -42,7 +42,7 @@ test('every audited action produces exactly one correctly-shaped audit_logs row'
     'user.registered' => function () {
         Notification::fake();
 
-        test()->postJson('/api/auth/register', [
+        test()->postJson('/api/v1/auth/register', [
             'organization_name' => 'Coverage Org',
             'full_name' => 'Coverage Owner',
             'email' => 'coverage-owner@acme.example',
@@ -59,7 +59,7 @@ test('every audited action produces exactly one correctly-shaped audit_logs row'
             'password_hash' => Hash::make('password123'),
         ]);
 
-        test()->postJson('/api/auth/login', [
+        test()->postJson('/api/v1/auth/login', [
             'email' => 'login-coverage@acme.example',
             'password' => 'password123',
         ])->assertOk();
@@ -71,7 +71,7 @@ test('every audited action produces exactly one correctly-shaped audit_logs row'
         $user = User::factory()->create();
 
         test()->withHeader('Authorization', 'Bearer '.tokenFor($user))
-            ->postJson('/api/auth/logout')
+            ->postJson('/api/v1/auth/logout')
             ->assertOk();
 
         return 'user.logged_out';

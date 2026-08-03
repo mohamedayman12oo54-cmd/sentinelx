@@ -11,7 +11,7 @@ test('a verified, active user can log in and receives a bearer token', function 
         'password_hash' => Hash::make('password123'),
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'ahmed@acme.example',
         'password' => 'password123',
     ]);
@@ -28,7 +28,7 @@ test('login updates last_login_at', function () {
         'last_login_at' => null,
     ]);
 
-    $this->postJson('/api/auth/login', [
+    $this->postJson('/api/v1/auth/login', [
         'email' => 'ahmed@acme.example',
         'password' => 'password123',
     ])->assertOk();
@@ -44,7 +44,7 @@ test('login fails with a generic message for a wrong password', function () {
         'password_hash' => Hash::make('password123'),
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'ahmed@acme.example',
         'password' => 'wrong-password',
     ]);
@@ -54,7 +54,7 @@ test('login fails with a generic message for a wrong password', function () {
 });
 
 test('login fails with a generic message for an unknown email', function () {
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'nobody@acme.example',
         'password' => 'password123',
     ]);
@@ -69,7 +69,7 @@ test('login fails with a generic message for a disabled user', function () {
         'password_hash' => Hash::make('password123'),
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'ahmed@acme.example',
         'password' => 'password123',
     ]);
@@ -84,7 +84,7 @@ test('login fails with a generic message for an unverified user', function () {
         'password_hash' => Hash::make('password123'),
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'ahmed@acme.example',
         'password' => 'password123',
     ]);
@@ -95,13 +95,13 @@ test('login fails with a generic message for an unverified user', function () {
 
 test('login is rate limited', function () {
     for ($i = 0; $i < 5; $i++) {
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/v1/auth/login', [
             'email' => 'nobody@acme.example',
             'password' => 'password123',
         ]);
     }
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = $this->postJson('/api/v1/auth/login', [
         'email' => 'nobody@acme.example',
         'password' => 'password123',
     ]);
