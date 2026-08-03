@@ -2,11 +2,13 @@
 
 use App\Modules\Analysis\Application\AnalyzeObservationAction;
 use App\Modules\Analysis\Domain\Exceptions\MLCommunicationException;
+use App\Modules\Analysis\Domain\Exceptions\MLConfigurationException;
 use App\Modules\Analysis\Infrastructure\Persistence\Prediction;
 use App\Modules\Observation\Domain\AnalysisStatus;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use App\Modules\Observation\Infrastructure\Persistence\ObservationRepository;
 use Illuminate\Http\Client\Request as HttpClientRequest;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -60,7 +62,12 @@ test('the ML request sends raw_ases_json unmodified plus an empty analysis_optio
     Http::assertSent(function (HttpClientRequest $request) use ($observation) {
         $body = $request->data();
 
-        return $body['analysis_options'] === []
+        // Cast to array for the comparison: MLClient sends (object) [] (not a
+        // bare []) so it serializes as a JSON object over real HTTP, not a
+        // JSON array -- Http::fake() preserves that original PHP value
+        // unconverted, so it arrives here as a stdClass, not a re-decoded
+        // array. See MLClient.php's own comment on this exact cast.
+        return (array) $body['analysis_options'] === []
             && $body['observation']['id'] === $observation->id
             && $body['observation']['context'] === $observation->raw_ases_json['context']
             && $body['observation']['events'] === $observation->raw_ases_json['events'];
@@ -76,6 +83,46 @@ test('the ML request carries a non-empty X-Request-Id header', function () {
     app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
 
     Http::assertSent(fn (HttpClientRequest $request) => filled($request->header('X-Request-Id')[0] ?? null));
+});
+
+test('the ML request carries a Bearer token matching the configured ML_SERVICE_TOKEN (SECURITY-004)', function () {
+    Http::preventStrayRequests();
+    Http::fake(['*/analyze' => Http::response(fakeMlResponse())]);
+    Config::set('services.ml_engine.token', 'the-configured-secret');
+
+    $observation = Observation::factory()->create();
+
+    app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
+
+    Http::assertSent(fn (HttpClientRequest $request) => $request->header('Authorization')[0] === 'Bearer the-configured-secret');
+});
+
+test('MLClient fails loudly with MLConfigurationException when ML_SERVICE_TOKEN is unset, instead of sending an unauthenticated request (SECURITY-004)', function () {
+    Http::preventStrayRequests();
+    Config::set('services.ml_engine.token', null);
+
+    $observation = Observation::factory()->create();
+
+    expect(fn () => app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id))
+        ->toThrow(MLConfigurationException::class);
+
+    Http::assertNothingSent();
+});
+
+test('a MALICIOUS verdict (the previously-unreachable vocabulary member) round-trips into a stored Prediction (CONTRACT-003)', function () {
+    Http::preventStrayRequests();
+    $response = fakeMlResponse(['verdict' => 'MALICIOUS', 'risk_score' => 96]);
+    Http::fake(['*/analyze' => Http::response($response)]);
+
+    $observation = Observation::factory()->create();
+
+    app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
+
+    $observation->refresh();
+    $prediction = Prediction::where('observation_id', $observation->id)->firstOrFail();
+
+    expect($observation->analysis_status)->toBe(AnalysisStatus::Completed)
+        ->and($prediction->verdict->value)->toBe('MALICIOUS');
 });
 
 // === EDGE CASE ===
@@ -165,5 +212,5 @@ test('analysis_options is always sent as an empty object, never invented fields'
 
     app(AnalyzeObservationAction::class)->handle($observation->id, $observation->organization_id);
 
-    Http::assertSent(fn (HttpClientRequest $request) => $request->data()['analysis_options'] === []);
+    Http::assertSent(fn (HttpClientRequest $request) => (array) $request->data()['analysis_options'] === []);
 });
