@@ -32,7 +32,7 @@ class AgentController extends Controller
         $agents = $action->handle(
             organizationId: $this->organizationId($request),
             status: $status,
-            perPage: (int) $request->integer('per_page', 20),
+            perPage: $this->perPage($request),
             page: (int) $request->integer('page', 1),
         );
 
