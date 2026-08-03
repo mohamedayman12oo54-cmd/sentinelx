@@ -4,7 +4,6 @@ namespace App\Modules\Agent\API\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateAgentRequest extends FormRequest
 {
@@ -52,19 +51,6 @@ class UpdateAgentRequest extends FormRequest
         return $this->only(['name', 'framework', 'framework_version', 'description']);
     }
 
-    /**
-     * Matches the platform-wide nested error envelope
-     * (docs/09-api-reference/07-ERROR_CODES.md), not Laravel's default
-     * validation error shape.
-     */
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'error' => [
-                'code' => 'VALIDATION_ERROR',
-                'message' => 'The given data was invalid.',
-                'details' => $validator->errors()->toArray(),
-            ],
-        ], 422));
-    }
+    // No failedValidation() override — see StoreAgentRequest's own comment
+    // on why (ERROR-001/ERROR-004).
 }
