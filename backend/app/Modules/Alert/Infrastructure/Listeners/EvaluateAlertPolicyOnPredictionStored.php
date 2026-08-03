@@ -59,10 +59,20 @@ class EvaluateAlertPolicyOnPredictionStored
         $severity = $this->severityMapper->fromRiskScore($prediction->risk_score);
 
         try {
-            $this->alerts->create([
+            $alert = $this->alerts->create([
                 'prediction_id' => $prediction->id,
                 'severity' => $severity,
                 'status' => AlertStatus::Open,
+            ]);
+
+            // OBS-002/OBS-005: the last uncovered item from the audit's own
+            // "auth -> observation -> analysis -> alert" checklist. Distinct
+            // from the defensive Log::warning above -- this is the routine
+            // success case, not an unreachable-in-practice guard.
+            Log::info('Alert generated.', [
+                'alert_id' => $alert->id,
+                'prediction_id' => $prediction->id,
+                'severity' => $severity->value,
             ]);
         } catch (UniqueConstraintViolationException) {
             // Lost the race against another dispatch of the same event —
