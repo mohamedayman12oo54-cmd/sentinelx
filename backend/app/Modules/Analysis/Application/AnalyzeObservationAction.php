@@ -9,6 +9,8 @@ use App\Modules\Analysis\Domain\MLResponseValidator;
 use App\Modules\Analysis\Infrastructure\MLClient\MLClient;
 use App\Modules\Analysis\Infrastructure\Persistence\PredictionRepository;
 use App\Modules\Observation\Infrastructure\Persistence\ObservationRepository;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -51,11 +53,33 @@ class AnalyzeObservationAction
             throw new RuntimeException("Observation {$observationId} was claimed for analysis but no longer exists.");
         }
 
-        $response = $this->mlClient->analyze($observation);
+        // Generated per analysis attempt (job execution), not threaded from
+        // the original observation-submission HTTP request — analysis is
+        // asynchronous and queue-dispatched, with no HTTP request context of
+        // its own by the time it runs. This is the identifier that ties
+        // these log lines to the ML Service's own log line for the same
+        // call. See Phase 1.5 / OBS-001.
+        $requestId = (string) Str::uuid();
+        Log::withContext(['request_id' => $requestId, 'observation_id' => $observationId]);
+
+        Log::info('Analysis started.', ['observation_id' => $observationId]);
+        $startedAt = now();
+
+        $response = $this->mlClient->analyze($observation, $requestId);
 
         try {
             $this->validator->validate($response);
-        } catch (InvalidMlResponseException) {
+        } catch (InvalidMlResponseException $e) {
+            // ERROR-002: previously silent — a malformed ML response was
+            // resolved to markFailed() with no trace of why. This is the
+            // single most likely failure mode while Phase 2 is reworking the
+            // ML contract, so it needs to be debuggable now, not deferred to
+            // Phase 4's full retrofit.
+            Log::warning('Analysis failed: ML response failed contract validation.', [
+                'observation_id' => $observationId,
+                'reason' => $e->getMessage(),
+            ]);
+
             $this->observations->markFailed($observationId, now());
 
             return;
@@ -73,6 +97,13 @@ class AnalyzeObservationAction
         ]);
 
         $this->observations->markCompleted($observationId, now());
+
+        Log::info('Analysis completed.', [
+            'observation_id' => $observationId,
+            'verdict' => $response['verdict'],
+            'risk_score' => $response['risk_score'],
+            'duration_ms' => $startedAt->diffInMilliseconds(now()),
+        ]);
 
         // The one new line this Sprint adds to Analysis — see
         // docs/backend/alert/05-cross-module-boundaries.md §2. Analysis has
