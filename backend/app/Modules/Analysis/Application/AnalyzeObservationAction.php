@@ -76,6 +76,7 @@ class AnalyzeObservationAction
             // ML contract, so it needs to be debuggable now, not deferred to
             // Phase 4's full retrofit.
             Log::warning('Analysis failed: ML response failed contract validation.', [
+                'metric' => 'ml_call_failed',
                 'observation_id' => $observationId,
                 'reason' => $e->getMessage(),
             ]);
@@ -98,11 +99,15 @@ class AnalyzeObservationAction
 
         $this->observations->markCompleted($observationId, now());
 
+        $durationMs = $startedAt->diffInMilliseconds(now());
+
         Log::info('Analysis completed.', [
+            'metric' => 'ml_call_duration_ms',
+            'value' => $durationMs,
             'observation_id' => $observationId,
             'verdict' => $response['verdict'],
             'risk_score' => $response['risk_score'],
-            'duration_ms' => $startedAt->diffInMilliseconds(now()),
+            'duration_ms' => $durationMs,
         ]);
 
         // The one new line this Sprint adds to Analysis — see

@@ -8,6 +8,7 @@ use App\Modules\Observation\Domain\AnalysisStatus;
 use App\Modules\Observation\Infrastructure\Persistence\Observation;
 use App\Modules\Observation\Infrastructure\Persistence\ObservationRepository;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 // === HAPPY PATH ===
 
@@ -53,4 +54,20 @@ test('once retries are exhausted, the failed() hook marks the observation FAILED
 
     expect($observation->analysis_status)->toBe(AnalysisStatus::Failed)
         ->and(Prediction::where('observation_id', $observation->id)->exists())->toBeFalse();
+});
+
+test('once retries are exhausted, the failed() hook logs the failure with the ml_call_failed metric tag (ERROR-005/OBS-003)', function () {
+    Log::spy();
+
+    $observation = Observation::factory()->create();
+    app(ObservationRepository::class)->markProcessing($observation->id);
+
+    $job = new AnalyzeObservationJob($observation->id, $observation->organization_id);
+    $job->failed(new MLCommunicationException('ML Engine unreachable.'));
+
+    Log::shouldHaveReceived('warning')
+        ->once()
+        ->withArgs(fn (string $message, array $context = []) => ($context['metric'] ?? null) === 'ml_call_failed'
+            && ($context['observation_id'] ?? null) === $observation->id
+        );
 });

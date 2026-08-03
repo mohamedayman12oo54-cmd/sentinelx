@@ -59,7 +59,9 @@ test('registration fails when the email is already taken', function () {
         'password_confirmation' => 'password123',
     ]);
 
-    $response->assertUnprocessable()->assertJsonValidationErrors('email');
+    $response->assertUnprocessable()
+        ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+        ->assertJsonStructure(['error' => ['details' => ['email']]]);
 });
 
 test('registration fails when the password confirmation does not match', function () {
@@ -71,7 +73,9 @@ test('registration fails when the password confirmation does not match', functio
         'password_confirmation' => 'not-the-same',
     ]);
 
-    $response->assertUnprocessable()->assertJsonValidationErrors('password');
+    $response->assertUnprocessable()
+        ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+        ->assertJsonStructure(['error' => ['details' => ['password']]]);
 });
 
 test('two organizations get distinct slugs even with the same name', function () {

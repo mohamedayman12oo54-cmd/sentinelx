@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -50,6 +51,21 @@ class AnalyzeObservationJob implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        // ERROR-005: brings this path's observability in line with the
+        // sibling InvalidMlResponseException path (AnalyzeObservationAction's
+        // own Log::warning) -- both failure kinds now produce an explicit,
+        // similarly-structured log entry for the same terminal FAILED
+        // outcome, rather than this one relying solely on Laravel's default
+        // job-failure reporting (still separately emitted; this is
+        // additional, not a replacement — see ADR-003, retry visibility
+        // still matters). `metric` is OBS-003's greppable tag for computing
+        // an ML failure rate from log lines alone.
+        Log::warning('Analysis failed: ML communication error (retries exhausted).', [
+            'metric' => 'ml_call_failed',
+            'observation_id' => $this->observationId,
+            'reason' => $exception?->getMessage(),
+        ]);
+
         app(ObservationRepository::class)->markFailed($this->observationId, now());
     }
 }

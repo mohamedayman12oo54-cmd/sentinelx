@@ -62,7 +62,8 @@ test('change-password with mismatched confirmation returns 422', function () {
             'new_password_confirmation' => 'does-not-match',
         ])
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('new_password');
+        ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+        ->assertJsonStructure(['error' => ['details' => ['new_password']]]);
 });
 
 test('PATCH /me attempting to set email or role has no effect', function () {

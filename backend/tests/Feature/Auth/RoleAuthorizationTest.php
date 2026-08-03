@@ -39,8 +39,9 @@ test('an admin is denied on a route restricted to owner only', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/__test/owner-only')
         ->assertForbidden()
-        ->assertJson(['error' => 'forbidden', 'message' => 'You do not have permission to perform this action.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'FORBIDDEN')
+        ->assertJsonPath('error.message', 'You do not have permission to perform this action.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 // === FAILURE CASES ===
@@ -52,8 +53,9 @@ test('a user without the required role is denied with the generic 403 shape', fu
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/__test/owner-only')
         ->assertForbidden()
-        ->assertJson(['error' => 'forbidden', 'message' => 'You do not have permission to perform this action.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'FORBIDDEN')
+        ->assertJsonPath('error.message', 'You do not have permission to perform this action.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('a member is denied on a route restricted to owner or admin', function () {
@@ -63,8 +65,9 @@ test('a member is denied on a route restricted to owner or admin', function () {
     $this->withHeader('Authorization', "Bearer {$token}")
         ->getJson('/api/__test/owner-or-admin')
         ->assertForbidden()
-        ->assertJson(['error' => 'forbidden', 'message' => 'You do not have permission to perform this action.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'FORBIDDEN')
+        ->assertJsonPath('error.message', 'You do not have permission to perform this action.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('an unauthenticated request never reaches the role check', function () {

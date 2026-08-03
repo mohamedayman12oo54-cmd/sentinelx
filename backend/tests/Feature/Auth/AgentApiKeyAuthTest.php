@@ -31,16 +31,18 @@ test('successful authentication touches last_used_at and last_seen_at', function
 test('a request with no API key is rejected', function () {
     $this->getJson('/api/agent/me')
         ->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('an unknown API key is rejected', function () {
     $this->withHeader('X-API-Key', 'not-a-real-key')
         ->getJson('/api/agent/me')
         ->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('a revoked API key is rejected', function () {
@@ -49,8 +51,9 @@ test('a revoked API key is rejected', function () {
     $this->withHeader('X-API-Key', 'a-revoked-secret')
         ->getJson('/api/agent/me')
         ->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('an expired API key is rejected', function () {
@@ -59,8 +62,9 @@ test('an expired API key is rejected', function () {
     $this->withHeader('X-API-Key', 'an-expired-secret')
         ->getJson('/api/agent/me')
         ->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('a valid key belonging to an archived agent is rejected', function () {
@@ -69,8 +73,9 @@ test('a valid key belonging to an archived agent is rejected', function () {
     $this->withHeader('X-API-Key', 'a-key-for-archived-agent')
         ->getJson('/api/agent/me')
         ->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('an active key for a different agent does not authenticate as another agent', function () {

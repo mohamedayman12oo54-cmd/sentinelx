@@ -50,8 +50,9 @@ test('login fails with a generic message for a wrong password', function () {
     ]);
 
     $response->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('login fails with a generic message for an unknown email', function () {
@@ -61,8 +62,9 @@ test('login fails with a generic message for an unknown email', function () {
     ]);
 
     $response->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('login fails with a generic message for a disabled user', function () {
@@ -77,8 +79,9 @@ test('login fails with a generic message for a disabled user', function () {
     ]);
 
     $response->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('login fails with a generic message for an unverified user', function () {
@@ -93,8 +96,9 @@ test('login fails with a generic message for an unverified user', function () {
     ]);
 
     $response->assertUnauthorized()
-        ->assertJson(['error' => 'authentication_failed', 'message' => 'Authentication failed.'])
-        ->assertJsonStructure(['request_id']);
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
 });
 
 test('login is rate limited', function () {

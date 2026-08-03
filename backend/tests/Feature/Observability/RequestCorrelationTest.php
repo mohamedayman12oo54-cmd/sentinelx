@@ -35,13 +35,17 @@ test('an inbound X-Request-Id header is reused rather than replaced', function (
 
 // === ERROR PATH: header + body carry the same id, for both response shapes ===
 
-test('a flat-shape error response carries X-Request-Id in both the header and a top-level body field', function () {
-    $response = $this->postJson('/api/v1/auth/login', [
-        'email' => 'nobody@acme.example',
-        'password' => 'wrong-password',
-    ]);
+test('a response with no error object at all (an undefined route) still carries X-Request-Id, top-level', function () {
+    // Every Domain-exception-driven error on api/* is nested as of Phase 4's
+    // CONTRACT-009 migration -- an undefined route is one of the few
+    // responses left with no `error` key at all (Laravel's own default
+    // JSON 404 shape, deliberately left alone by the Throwable catch-all's
+    // HttpExceptionInterface exclusion — see bootstrap/app.php), which is
+    // exactly the shape this fallback path (top-level request_id, not
+    // nested) exists for.
+    $response = $this->getJson('/api/v1/this-route-does-not-exist');
 
-    $response->assertUnauthorized()->assertJsonStructure(['request_id']);
+    $response->assertNotFound()->assertJsonStructure(['request_id']);
 
     expect($response->headers->get('X-Request-Id'))
         ->not->toBeEmpty()
