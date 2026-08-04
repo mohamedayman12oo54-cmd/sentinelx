@@ -6,6 +6,7 @@ use App\Modules\Authentication\Identity\Domain\AuthenticationFailedException;
 use App\Modules\Authentication\Identity\Domain\Events\UserLoggedIn;
 use App\Modules\Authentication\Identity\Domain\UserStatus;
 use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Organization\Domain\OrganizationStatus;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -40,6 +41,16 @@ class LoginUserAction
             Log::warning('Login failed: email is not verified.', ['user_id' => $user->id]);
 
             throw new AuthenticationFailedException('Email is not verified.');
+        }
+
+        // STATE-002: OrganizationStatus::Suspended was defined but never
+        // checked anywhere — enforcement only, the actual suspend/reinstate
+        // trigger is deliberately out of scope here (see the Finding
+        // Closure notes). Mirrors the UserStatus::Disabled check above.
+        if ($user->organization->status !== OrganizationStatus::Active) {
+            Log::warning('Login failed: organization is not active.', ['user_id' => $user->id, 'organization_id' => $user->organization_id]);
+
+            throw new AuthenticationFailedException('Organization is not active.');
         }
 
         $token = JWTAuth::fromUser($user);

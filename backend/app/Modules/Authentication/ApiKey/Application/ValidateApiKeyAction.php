@@ -6,6 +6,7 @@ use App\Modules\Agent\Domain\AgentStatus;
 use App\Modules\Agent\Infrastructure\Persistence\Agent;
 use App\Modules\Authentication\ApiKey\Domain\ApiKeyStatus;
 use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
+use App\Modules\Organization\Domain\OrganizationStatus;
 
 class ValidateApiKeyAction
 {
@@ -35,6 +36,13 @@ class ValidateApiKeyAction
         $agent = $apiKey->agent;
 
         if (! $agent || $agent->status !== AgentStatus::Active) {
+            return null;
+        }
+
+        // STATE-002: mirrors LoginUserAction's own Organization-suspended
+        // check — a suspended Organization loses API access too, not just
+        // Human login.
+        if ($agent->organization?->status !== OrganizationStatus::Active) {
             return null;
         }
 

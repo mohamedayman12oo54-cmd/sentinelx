@@ -87,4 +87,11 @@ This is flagged explicitly, rather than assumed either way, because this documen
 4. status transitions (ACTIVE ↔ SUSPENDED) are NOT exposed via any endpoint in this
    Sprint — they remain a platform-operator-only concern, with no documented
    self-service mechanism.
+5. STATE-002 (integration audit): a SUSPENDED Organization is now enforced, not
+   merely defined — `LoginUserAction` rejects Human login and
+   `ValidateApiKeyAction` rejects Agent API Key authentication for any
+   Organization whose status is not ACTIVE. The transition mechanism itself
+   (who can suspend/reinstate, through what interface) is still deliberately
+   out of scope — this is now the same "guarded door, no key yet" state as
+   invariant 4 for `UserStatus::Disabled`, not a fully built feature.
 ```
