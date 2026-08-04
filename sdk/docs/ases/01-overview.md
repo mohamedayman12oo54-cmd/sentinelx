@@ -68,12 +68,61 @@ Every framework describes its own execution differently — CrewAI says *"Tool X
 
 ```json
 {
-  "event_type": "...",
+  "header": {
+    "event_type": "tool_execution",
+    "timestamp": "2026-08-01T10:15:32Z"
+  },
   "payload": { "..." : "..." }
 }
 ```
 
-This is called the **Canonical Event Model** — a single internal representation, regardless of source framework.
+This is called the **Canonical Event Model** — a single internal representation, regardless of source framework. `event_type` is drawn from a closed, ten-value vocabulary (the Event Dictionary — see `docs/03-specifications/02-EVENT_DICTIONARY.md`: `api_call`, `file_access`, `command_execution`, `network_connection`, `database_operation`, `tool_execution`, `memory_operation`, `authentication`, `configuration_change`, `custom`); every Adapter is responsible for mapping its own framework's vocabulary into one of these ten values (see [`07-agent-framework-ecosystem.md §3`](./07-agent-framework-ecosystem.md#3-the-crewai-adapters-event_type-mapping-rc-7-ground-2) for the CrewAI Adapter's own mapping table).
+
+A complete, wire-format Observation — Context, Events, and Metadata, fully populated — looks like this:
+
+```json
+{
+  "context": {
+    "framework": "crewai",
+    "environment": "production",
+    "execution_start_time": "2026-08-01T10:15:32Z",
+    "execution_finish_time": "2026-08-01T10:15:41Z"
+  },
+  "events": [
+    {
+      "header": {
+        "event_type": "tool_execution",
+        "timestamp": "2026-08-01T10:15:32Z"
+      },
+      "payload": {
+        "tool": "search",
+        "query": "latest AI security news"
+      }
+    },
+    {
+      "header": {
+        "event_type": "custom",
+        "timestamp": "2026-08-01T10:15:38Z"
+      },
+      "payload": {
+        "model": "gpt-4o",
+        "crewai_event": "llm_call_completed"
+      }
+    }
+  ],
+  "metadata": {
+    "spec_version": "1.0",
+    "sdk_version": "1.0.0",
+    "environment": "production",
+    "started_at": "2026-08-01T10:15:32Z",
+    "completed_at": "2026-08-01T10:15:41Z",
+    "completion_reason": "framework_task_finished",
+    "event_count": 2
+  }
+}
+```
+
+Ordering within `events` is guaranteed by array position — no explicit `sequence` field is included in the Header; see [`contracts/adapter-signal-contract.md §2a`](./contracts/adapter-signal-contract.md#2a-ordering-and-the-sequence-field) for why.
 
 ### 4.3 Transport
 Once a complete Observation exists, the layer sends it. That's the entire job.

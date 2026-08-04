@@ -64,7 +64,7 @@ This matters precisely because the Adapter does **not** know the JSON shape, and
 
 ## 5. Component 4 — Observation Validator
 
-After an Observation is built, it needs to be checked — a Timestamp could be missing, an Event could be malformed, Metadata could be incomplete. Before anything is transmitted, the Validator confirms correctness.
+After an Observation is built, it needs to be checked — a Timestamp could be missing, an Event could be malformed, Metadata could be incomplete. Before anything is transmitted, the Validator confirms correctness — including that `metadata.spec_version` and `metadata.sdk_version` are both present (previously unspecified here; see `01-overview.md §4.2` for the complete Metadata shape, `PIPELINE-005`).
 
 ---
 

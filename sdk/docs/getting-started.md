@@ -90,10 +90,12 @@ actual business logic — only add these calls around it.
 ### Simple, single-execution Agents
 
 ```python
-adapter.emit("tool_call", {"tool": "search", "query": "..."})
-adapter.emit("llm_call", {"model": "gpt-4o", "tokens": 812})
+adapter.emit("tool_execution", {"tool": "search", "query": "..."})
+adapter.emit("custom", {"kind": "llm_call", "model": "gpt-4o", "tokens": 812})
 adapter.complete()
 ```
+
+`event_type` must be one of the Backend's ten canonical Event Dictionary values (`api_call`, `file_access`, `command_execution`, `network_connection`, `database_operation`, `tool_execution`, `memory_operation`, `authentication`, `configuration_change`, `custom`) — `emit()` raises a clear `AdapterError` immediately if given anything else.
 
 ### Concurrent Agents (recommended for Django views)
 
@@ -106,7 +108,7 @@ Yes, definitely."):
 def my_view(request):
     execution = adapter.begin_execution()
     try:
-        execution.emit("tool_call", {"tool": "search", "query": "..."})
+        execution.emit("tool_execution", {"tool": "search", "query": "..."})
         # ... your existing business logic, unchanged ...
         execution.complete()
     except Exception:

@@ -62,7 +62,7 @@ adapter = GenericAdapter()
 ases.attach(adapter)
 ases.start()
 
-adapter.emit("tool_call", {"tool": "search", "query": "latest AI security news"})
+adapter.emit("tool_execution", {"tool": "search", "query": "latest AI security news"})
 adapter.complete()
 
 ases.stop()
