@@ -10,15 +10,17 @@ from __future__ import annotations
 
 from typing import List
 
-from ases.observation.models import Event, Observation, ObservationMetadata
+from ases.observation.models import Context, Event, EventHeader, Observation, ObservationMetadata
 from ases.pipeline.events import EventSignal
-from ases.shared.constants import SDK_VERSION
+from ases.shared.constants import SDK_VERSION, SPEC_VERSION
 
 
 def build_observation(
     signals: List[EventSignal], completion_reason: str, environment: str
 ) -> Observation:
-    """Convert a finished group of EventSignals into a single Observation.
+    """Convert a finished group of EventSignals into a single Observation,
+    in the Backend's real wire-format shape — Context + Events (each
+    header/payload-nested) + Metadata (RC-7 / Ground 1).
 
     Raises ValueError if given an empty list — the Collector never calls
     this with zero Events (see collector._finalize's own empty-events
@@ -29,11 +31,22 @@ def build_observation(
         raise ValueError("build_observation() requires at least one EventSignal.")
 
     events = [
-        Event(event_type=s.event_type, payload=s.payload, timestamp=s.timestamp)
+        Event(
+            header=EventHeader(event_type=s.event_type, timestamp=s.timestamp),
+            payload=s.payload,
+        )
         for s in signals
     ]
 
+    context = Context(
+        framework=signals[0].framework,
+        environment=environment,
+        execution_start_time=signals[0].timestamp,
+        execution_finish_time=signals[-1].timestamp,
+    )
+
     metadata = ObservationMetadata(
+        spec_version=SPEC_VERSION,
         sdk_version=SDK_VERSION,
         environment=environment,
         started_at=signals[0].timestamp,
@@ -41,4 +54,4 @@ def build_observation(
         completion_reason=completion_reason,
         event_count=len(events),
     )
-    return Observation(events=events, metadata=metadata)
+    return Observation(context=context, events=events, metadata=metadata)

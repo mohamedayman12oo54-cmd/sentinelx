@@ -6,21 +6,21 @@ from ases.shared.exceptions import AdapterError
 
 def test_event_signal_requires_event_type():
     with pytest.raises(AdapterError):
-        EventSignal(event_type="", payload={}, runtime_context={"x": 1}, timestamp="2026-01-01T00:00:00Z")
+        EventSignal(event_type="", payload={}, runtime_context={"x": 1}, timestamp="2026-01-01T00:00:00Z", framework="generic")
 
 
 def test_event_signal_requires_dict_payload():
     with pytest.raises(AdapterError):
-        EventSignal(event_type="tool_call", payload="not-a-dict", runtime_context={"x": 1}, timestamp="t")
+        EventSignal(event_type="tool_execution", payload="not-a-dict", runtime_context={"x": 1}, timestamp="t", framework="generic")
 
 
 def test_event_signal_requires_runtime_context():
     with pytest.raises(AdapterError):
-        EventSignal(event_type="tool_call", payload={}, runtime_context={}, timestamp="t")
+        EventSignal(event_type="tool_execution", payload={}, runtime_context={}, timestamp="t", framework="generic")
 
 
 def test_event_signal_has_fixed_signal_type():
-    signal = EventSignal(event_type="tool_call", payload={"a": 1}, runtime_context={"x": 1}, timestamp="t")
+    signal = EventSignal(event_type="tool_execution", payload={"a": 1}, runtime_context={"x": 1}, timestamp="t", framework="generic")
     assert signal.signal_type == "EVENT"
 
 

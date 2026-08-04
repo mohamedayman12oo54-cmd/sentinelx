@@ -52,7 +52,7 @@ def test_monitor_creates_attaches_and_starts_a_default_instance():
         assert isinstance(instance, ASES)
         assert instance is ases._default_instance
 
-        adapter.emit("tool_call", {"tool": "search"})
+        adapter.emit("tool_execution", {"tool": "search"})
         adapter.complete()
 
         time.sleep(1.5)

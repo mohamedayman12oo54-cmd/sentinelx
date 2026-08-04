@@ -9,7 +9,7 @@ def test_dispatcher_routes_event_to_collector():
     dispatcher = Dispatcher(collector)
 
     ctx = {"execution_id": "abc"}
-    dispatcher.dispatch(EventSignal(event_type="tool_call", payload={}, runtime_context=ctx, timestamp="t1"))
+    dispatcher.dispatch(EventSignal(event_type="tool_execution", payload={}, runtime_context=ctx, timestamp="t1", framework="generic"))
     dispatcher.dispatch(ObservationCompletedSignal(runtime_context=ctx, reason="agent_execution_ended", timestamp="t2"))
 
     assert len(received) == 1

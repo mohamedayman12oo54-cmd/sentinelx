@@ -12,25 +12,48 @@ never swallows errors silently, so it stays trivially unit-testable.
 from __future__ import annotations
 
 from ases.observation.models import Observation
-from ases.shared.constants import VALID_COMPLETION_REASONS
+from ases.shared.constants import CANONICAL_EVENT_TYPES, VALID_COMPLETION_REASONS
 from ases.shared.exceptions import ValidationError
 
 
 def validate_observation(observation: Observation) -> None:
+    """Mirrors the Backend's real ObservationValidator's own check order —
+    Context, then Events, then Metadata (RC-7) — so a rejection here means
+    the same rejection would happen server-side, just caught earlier."""
+    context = observation.context
+    if context is None:
+        raise ValidationError("Observation is missing context entirely.")
+    if not context.framework or not isinstance(context.framework, str):
+        raise ValidationError("context.framework is required.")
+    if not context.execution_start_time or not context.execution_finish_time:
+        raise ValidationError(
+            "context.execution_start_time and context.execution_finish_time are both required."
+        )
+
     if not observation.events:
         raise ValidationError("Observation has zero Events — nothing to send.")
 
     for index, event in enumerate(observation.events):
-        if not event.event_type or not isinstance(event.event_type, str):
-            raise ValidationError(f"Event at index {index} is missing a valid event_type.")
+        header = event.header
+        if header is None:
+            raise ValidationError(f"Event at index {index} is missing a header.")
+        if not header.event_type or header.event_type not in CANONICAL_EVENT_TYPES:
+            raise ValidationError(
+                f"Event at index {index} has an invalid header.event_type "
+                f"(must be one of {sorted(CANONICAL_EVENT_TYPES)})."
+            )
+        if not header.timestamp or not isinstance(header.timestamp, str):
+            raise ValidationError(f"Event at index {index} is missing a valid ISO 8601 timestamp.")
         if event.payload is None or not isinstance(event.payload, dict):
             raise ValidationError(f"Event at index {index} has an invalid payload (must be a dict).")
-        if not event.timestamp or not isinstance(event.timestamp, str):
-            raise ValidationError(f"Event at index {index} is missing a valid ISO 8601 timestamp.")
 
     metadata = observation.metadata
     if metadata is None:
         raise ValidationError("Observation is missing metadata entirely.")
+    if not metadata.spec_version:
+        raise ValidationError("metadata.spec_version is required.")
+    if not metadata.sdk_version:
+        raise ValidationError("metadata.sdk_version is required.")
     if metadata.event_count != len(observation.events):
         raise ValidationError(
             f"metadata.event_count ({metadata.event_count}) does not match "
