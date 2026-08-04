@@ -64,10 +64,10 @@ The moment the decorated function runs, an Event is recorded.
 
 ## 5. Model 4 — Manual API (Generic Fallback)
 
-For Agents with no framework at all — no callback, no middleware, no decorator hook — a direct, explicit call:
+For Agents with no framework at all — no callback, no middleware, no decorator hook — a direct, explicit call on a `GenericAdapter` instance:
 
 ```python
-ases.emit(...)
+adapter.emit(...)
 ```
 
 This is the **fallback of last resort**, guaranteeing that even a fully custom Agent can integrate, as long as its owner is willing to add one explicit call.

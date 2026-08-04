@@ -96,6 +96,18 @@ Done
 
 The measure of success: within five minutes, the customer sees their first real Observation. That single experience matters more than any amount of prose documentation.
 
+Concretely, for a CrewAI Agent, steps 3-5 are three lines (see [`04-public-api.md §6a`](./04-public-api.md#6a-the-fast-path--monitor--configure--shutdown) for the full contract):
+
+```python
+from ases import configure, monitor
+from ases.adapters import CrewAIAdapter
+
+configure(api_key="ases_xxxxxxxxx")
+monitor(CrewAIAdapter(crew))
+
+crew.kickoff()
+```
+
 After the Five-Minute Guide, the documentation continues with **Getting Started**, then per-framework **Framework Guides** — CrewAI, then LangGraph, then the OpenAI Agents SDK — each with its own dedicated guide.
 
 ---
@@ -143,6 +155,8 @@ A customer should be able to run these directly, not just read them.
 ```
 
 No custom versioning scheme is invented here — Semantic Versioning is a well-understood standard, and there's no reason to diverge from it.
+
+**Breaking changes and deprecation.** The Public API surface this applies to is exactly the one [`contracts/public-api-contract.md §1`](./contracts/public-api-contract.md) names: `ASES`, `configure`, `monitor`, `shutdown`, and each Adapter's own public contract (e.g. `GenericAdapter.emit()`). Removing or changing the signature of any of these requires a major version bump, preceded by at least one minor version in which the old form still works but emits a `DeprecationWarning` naming its replacement. Internal paths (anything not listed in `public-api-contract.md §1`) carry no such guarantee and may change in any minor version, per section 1's own "internal paths are implementation detail" rule.
 
 ---
 
@@ -208,6 +222,18 @@ Dashboard Shows Result
 ```
 
 This is the first point in the entire design process where the whole customer journey can genuinely be told in under a minute — a meaningful signal that the underlying design has converged correctly.
+
+In code, "Enable Framework Adapter" through "Run Agent" is:
+
+```python
+from ases import configure, monitor
+from ases.adapters import CrewAIAdapter
+
+configure(api_key="ases_xxxxxxxxx")
+monitor(CrewAIAdapter(crew))
+
+crew.kickoff()
+```
 
 ---
 

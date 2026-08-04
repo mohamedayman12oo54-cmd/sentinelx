@@ -7,6 +7,12 @@
 **ASES Integration Layer**
 The full client-side component connecting AI Agent frameworks to SentinelX. Deliberately not called "the SDK" in this documentation, to avoid implying it's a general-purpose monitoring tool. See [`01-overview.md`](./01-overview.md).
 
+**`ASES` (class)**
+The engine underlying the entire Public API: constructor, `attach()`, `start()`, `stop()`. The full-control path. See [`04-public-api.md`](./04-public-api.md).
+
+**`monitor()` / `configure()` / `shutdown()`**
+Thin convenience wrappers over the `ASES` class, for the common single-Adapter case. The fast path. See [`04-public-api.md §6a`](./04-public-api.md#6a-the-fast-path--monitor--configure--shutdown).
+
 **Observation**
 The complete execution story of a single Agent Task — not a single Event, and not a snapshot. Built from one or more correlated Events. See [`09-observation-lifecycle.md`](./09-observation-lifecycle.md).
 
