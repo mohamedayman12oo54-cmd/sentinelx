@@ -74,3 +74,20 @@ Route:
 Generate the report as:
 
 reports/<module>/<method>-<endpoint>.md
+
+
+---
+
+## Final Step
+
+After generating the report:
+
+1. Save it to the required path:
+   `reports/<module>/<method>-<endpoint>.md`
+
+2. Create a Git commit containing only the generated report file.
+
+Commit message format:
+
+```text
+docs(endpoint-report): inspect <METHOD> <endpoint>
