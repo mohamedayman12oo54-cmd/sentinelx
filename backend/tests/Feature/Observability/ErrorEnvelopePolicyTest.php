@@ -8,6 +8,7 @@ use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // === ERROR-001: every FormRequest failure returns the identical nested envelope ===
 
@@ -84,4 +85,25 @@ test('an undefined route (404) is left alone by the Throwable catch-all, not fla
     $this->getJson('/api/v1/this-route-does-not-exist')
         ->assertNotFound()
         ->assertJsonMissingPath('error.code');
+});
+
+// === ERROR-007: a generic, unhandled exception never leaks file/line/trace,
+// regardless of app.debug — the general case, independent of FAILURE-002's
+// QueryException-specific fix ===
+
+test('a generic unhandled exception never leaks file paths, line numbers, or stack trace content, even with app.debug true', function () {
+    config(['app.debug' => true]);
+
+    Route::middleware('api')->get('/api/v1/__test-only-unhandled-exception', function () {
+        throw new TypeError('deliberately unhandled, for ERROR-007 regression coverage');
+    });
+
+    $response = $this->getJson('/api/v1/__test-only-unhandled-exception');
+    $body = $response->getContent();
+
+    expect($response->getStatusCode())->toBe(503)
+        ->and($body)->not->toContain('TypeError')
+        ->and($body)->not->toContain(__FILE__)
+        ->and($body)->not->toContain('.php')
+        ->and($body)->not->toContain('Stack trace');
 });
