@@ -131,7 +131,11 @@ from ases import configure
 from ases import shutdown
 ```
 
-while something like:
+```python
+from ases import ASES
+```
+
+is also root-level and public — `monitor`/`configure`/`shutdown` are thin convenience wrappers over this class, not a separate surface (see [`04-public-api.md §6a`](./04-public-api.md#6a-the-fast-path--monitor--configure--shutdown) for the full reconciliation). While something like:
 
 ```python
 from ases.transport.worker    # forbidden for customer use
@@ -299,10 +303,9 @@ ases/
 ────────────────────────
 
 Public API
-Expose only stable SDK functions through:
-- monitor()
-- configure()
-- shutdown()
+Expose only the stable surface at the package root:
+- ASES (class — full control)
+- monitor() / configure() / shutdown() (thin wrappers over ASES — fast path)
 Everything else remains internal.
 
 ────────────────────────

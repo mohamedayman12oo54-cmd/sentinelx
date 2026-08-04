@@ -22,6 +22,8 @@ If that line — and the handful that follow it — feel complicated, the SDK ha
 
 The founding constraint from [`01-overview.md`](./01-overview.md) is repeated here as a hard requirement: the simplest possible integration must be **three lines**. Not an aspiration — a design constraint every API decision is checked against.
 
+**Scope of this claim, stated precisely:** "three lines" describes the `monitor()` fast path (section 6a, below) — an import, an Adapter construction, and one `monitor(adapter)` call. The four-operation class-based form (section 6) is the full-control path for a customer who needs more than one Adapter on a single SDK instance, or who needs `attach()`/`start()`/`stop()` as independent, explicit steps; it was never meant to be the three-line form itself, and this document previously left that unstated.
+
 ---
 
 ## 3. Designing the Shape of the API
@@ -74,7 +76,7 @@ No `ASESConfig` object is introduced in V1 — that would be solving a problem V
 
 ---
 
-## 6. The Minimum Public API — Four Operations, No More
+## 6. The Full-Control Path — Four Operations, No More
 
 ```text
 1. Create the SDK        →  ases = ASES(api_key="...")
@@ -92,6 +94,23 @@ Deliberately absent from the public surface:
 ```
 
 All of that is internal. The exact, implementation-ready contract for these four calls is in [`contracts/public-api-contract.md`](./contracts/public-api-contract.md).
+
+Use this path directly when more than one Adapter needs to be attached to a single SDK instance, or when `attach()`/`start()`/`stop()` need to be independent, explicit steps in your own code. For the common single-Adapter case, section 6a's `monitor()` is the three-line form this document's own founding constraint (section 2) refers to.
+
+---
+
+## 6a. The Fast Path — `monitor()` / `configure()` / `shutdown()`
+
+Thin convenience wrappers over the `ASES` class above (section 6), not a second, competing implementation — see [`contracts/public-api-contract.md`](./contracts/public-api-contract.md#8-monitor--configure--shutdown-the-fast-path) for their full contract. `monitor()` constructs an `ASES` instance, attaches exactly one Adapter, and starts it, in one call:
+
+```python
+from ases import monitor
+from ases.adapters import CrewAIAdapter
+
+monitor(CrewAIAdapter(crew))
+```
+
+Genuinely three lines, satisfying section 2's constraint literally. `configure(api_key=...)` sets process-wide configuration a later `monitor()` or `ASES(...)` call can rely on instead of passing `api_key` directly; `shutdown()` stops whatever instance `monitor()` most recently created. A customer needing more than one Adapter uses the full-control path (section 6) instead — `monitor()` deliberately does not grow multi-Adapter support.
 
 ---
 
@@ -125,7 +144,7 @@ SDK handles everything automatically
 stop()
 ```
 
-### Complete Example — CrewAI
+### Complete Example (Full-Control Path) — CrewAI
 
 ```python
 from crewai import Crew
@@ -144,7 +163,18 @@ crew.kickoff()
 ases.stop()
 ```
 
-### Complete Example — Generic Agent (Manual API)
+### Complete Example (Fast Path) — CrewAI
+
+```python
+from ases import monitor
+from ases.adapters import CrewAIAdapter
+
+monitor(CrewAIAdapter(crew))
+
+crew.kickoff()
+```
+
+### Complete Example (Full-Control Path) — Generic Agent (Manual API)
 
 ```python
 from ases import ASES
@@ -179,10 +209,8 @@ Design Principles
 ────────────────────────
 
 Public Surface
-ases = ASES(api_key="...")
-ases.attach(adapter)
-ases.start()
-ases.stop()
+Full control:  ases = ASES(api_key="..."); ases.attach(adapter); ases.start(); ases.stop()
+Fast path:     monitor(adapter); ...; shutdown()
 
 ────────────────────────
 

@@ -17,6 +17,8 @@ from ases import shutdown
 
 No other import path is considered public. Internal paths (e.g., `ases.transport.worker`) are implementation detail and may change between minor versions without notice.
 
+`ASES` and `configure` are specified in sections 2 and 5 below; `monitor` and `shutdown` are specified in section 8 — all four are part of one reconciled surface (see [`04-public-api.md §6a`](../04-public-api.md#6a-the-fast-path--monitor--configure--shutdown)), not two competing ones.
+
 ---
 
 ## 2. The `ASES` Class
@@ -99,7 +101,7 @@ If a future requirement seems to need one of these exposed, it must go through a
 
 ---
 
-## 7. Complete Reference Example
+## 7. Complete Reference Example (Full-Control Path)
 
 ```python
 from crewai import Crew
@@ -116,4 +118,28 @@ ases.start()
 crew.kickoff()
 
 ases.stop()
+```
+
+---
+
+## 8. `monitor()` / `configure()` / `shutdown()` — the Fast Path
+
+Thin convenience wrappers over the `ASES` class (section 2) — not a second, competing implementation. See [`04-public-api.md §6a`](../04-public-api.md#6a-the-fast-path--monitor--configure--shutdown) for the design rationale.
+
+| Function | Signature | Behavior |
+|--------|-----------|----------|
+| `monitor` | `monitor(adapter: Adapter, api_key: str = None) -> ASES` | Constructs an `ASES` instance (using `api_key` if given, otherwise falling back to a prior `configure()` call or the `ASES_API_KEY` environment variable, per the same precedence rules `ASES(...)` itself uses — see [`environment-configuration.md §3`](./environment-configuration.md)), attaches exactly one Adapter, starts it, and returns the instance. Does not support attaching more than one Adapter — use the `ASES` class directly for that case. |
+| `shutdown` | `shutdown() -> None` | Stops whatever instance `monitor()` most recently created. A no-op, not an error, if `monitor()` was never called — mirrors `start()`'s own documented idempotency (section 2). |
+
+`configure()` is already fully specified in section 5, above; it is listed here only to confirm it is part of the same fast path as `monitor()`/`shutdown()`, not a third, unrelated surface.
+
+Complete fast-path example:
+
+```python
+from ases import monitor
+from ases.adapters import CrewAIAdapter
+
+monitor(CrewAIAdapter(crew))
+
+crew.kickoff()
 ```

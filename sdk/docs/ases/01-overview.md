@@ -112,7 +112,7 @@ from ases import monitor
 monitor(...)
 ```
 
-...wired to the framework's existing callback mechanism. The customer never:
+...wired to the framework's existing callback mechanism. `monitor()` is a thin convenience wrapper over the underlying `ASES` class (constructor, `attach()`, `start()`, `stop()`) documented in full in [`04-public-api.md`](./04-public-api.md) — a customer attaching more than one Adapter to the same SDK instance uses that class directly instead. The customer never:
 
 - Modifies their Agent's logic.
 - Writes their own logging.
