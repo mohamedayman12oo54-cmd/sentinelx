@@ -15,7 +15,7 @@ class AgentObservationController extends Controller
         $observations = $action->handle(
             organizationId: (string) $request->user('api')->organization_id,
             agentId: $agentId,
-            perPage: (int) $request->integer('per_page', 20),
+            perPage: $this->perPage($request),
             page: (int) $request->integer('page', 1),
         );
 

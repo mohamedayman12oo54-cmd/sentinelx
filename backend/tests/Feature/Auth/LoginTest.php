@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Authentication\Identity\Infrastructure\Persistence\User;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 use Illuminate\Support\Facades\Hash;
 
 // === HAPPY PATH ===
@@ -69,6 +70,25 @@ test('login fails with a generic message for an unknown email', function () {
 
 test('login fails with a generic message for a disabled user', function () {
     User::factory()->disabled()->create([
+        'email' => 'ahmed@acme.example',
+        'password_hash' => Hash::make('password123'),
+    ]);
+
+    $response = $this->postJson('/api/v1/auth/login', [
+        'email' => 'ahmed@acme.example',
+        'password' => 'password123',
+    ]);
+
+    $response->assertUnauthorized()
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
+});
+
+test('login fails with a generic message for a user whose Organization is suspended (STATE-002)', function () {
+    $organization = Organization::factory()->suspended()->create();
+
+    User::factory()->for($organization)->create([
         'email' => 'ahmed@acme.example',
         'password_hash' => Hash::make('password123'),
     ]);

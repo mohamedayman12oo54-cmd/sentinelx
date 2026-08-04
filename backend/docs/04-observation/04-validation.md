@@ -69,6 +69,12 @@ events.length >= 1
 ```
 An Observation with zero Events carries no information for the ML Engine to ever analyze — rejected here rather than accepted and left permanently `PENDING`.
 
+### Check 6 — Maximum Event Count (PERF-004)
+```text
+events.length <= 1000
+```
+No upper bound existed anywhere in the Backend or ML Service prior to the integration audit's PERF-004 finding — an unbounded payload is an unbounded worst-case processing cost per Observation. `1000` is an adjustable engineering default (`ObservationValidator::MAX_EVENTS`), not a frozen business rule; large enough for legitimate batched SDK submissions, rejected here at the same structural layer as Check 5 rather than left to fail later, unpredictably, deeper in the pipeline.
+
 ---
 
 ## 4. Where This Logic Lives (Layer Placement)

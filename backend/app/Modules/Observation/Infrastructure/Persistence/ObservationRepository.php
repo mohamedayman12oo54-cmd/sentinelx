@@ -133,6 +133,42 @@ class ObservationRepository implements ObservationLookupContract, ObservationSum
         });
     }
 
+    /**
+     * STATE-004/FAILURE-003: the only writer anywhere that moves a FAILED
+     * Observation back toward re-analysis — a deliberate, operator-triggered
+     * recovery path (see
+     * App\Modules\Analysis\Infrastructure\Queue\RetryFailedObservationsCommand),
+     * not an automated retry. Guarded by the WHERE clause so retrying an
+     * Observation that isn't actually FAILED (already retried, or never
+     * failed at all) is a safe no-op rather than clobbering a row mid-flight.
+     */
+    public function retryFailed(string $observationId): bool
+    {
+        return Observation::query()
+            ->where('id', $observationId)
+            ->where('analysis_status', AnalysisStatus::Failed)
+            ->update([
+                'analysis_status' => AnalysisStatus::Pending,
+                'processing_started_at' => null,
+                'processed_at' => null,
+            ]) > 0;
+    }
+
+    /**
+     * Bulk variant of retryFailed() — every currently FAILED Observation,
+     * platform-wide. See retryFailed()'s own doc-block.
+     */
+    public function retryAllFailed(): int
+    {
+        return Observation::query()
+            ->where('analysis_status', AnalysisStatus::Failed)
+            ->update([
+                'analysis_status' => AnalysisStatus::Pending,
+                'processing_started_at' => null,
+                'processed_at' => null,
+            ]);
+    }
+
     public function countForOrganizationSince(string $organizationId, DateTimeInterface $since): int
     {
         return Observation::query()

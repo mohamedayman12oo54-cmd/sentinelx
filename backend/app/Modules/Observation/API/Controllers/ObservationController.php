@@ -42,7 +42,7 @@ class ObservationController extends Controller
             organizationId: $this->organizationId($request),
             agentId: $request->query('agent_id'),
             status: $this->statusFromQuery($request),
-            perPage: (int) $request->integer('per_page', 20),
+            perPage: $this->perPage($request),
             page: (int) $request->integer('page', 1),
         );
 

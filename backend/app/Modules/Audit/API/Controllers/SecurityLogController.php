@@ -22,7 +22,7 @@ class SecurityLogController extends Controller
             resourceType: $request->query('resource_type'),
             from: $this->dateQuery($request, 'from'),
             to: $this->dateQuery($request, 'to'),
-            perPage: (int) $request->integer('per_page', 20),
+            perPage: $this->perPage($request),
             page: (int) $request->integer('page', 1),
         );
 

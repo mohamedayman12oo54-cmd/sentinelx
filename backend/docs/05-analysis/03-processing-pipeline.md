@@ -85,6 +85,14 @@ This is exactly why `markProcessing` must happen **synchronously, inside the Pol
 
 ---
 
+## 4a. Capacity (PERF-002)
+
+The Poller runs `->everyMinute()` (`routes/console.php`) and claims at most `config('analysis.poll_batch_limit')` Observations per run (`ANALYSIS_POLL_BATCH_LIMIT`, defaulting to 10 — see `.env.example`). This is the platform's real, current throughput ceiling: **at most `ANALYSIS_POLL_BATCH_LIMIT` Observations are claimed for analysis per minute, globally, across every Organization** — not a per-Organization allowance. An adjustable engineering default, not a frozen business rule; raise it directly via the environment variable as real throughput needs become clearer.
+
+**Deliberately not built in this pass:** per-Organization fairness (so one high-volume Organization can't starve every other Organization's queue of the shared batch). The current FIFO-by-`received_at` claim order (Index 5, `01-database/schema/indexes.md`) has no such guarantee. This is real architectural work — a fairness scheme needs its own design pass (round-robin per Organization? a per-Organization minimum reservation?) — and is flagged here as a follow-up decision, not silently deferred without a record.
+
+---
+
 ## 5. Success and Failure Paths
 
 ```text
@@ -104,7 +112,7 @@ ML call fails (after retries — see adr/ADR-003-ml-failure-retry-then-fail.md)
     └── ObservationRepository::markFailed(observationId, now())
 ```
 
-**A `FAILED` Observation is not automatically retried by a later Poller run** — `FAILED` is excluded from the Poller's `WHERE analysis_status = 'PENDING'` query by construction. Re-attempting a failed analysis, if ever desired, is an explicit, separate operational action (out of scope for Stage 4; a natural candidate for Stage 7's Audit & Settings tooling, not designed here).
+**A `FAILED` Observation is not automatically retried by a later Poller run** — `FAILED` is excluded from the Poller's `WHERE analysis_status = 'PENDING'` query by construction. Re-attempting a failed analysis is an explicit, separate, operator-triggered action: `php artisan analysis:retry-failed {observationId}` (or `--all` for every currently FAILED Observation), transitioning it back to `PENDING` so the next Poller run picks it up (STATE-004/FAILURE-003, integration audit Session 08). Deliberately a CLI/operator tool, not a REST endpoint — no Role/authorization model exists for "who can force a re-analysis," and building that API surface is a separate, future decision if self-service or Owner-triggered retry is ever needed.
 
 ---
 

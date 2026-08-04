@@ -29,7 +29,7 @@ class AlertController extends Controller
             organizationId: $this->organizationId($request),
             status: $this->statusFromQuery($request),
             severity: $this->severityFromQuery($request),
-            perPage: (int) $request->integer('per_page', 20),
+            perPage: $this->perPage($request),
             page: (int) $request->integer('page', 1),
         );
 

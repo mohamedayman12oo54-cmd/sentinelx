@@ -40,6 +40,57 @@ function getStoredToken() {
   return typeof window !== "undefined" ? localStorage.getItem("sentinelx_access_token") : null;
 }
 
+// PERF-005: apiFetch previously had no timeout at all, inheriting the
+// browser's own effectively-unbounded default. Most Backend endpoints are
+// fast; the async Observation pipeline is designed to be slow and is
+// already handled by polling (Phase 1), not a single long-lived request.
+const REQUEST_TIMEOUT_MS = 20_000;
+
+// FAILURE-004: one bounded, silent automatic retry for a transient
+// network-level blip — a supplement to, not a replacement for, the
+// existing manual "Retry" button every page already wires up via
+// PageError/onRetry (see frontend/src/components/ui/PageState.jsx).
+const RETRY_DELAY_MS = 1_500;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function attemptFetch(path, { method, body, headers, token }) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (cause) {
+    // ERROR-006: a raw, un-normalized browser error (a dropped connection,
+    // DNS failure, or this function's own timeout abort) — normalized into
+    // the same ApiError shape as an HTTP-response failure, so calling code
+    // can always branch on `err.code` regardless of cause, distinguishing
+    // "couldn't reach the server" from "the server rejected the request."
+    // Mirrors how the Backend already distinguishes its own transport-vs-
+    // contract ML failures (MLCommunicationException vs
+    // InvalidMlResponseException).
+    const isTimeout = cause?.name === "AbortError";
+    throw new ApiError(
+      isTimeout ? "TIMEOUT" : "NETWORK_ERROR",
+      isTimeout ? "The request timed out." : "Unable to reach the server.",
+      {},
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 /**
  * Thin fetch wrapper: attaches the JWT, parses the standard error envelope,
  * and throws an ApiError on any non-2xx response so calling code can use a
@@ -48,15 +99,21 @@ function getStoredToken() {
 export async function apiFetch(path, { method = "GET", body, headers = {} } = {}) {
   const token = getStoredToken();
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await attemptFetch(path, { method, body, headers, token });
+  } catch (err) {
+    // Exactly one silent retry, and only for a genuine network-level
+    // failure — never for a timeout (the server may still be processing
+    // the first attempt) and never for an HTTP-response failure (retrying
+    // a rejected request changes nothing).
+    if (err instanceof ApiError && err.code === "NETWORK_ERROR") {
+      await sleep(RETRY_DELAY_MS);
+      res = await attemptFetch(path, { method, body, headers, token });
+    } else {
+      throw err;
+    }
+  }
 
   if (res.status === 204) return null;
 

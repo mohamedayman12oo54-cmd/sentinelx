@@ -10,6 +10,7 @@ use App\Modules\Alert\Domain\Exceptions\AlertAlreadyAcknowledgedException;
 use App\Modules\Alert\Domain\Exceptions\AlertAlreadyResolvedException;
 use App\Modules\Alert\Domain\Exceptions\AlertNotFoundException;
 use App\Modules\Analysis\Infrastructure\Queue\PollPendingObservationsCommand;
+use App\Modules\Analysis\Infrastructure\Queue\RetryFailedObservationsCommand;
 use App\Modules\Audit\Domain\Exceptions\AuditForbiddenException;
 use App\Modules\Audit\Domain\Exceptions\AuditLogNotFoundException;
 use App\Modules\Authentication\Identity\API\Middleware\EnsureUserHasRole;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // rather than app/Console/Commands — every module keeps its own
         // pieces together, per 06-implementation-layers.md §2.
         PollPendingObservationsCommand::class,
+        RetryFailedObservationsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

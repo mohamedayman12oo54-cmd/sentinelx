@@ -3,6 +3,7 @@
 use App\Modules\Agent\Domain\AgentStatus;
 use App\Modules\Authentication\ApiKey\Domain\ApiKeyStatus;
 use App\Modules\Authentication\ApiKey\Infrastructure\Persistence\ApiKey;
+use App\Modules\Organization\Infrastructure\Persistence\Organization;
 
 // createAgentWithKey() is a shared helper — see tests/Pest.php.
 
@@ -71,6 +72,18 @@ test('a valid key belonging to an archived agent is rejected', function () {
     createAgentWithKey('a-key-for-archived-agent', ['status' => AgentStatus::Archived]);
 
     $this->withHeader('X-API-Key', 'a-key-for-archived-agent')
+        ->getJson('/api/agent/me')
+        ->assertUnauthorized()
+        ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')
+        ->assertJsonPath('error.message', 'Authentication failed.')
+        ->assertJsonStructure(['error' => ['request_id']]);
+});
+
+test('a valid key belonging to an Agent in a suspended Organization is rejected (STATE-002)', function () {
+    $organization = Organization::factory()->suspended()->create();
+    createAgentWithKey('a-key-for-suspended-org', ['organization_id' => $organization->id]);
+
+    $this->withHeader('X-API-Key', 'a-key-for-suspended-org')
         ->getJson('/api/agent/me')
         ->assertUnauthorized()
         ->assertJsonPath('error.code', 'AUTHENTICATION_FAILED')

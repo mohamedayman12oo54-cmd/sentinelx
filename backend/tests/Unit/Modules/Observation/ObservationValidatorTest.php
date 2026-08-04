@@ -16,6 +16,28 @@ test('a payload with zero events is rejected', function () {
         ->toThrow(ObservationValidationFailedException::class);
 });
 
+// === PERF-004: an unbounded event count is rejected ===
+
+test('a payload with exactly the maximum allowed event count (1000) is accepted', function () {
+    $events = array_fill(0, 1000, [
+        'header' => ['event_type' => 'api_call', 'timestamp' => '2026-07-29T09:59:52Z'],
+        'payload' => ['url' => 'https://api.example.com/v1/data', 'method' => 'GET'],
+    ]);
+
+    expect(fn () => $this->validator->validate(validAsesPayload(['events' => $events])))
+        ->not->toThrow(ObservationValidationFailedException::class);
+});
+
+test('a payload exceeding the maximum allowed event count (1001) is rejected', function () {
+    $events = array_fill(0, 1001, [
+        'header' => ['event_type' => 'api_call', 'timestamp' => '2026-07-29T09:59:52Z'],
+        'payload' => ['url' => 'https://api.example.com/v1/data', 'method' => 'GET'],
+    ]);
+
+    expect(fn () => $this->validator->validate(validAsesPayload(['events' => $events])))
+        ->toThrow(ObservationValidationFailedException::class);
+});
+
 test('a payload with out-of-order event timestamps is rejected', function () {
     $payload = validAsesPayload([
         'events' => [
