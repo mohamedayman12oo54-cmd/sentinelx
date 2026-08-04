@@ -112,7 +112,7 @@ ML call fails (after retries — see adr/ADR-003-ml-failure-retry-then-fail.md)
     └── ObservationRepository::markFailed(observationId, now())
 ```
 
-**A `FAILED` Observation is not automatically retried by a later Poller run** — `FAILED` is excluded from the Poller's `WHERE analysis_status = 'PENDING'` query by construction. Re-attempting a failed analysis, if ever desired, is an explicit, separate operational action (out of scope for Stage 4; a natural candidate for Stage 7's Audit & Settings tooling, not designed here).
+**A `FAILED` Observation is not automatically retried by a later Poller run** — `FAILED` is excluded from the Poller's `WHERE analysis_status = 'PENDING'` query by construction. Re-attempting a failed analysis is an explicit, separate, operator-triggered action: `php artisan analysis:retry-failed {observationId}` (or `--all` for every currently FAILED Observation), transitioning it back to `PENDING` so the next Poller run picks it up (STATE-004/FAILURE-003, integration audit Session 08). Deliberately a CLI/operator tool, not a REST endpoint — no Role/authorization model exists for "who can force a re-analysis," and building that API surface is a separate, future decision if self-service or Owner-triggered retry is ever needed.
 
 ---
 
