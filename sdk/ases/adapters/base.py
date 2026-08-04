@@ -19,6 +19,12 @@ Signal = Union[EventSignal, ObservationCompletedSignal]
 
 
 class Adapter(ABC):
+    #: Identifies which framework this Adapter represents, for the
+    #: Observation's wire-format `context.framework` field (RC-7, Ground 1).
+    #: Every concrete Adapter overrides this; "custom" is a safe default for
+    #: third-party Adapters that don't.
+    FRAMEWORK_NAME: str = "custom"
+
     def __init__(self) -> None:
         self._emit_signal: Optional[Callable[[Signal], None]] = None
 

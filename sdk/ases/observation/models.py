@@ -32,26 +32,81 @@ from typing import Any, Dict, List
 
 
 @dataclass(frozen=True)
-class Event:
-    """A single occurrence within an Observation — the Canonical Event
-    Model shape (01-overview.md, section 4.2)."""
+class EventHeader:
+    """The `header` section of a wire-format Event
+    (docs/03-specifications/02-EVENT_DICTIONARY.md, "Every Event contains:
+    Header, Payload"; backend/app/Modules/Observation/Domain/
+    ObservationValidator.php requires `header.event_type` — one of the ten
+    canonical Event Dictionary values, enforced upstream at EventSignal
+    construction, see pipeline/events.py — and `header.timestamp`).
+
+    Deliberately carries no `sequence` field: ordering is guaranteed by
+    array position within the Observation's `events` array (see
+    contracts/adapter-signal-contract.md, section 2a), which is what both
+    the Backend's validator and the ML Service actually rely on. An
+    explicit sequence field was considered and deliberately not added —
+    array position alone is sufficient and this keeps the Header minimal.
+    """
 
     event_type: str
-    payload: Dict[str, Any]
     timestamp: str  # ISO 8601, e.g. "2026-08-01T10:15:32Z"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "event_type": self.event_type,
-            "payload": self.payload,
             "timestamp": self.timestamp,
         }
 
 
 @dataclass(frozen=True)
-class ObservationMetadata:
-    """Everything about an Observation that is not itself an Event."""
+class Event:
+    """A single occurrence within an Observation — the real wire-format
+    shape (docs/03-specifications/02-EVENT_DICTIONARY.md,
+    03-ASES_JSON_SCHEMA.md): a nested `header`/`payload` object, not the
+    flat `{event_type, payload}` shape `01-overview.md §4.2` previously,
+    incorrectly, documented as final (RC-7, PIPELINE-002/WALK-008)."""
 
+    header: EventHeader
+    payload: Dict[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "header": self.header.to_dict(),
+            "payload": self.payload,
+        }
+
+
+@dataclass(frozen=True)
+class Context:
+    """The Observation's `context` section — describes the execution
+    environment (docs/03-specifications/03-ASES_JSON_SCHEMA.md, "Context").
+    Required by the Backend's ObservationValidator: `framework`,
+    `execution_start_time`, `execution_finish_time` (validated in that
+    order, before Events or Metadata are ever checked)."""
+
+    framework: str
+    environment: str
+    execution_start_time: str
+    execution_finish_time: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "framework": self.framework,
+            "environment": self.environment,
+            "execution_start_time": self.execution_start_time,
+            "execution_finish_time": self.execution_finish_time,
+        }
+
+
+@dataclass(frozen=True)
+class ObservationMetadata:
+    """Everything about an Observation that is not itself an Event.
+
+    `spec_version` and `sdk_version` are both required by the Backend's
+    ObservationValidator (PIPELINE-005/WALK-008) — previously undocumented
+    and unpopulated anywhere in this SDK."""
+
+    spec_version: str
     sdk_version: str
     environment: str
     started_at: str
@@ -61,6 +116,7 @@ class ObservationMetadata:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "spec_version": self.spec_version,
             "sdk_version": self.sdk_version,
             "environment": self.environment,
             "started_at": self.started_at,
@@ -81,11 +137,13 @@ class Observation:
     its own identifier on receipt.
     """
 
+    context: Context
     events: List[Event]
     metadata: ObservationMetadata
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "metadata": self.metadata.to_dict(),
+            "context": self.context.to_dict(),
             "events": [event.to_dict() for event in self.events],
+            "metadata": self.metadata.to_dict(),
         }

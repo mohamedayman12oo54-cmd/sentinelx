@@ -51,7 +51,7 @@ def test_registers_and_dispatches_via_the_real_event_bus():
         )
 
     assert len(received) == 1
-    assert received[0].event_type == "task_started"
+    assert received[0].event_type == "custom"
     assert received[0].runtime_context == {"crewai_task_id": "task-1"}
 
 
@@ -77,7 +77,8 @@ def test_translates_task_started():
     adapter._on_task_started(None, event)
 
     assert len(received) == 1
-    assert received[0].event_type == "task_started"
+    assert received[0].event_type == "custom"
+    assert received[0].payload["crewai_event"] == "task_started"
     assert received[0].runtime_context == {"crewai_task_id": "task-1"}
 
 
@@ -86,8 +87,12 @@ def test_translates_tool_usage_started():
     event = ToolUsageStartedEvent(tool_name="search", tool_args={"query": "AI security"}, task_id="task-2")
     adapter._on_tool_usage_started(None, event)
 
-    assert received[0].event_type == "tool_call"
-    assert received[0].payload == {"tool": "search", "args": {"query": "AI security"}}
+    assert received[0].event_type == "tool_execution"
+    assert received[0].payload == {
+        "tool": "search",
+        "args": {"query": "AI security"},
+        "crewai_event": "tool_usage_started",
+    }
     assert received[0].runtime_context == {"crewai_task_id": "task-2"}
 
 
@@ -106,8 +111,12 @@ def test_translates_tool_usage_finished():
     )
     adapter._on_tool_usage_finished(None, event)
 
-    assert received[0].event_type == "tool_call_finished"
-    assert received[0].payload == {"tool": "search", "from_cache": False}
+    assert received[0].event_type == "tool_execution"
+    assert received[0].payload == {
+        "tool": "search",
+        "from_cache": False,
+        "crewai_event": "tool_usage_finished",
+    }
 
 
 def test_translates_llm_call_started():
@@ -115,8 +124,8 @@ def test_translates_llm_call_started():
     event = LLMCallStartedEvent(call_id="call-1", model="gpt-4o", task_id="task-2")
     adapter._on_llm_call_started(None, event)
 
-    assert received[0].event_type == "llm_call"
-    assert received[0].payload == {"model": "gpt-4o"}
+    assert received[0].event_type == "custom"
+    assert received[0].payload == {"model": "gpt-4o", "crewai_event": "llm_call_started"}
 
 
 def test_translates_task_completed_to_observation_completed():

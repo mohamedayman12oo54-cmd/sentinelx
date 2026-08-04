@@ -82,7 +82,9 @@ See [`diagrams/state/observation-state.svg`](./diagrams/state) for the full visu
 
 This question resurfaces a decision made earlier in the project's history: `task_id` and `observation_id` were deliberately removed from anything the customer is required to supply (see the ASES JSON Schema documentation for that original decision). So how does correlation happen without asking the customer for an ID?
 
-> **The Collector relies on an Execution Context that the Adapter is able to provide from the framework itself.**
+> **The Collector relies on a Runtime Context that the Adapter is able to provide from the framework itself.**
+>
+> Named "Runtime Context" throughout this document, matching the `runtime_context` field name `contracts/adapter-signal-contract.md` already uses — not "Execution Context," which collides with the Backend's own, entirely different wire-format `context` section (execution environment metadata, sent on every Observation; see `01-overview.md §4.2`). This was previously a genuine naming collision between two unrelated concepts (`PIPELINE-004`); the rename here is documentation-only and changes no behavior — the field itself was always called `runtime_context`.
 
 For example: CrewAI exposes an Execution object; LangGraph exposes a Graph Run. The Adapter forwards this as an **internal** context — never as part of the outward-facing ASES JSON.
 

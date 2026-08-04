@@ -22,17 +22,18 @@ Emitted every time the Adapter observes a discrete occurrence inside the framewo
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `signal_type` | `"EVENT"` | ✅ | Fixed value identifying this signal type |
-| `event_type` | string | ✅ | A framework-neutral label for what occurred (e.g., `"tool_call"`, `"llm_call"`) — never the framework's own internal terminology verbatim |
+| `event_type` | string | ✅ | One of the Backend's ten canonical Event Dictionary values (`api_call`, `file_access`, `command_execution`, `network_connection`, `database_operation`, `tool_execution`, `memory_operation`, `authentication`, `configuration_change`, `custom`) — never the framework's own internal terminology verbatim. Enforced at construction: constructing an `EventSignal` with any other value raises an error (RC-7, Ground 2) |
 | `payload` | object | ✅ | Arbitrary, event-specific data. Shape is defined by the Canonical Event Model, not by the Adapter |
 | `runtime_context` | object | ✅ | Internal correlation data (see Section 4) — **never** included in the outward-facing ASES JSON |
 | `timestamp` | ISO 8601 string | ✅ | When the Adapter observed this occurrence |
+| `framework` | string | ✅ | Identifies which framework/Adapter produced this signal (e.g. `"crewai"`, `"generic"`) — becomes the Observation's wire-format `context.framework` field |
 
 ### Example
 
 ```json
 {
   "signal_type": "EVENT",
-  "event_type": "tool_call",
+  "event_type": "tool_execution",
   "payload": {
     "tool": "search",
     "query": "latest AI security news"
@@ -40,9 +41,14 @@ Emitted every time the Adapter observes a discrete occurrence inside the framewo
   "runtime_context": {
     "execution_id": "internal-crewai-run-object-ref"
   },
-  "timestamp": "2026-08-01T10:15:32Z"
+  "timestamp": "2026-08-01T10:15:32Z",
+  "framework": "crewai"
 }
 ```
+
+### 2a. Ordering and the `sequence` Field
+
+No explicit per-event `sequence` field is part of this signal, or of the final wire-format Event's `header`. Ordering is guaranteed instead by array position within the Observation's `events` array — the Collector appends Events in the order it receives them, and the Builder preserves that order when constructing the final JSON (09-observation-lifecycle.md §7: one build, at the end, never incrementally). Both the Backend's `ObservationValidator` and the ML Service rely on array position, not a `sequence` field, for ordering — this was previously undocumented (`PIPELINE-003`) and is stated explicitly here to close that gap.
 
 ---
 

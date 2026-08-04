@@ -70,6 +70,8 @@ class CrewAIAdapter(Adapter):
     crewai's own event bus adds one.
     """
 
+    FRAMEWORK_NAME = "crewai"
+
     def __init__(self, crew: Any = None) -> None:
         super().__init__()
         self._crew = crew
@@ -99,6 +101,24 @@ class CrewAIAdapter(Adapter):
     # Canonical Event Model and forwards it — never interpreting,
     # aggregating, or deciding anything beyond that (ADR-002).
 
+    # Mapping from crewai's own callback vocabulary to the Backend's ten
+    # canonical Event Dictionary values (RC-7, PIPELINE-001/WALK-008, Ground
+    # 2). No dedicated category exists for a Task lifecycle marker or an LLM
+    # call in the Backend's Event Dictionary, so both map to "custom" — the
+    # Dictionary's own explicit catch-all for "framework-specific events."
+    # The original crewai event name is preserved in the payload (never
+    # validated beyond "is an object" by the Backend, per
+    # ADR-002-structural-validation-only.md) so it isn't lost, only
+    # relocated out of the validated `header.event_type` field. Documented
+    # in full in 07-agent-framework-ecosystem.md.
+    _EVENT_TYPE_MAP = {
+        "task_started": "custom",
+        "tool_usage_started": "tool_execution",
+        "tool_usage_finished": "tool_execution",
+        "llm_call_started": "custom",
+        "llm_call_completed": "custom",
+    }
+
     def _on_task_started(self, source: Any, event: TaskStartedEvent) -> None:
         self._emit_event(
             "task_started",
@@ -108,20 +128,20 @@ class CrewAIAdapter(Adapter):
 
     def _on_tool_usage_started(self, source: Any, event: ToolUsageStartedEvent) -> None:
         self._emit_event(
-            "tool_call",
+            "tool_usage_started",
             {"tool": event.tool_name, "args": event.tool_args},
             event.task_id,
         )
 
     def _on_tool_usage_finished(self, source: Any, event: ToolUsageFinishedEvent) -> None:
         self._emit_event(
-            "tool_call_finished",
+            "tool_usage_finished",
             {"tool": event.tool_name, "from_cache": event.from_cache},
             event.task_id,
         )
 
     def _on_llm_call_started(self, source: Any, event: LLMCallStartedEvent) -> None:
-        self._emit_event("llm_call", {"model": event.model}, event.task_id)
+        self._emit_event("llm_call_started", {"model": event.model}, event.task_id)
 
     def _on_llm_call_completed(self, source: Any, event: LLMCallCompletedEvent) -> None:
         self._emit_event(
@@ -142,12 +162,14 @@ class CrewAIAdapter(Adapter):
         # failure as a non-terminating condition.
         self._complete(event.task_id, COMPLETION_REASON_FRAMEWORK_TASK_FINISHED)
 
-    def _emit_event(self, event_type: str, payload: Dict[str, Any], task_id: Any) -> None:
+    def _emit_event(self, crewai_event_name: str, payload: Dict[str, Any], task_id: Any) -> None:
+        canonical_event_type = self._EVENT_TYPE_MAP[crewai_event_name]
         signal = EventSignal(
-            event_type=event_type,
-            payload=payload,
+            event_type=canonical_event_type,
+            payload={**payload, "crewai_event": crewai_event_name},
             runtime_context=_runtime_context(task_id),
             timestamp=_now_iso(),
+            framework=self.FRAMEWORK_NAME,
         )
         self._forward(signal)
 

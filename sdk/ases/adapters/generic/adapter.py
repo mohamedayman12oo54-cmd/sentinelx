@@ -54,11 +54,18 @@ class Execution:
             )
         if not isinstance(payload, dict):
             raise AdapterError("payload must be a dict.")
+        # event_type is validated against the canonical Event Dictionary by
+        # EventSignal itself (pipeline/events.py) — a non-canonical value
+        # raises AdapterError here with a clear, actionable message listing
+        # the ten valid values (RC-7, Ground 2). The Manual API's customer
+        # is responsible for supplying a canonical value directly; there is
+        # no framework-specific Adapter mapping to protect them here.
         signal = EventSignal(
             event_type=event_type,
             payload=payload,
             runtime_context=self._runtime_context,
             timestamp=_now_iso(),
+            framework=self._adapter.FRAMEWORK_NAME,
         )
         self._adapter._forward(signal)
 
@@ -84,16 +91,25 @@ class GenericAdapter(Adapter):
         ases.start()
 
         execution = adapter.begin_execution()
-        execution.emit("tool_call", {"tool": "search", "query": "..."})
-        execution.emit("llm_call", {"model": "gpt-4o", "tokens": 812})
+        execution.emit("tool_execution", {"tool": "search", "query": "..."})
+        execution.emit("custom", {"kind": "llm_call", "model": "gpt-4o", "tokens": 812})
         execution.complete()
 
     Single-execution shortcut, for simple scripts that never run two Tasks
     at once::
 
-        adapter.emit("tool_call", {"tool": "search", "query": "..."})
+        adapter.emit("tool_execution", {"tool": "search", "query": "..."})
         adapter.complete()
+
+    `event_type` must be one of the Backend's ten canonical Event
+    Dictionary values (`api_call`, `file_access`, `command_execution`,
+    `network_connection`, `database_operation`, `tool_execution`,
+    `memory_operation`, `authentication`, `configuration_change`,
+    `custom`) — emit() raises AdapterError immediately, with the full list,
+    if given anything else (RC-7, Ground 2).
     """
+
+    FRAMEWORK_NAME = "generic"
 
     def __init__(self) -> None:
         super().__init__()

@@ -1,9 +1,16 @@
-from ases.observation.models import Observation, ObservationMetadata
+from ases.observation.models import Context, Observation, ObservationMetadata
 from ases.transport.queue import ObservationQueue
 
 
 def _dummy_observation():
+    context = Context(
+        framework="generic",
+        environment="production",
+        execution_start_time="t",
+        execution_finish_time="t",
+    )
     metadata = ObservationMetadata(
+        spec_version="1.0",
         sdk_version="1.0.0",
         environment="production",
         started_at="t",
@@ -11,7 +18,7 @@ def _dummy_observation():
         completion_reason="agent_execution_ended",
         event_count=0,
     )
-    return Observation(events=[], metadata=metadata)
+    return Observation(context=context, events=[], metadata=metadata)
 
 
 def test_queue_put_get_roundtrip():

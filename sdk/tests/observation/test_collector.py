@@ -13,8 +13,8 @@ def test_collector_groups_events_and_completes():
 
     collector = ObservationCollector(on_complete=sink)
     ctx = {"execution_id": "abc"}
-    collector.on_event(EventSignal(event_type="tool_call", payload={}, runtime_context=ctx, timestamp="t1"))
-    collector.on_event(EventSignal(event_type="llm_call", payload={}, runtime_context=ctx, timestamp="t2"))
+    collector.on_event(EventSignal(event_type="tool_execution", payload={}, runtime_context=ctx, timestamp="t1", framework="generic"))
+    collector.on_event(EventSignal(event_type="custom", payload={}, runtime_context=ctx, timestamp="t2", framework="generic"))
     collector.on_observation_completed(
         ObservationCompletedSignal(runtime_context=ctx, reason="agent_execution_ended", timestamp="t3")
     )
@@ -35,8 +35,8 @@ def test_collector_handles_concurrent_observations_independently():
     collector = ObservationCollector(on_complete=sink)
     ctx_a = {"execution_id": "a"}
     ctx_b = {"execution_id": "b"}
-    collector.on_event(EventSignal(event_type="tool_call", payload={}, runtime_context=ctx_a, timestamp="t1"))
-    collector.on_event(EventSignal(event_type="tool_call", payload={}, runtime_context=ctx_b, timestamp="t1"))
+    collector.on_event(EventSignal(event_type="tool_execution", payload={}, runtime_context=ctx_a, timestamp="t1", framework="generic"))
+    collector.on_event(EventSignal(event_type="tool_execution", payload={}, runtime_context=ctx_b, timestamp="t1", framework="generic"))
     collector.on_observation_completed(
         ObservationCompletedSignal(runtime_context=ctx_a, reason="agent_execution_ended", timestamp="t2")
     )
@@ -56,7 +56,7 @@ def test_collector_shutdown_flushes_open_observations():
 
     collector = ObservationCollector(on_complete=sink)
     collector.on_event(
-        EventSignal(event_type="tool_call", payload={}, runtime_context={"execution_id": "x"}, timestamp="t1")
+        EventSignal(event_type="tool_execution", payload={}, runtime_context={"execution_id": "x"}, timestamp="t1", framework="generic")
     )
     collector.shutdown()
 
@@ -73,7 +73,7 @@ def test_collector_force_closes_on_timeout(monkeypatch):
 
     collector = ObservationCollector(on_complete=sink)
     collector.on_event(
-        EventSignal(event_type="tool_call", payload={}, runtime_context={"execution_id": "y"}, timestamp="t1")
+        EventSignal(event_type="tool_execution", payload={}, runtime_context={"execution_id": "y"}, timestamp="t1", framework="generic")
     )
 
     time.sleep(1.5)  # the timeout loop polls once a second

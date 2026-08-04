@@ -186,7 +186,7 @@ ases.attach(adapter)
 ases.start()
 
 adapter.emit(
-    event_type="tool_call",
+    event_type="tool_execution",
     payload={"tool": "search", "query": "latest AI security news"}
 )
 

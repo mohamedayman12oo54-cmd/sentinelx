@@ -54,3 +54,32 @@ VALID_COMPLETION_REASONS = frozenset(
         COMPLETION_REASON_SDK_SHUTDOWN,
     }
 )
+
+# --- ASES JSON Schema (docs/03-specifications/03-ASES_JSON_SCHEMA.md,
+# frontmatter "version: 1.0") -------------------------------------------
+SPEC_VERSION = "1.0"
+
+# --- Event Dictionary (docs/03-specifications/02-EVENT_DICTIONARY.md) --
+#
+# The closed, ten-value canonical event_type vocabulary. Every EventSignal
+# is validated against this set at construction (pipeline/events.py) — the
+# single choke point every Adapter's output passes through — so that no
+# non-canonical value can ever reach the final Observation JSON, regardless
+# of which Adapter (shipped or third-party) produced it. Each Adapter is
+# responsible for mapping its own framework-specific vocabulary into one of
+# these ten values before constructing a signal; this set is what enforces
+# that the mapping was actually done.
+CANONICAL_EVENT_TYPES = frozenset(
+    {
+        "api_call",
+        "file_access",
+        "command_execution",
+        "network_connection",
+        "database_operation",
+        "tool_execution",
+        "memory_operation",
+        "authentication",
+        "configuration_change",
+        "custom",
+    }
+)

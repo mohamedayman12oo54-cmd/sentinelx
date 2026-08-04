@@ -38,6 +38,22 @@ Built around a Graph model — the Agent moves between Nodes. Every transition i
 ### OpenAI Agents SDK — a Nuance Worth Recording
 The framework itself is free and open, but running the underlying model incurs real usage cost. This has no bearing on ASES's ability to integrate — it's simply a fact worth documenting so it isn't mistaken for an integration limitation later.
 
+---
+
+## 3. The CrewAI Adapter's `event_type` Mapping (RC-7, Ground 2)
+
+The Adapter — not the Core — owns mapping its framework's own callback vocabulary into one of the Backend's ten canonical Event Dictionary values (`api_call`, `file_access`, `command_execution`, `network_connection`, `database_operation`, `tool_execution`, `memory_operation`, `authentication`, `configuration_change`, `custom`), consistent with the existing rule that the Core never knows a framework directly (`ADR-001-adapter-based-framework-strategy.md`) — the Builder stays framework-agnostic and never needs its own per-framework mapping table.
+
+| CrewAI callback | Canonical `event_type` | Rationale |
+|---|---|---|
+| `TaskStartedEvent` | `custom` | A Task lifecycle marker, not one of the nine specific categories — the Event Dictionary's own catch-all. |
+| `ToolUsageStartedEvent` | `tool_execution` | A direct match — CrewAI calling a Tool is exactly what this category describes. |
+| `ToolUsageFinishedEvent` | `tool_execution` | Same category as its start event; still a Tool operation. |
+| `LLMCallStartedEvent` | `custom` | No dedicated LLM-call category exists in the Backend's Event Dictionary. |
+| `LLMCallCompletedEvent` | `custom` | Same reasoning as its start event. |
+
+The original crewai callback name is preserved in the Event's `payload` (under a `crewai_event` key) so it isn't lost — only relocated out of the validated `header.event_type` field. The Backend never validates `payload` content beyond confirming it is an object (`adr/ADR-002-structural-validation-only.md`), so this is a safe place for it to live. This mapping is enforced, not just documented: `ases/pipeline/events.py`'s `EventSignal` rejects any `event_type` outside the ten canonical values at construction time, regardless of which Adapter produced it.
+
 ### AutoGen, Google ADK, Mastra — Acknowledged, Not V1
 AutoGen (Microsoft) supports genuine multi-Agent systems — likely relevant to Sentinel's longer-term future in multi-Agent security, but not required for the MVP. Google ADK is being pushed hard by Google but isn't yet a priority. Mastra is modern but has a smaller community. All three remain on the roadmap, not the MVP.
 
