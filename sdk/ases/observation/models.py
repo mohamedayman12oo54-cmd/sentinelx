@@ -131,15 +131,24 @@ class Observation:
     """The complete execution story of a single Agent Task
     (09-observation-lifecycle.md, section 1).
 
-    Deliberately carries no observation_id or task_id: correlation is
-    internal-only, via runtime_context, and never part of the outward-facing
-    wire format (09-observation-lifecycle.md, section 5). SentinelX assigns
-    its own identifier on receipt.
+    Deliberately carries no observation_id or task_id in its wire-format
+    JSON: correlation is internal-only, via runtime_context, and never part
+    of the outward-facing wire format (09-observation-lifecycle.md, section
+    5). SentinelX assigns its own identifier on receipt.
+
+    `correlation_id` (below) does NOT contradict this — it is the
+    Collector's own internal grouping key (the same value
+    observation/collector.py's `_correlation_key()` computes from
+    runtime_context), kept on this object purely so a permanently-dropped
+    Observation's log entry can reference which execution it was (RC-9,
+    RELIABILITY-005). `to_dict()` deliberately excludes it — it never
+    reaches the Backend.
     """
 
     context: Context
     events: List[Event]
     metadata: ObservationMetadata
+    correlation_id: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {

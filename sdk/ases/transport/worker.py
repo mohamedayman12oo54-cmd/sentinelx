@@ -44,15 +44,21 @@ class Worker:
                 payload = serialize_observation(observation)
                 delivered = self._client.send(payload)
                 if not delivered:
-                    # The API Client itself already logged the specific
-                    # reason (retries exhausted, authentication failure,
-                    # non-retryable rejection — see transport/client.py's
-                    # own three-way classification, RC-8 IDENTITY-002).
-                    # This is deliberately generic, not a duplicate claim
-                    # that retries were always exhausted.
+                    # RC-9, RELIABILITY-005 — structured content, at
+                    # minimum: the Observation's internal correlation_id
+                    # (never the wire-format JSON, which has none — see
+                    # models.py), and a timestamp (via the standard log
+                    # formatter, logger.py). The specific failure reason
+                    # (retries exhausted, authentication failure,
+                    # non-retryable rejection — RC-8 IDENTITY-002's
+                    # three-way classification) is on the API Client's own
+                    # immediately-preceding warning, referenced here rather
+                    # than duplicated, so the two messages can never drift
+                    # out of sync with each other.
                     self._logger.warning(
-                        "Observation dropped (%d event(s)).",
-                        len(observation.events),
+                        "Observation dropped (correlation_id=%s, event_count=%d) "
+                        "— see the preceding warning from transport.client for the failure reason.",
+                        observation.correlation_id, len(observation.events),
                     )
             except Exception:  # noqa: BLE001 — Transport must never crash the
                 # host Agent (ADR-004); a defect here must be logged and

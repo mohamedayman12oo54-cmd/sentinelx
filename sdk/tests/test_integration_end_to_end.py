@@ -82,3 +82,30 @@ def test_start_is_idempotent_and_stop_flushes_on_shutdown():
 
     assert len(sent_payloads) == 1
     assert '"completion_reason":"sdk_shutdown"' in sent_payloads[0]
+
+
+def test_dropped_observation_log_includes_correlation_id_and_never_the_wire_json(caplog):
+    # RC-9, RELIABILITY-005: the drop-warning must be diagnosable (which
+    # execution was this?) without the correlation_id ever reaching the
+    # wire-format JSON actually sent (it has no such field at all — see
+    # models.py's own Observation.to_dict()).
+    def fake_send(self, serialized):
+        return False  # every attempt "fails" -- permanently dropped
+
+    with caplog.at_level("WARNING", logger="ases.transport.worker"):
+        with patch("ases.transport.client.APIClient.send", fake_send):
+            sdk = ASES(api_key="ases_test_key")
+            adapter = GenericAdapter()
+            sdk.attach(adapter)
+            sdk.start()
+
+            adapter.emit("tool_execution", {"tool": "search"})
+            adapter.complete()
+
+            time.sleep(1.5)
+            sdk.stop()
+
+    drop_logs = [r.message for r in caplog.records if "Observation dropped" in r.message]
+    assert len(drop_logs) == 1
+    assert "correlation_id=" in drop_logs[0]
+    assert "event_count=1" in drop_logs[0]

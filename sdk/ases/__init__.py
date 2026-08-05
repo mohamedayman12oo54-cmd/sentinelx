@@ -123,15 +123,20 @@ class ASES:
         self._worker.join(timeout=TRANSPORT_SHUTDOWN_FLUSH_TIMEOUT_SECONDS)
         self._started = False
 
-    def _on_observation_ready(self, events: List[EventSignal], reason: str) -> None:
+    def _on_observation_ready(self, correlation_id: str, events: List[EventSignal], reason: str) -> None:
         """The Collector's completion sink: build, validate, and enqueue.
         A Validation failure is logged and the Observation is dropped —
         Transport never sees it (09-observation-lifecycle.md, section 8)."""
-        observation = build_observation(events, reason, self._settings.environment)
+        observation = build_observation(
+            events, reason, self._settings.environment, correlation_id=correlation_id
+        )
         try:
             validate_observation(observation)
         except ValidationError as exc:
-            _logger.warning("Observation dropped: failed validation (%s).", exc)
+            _logger.warning(
+                "Observation dropped: failed validation (correlation_id=%s): %s.",
+                correlation_id, exc,
+            )
             return
         self._queue.put(observation)
 

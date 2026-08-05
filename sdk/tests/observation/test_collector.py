@@ -8,7 +8,7 @@ from ases.pipeline.events import EventSignal, ObservationCompletedSignal
 def test_collector_groups_events_and_completes():
     completed = []
 
-    def sink(events, reason):
+    def sink(key, events, reason):
         completed.append((events, reason))
 
     collector = ObservationCollector(on_complete=sink)
@@ -29,7 +29,7 @@ def test_collector_groups_events_and_completes():
 def test_collector_handles_concurrent_observations_independently():
     completed = []
 
-    def sink(events, reason):
+    def sink(key, events, reason):
         completed.append(events)
 
     collector = ObservationCollector(on_complete=sink)
@@ -51,7 +51,7 @@ def test_collector_handles_concurrent_observations_independently():
 def test_collector_shutdown_flushes_open_observations():
     completed = []
 
-    def sink(events, reason):
+    def sink(key, events, reason):
         completed.append(reason)
 
     collector = ObservationCollector(on_complete=sink)
@@ -68,7 +68,7 @@ def test_collector_force_closes_on_timeout(monkeypatch):
 
     completed = []
 
-    def sink(events, reason):
+    def sink(key, events, reason):
         completed.append(reason)
 
     collector = ObservationCollector(on_complete=sink)
@@ -83,7 +83,7 @@ def test_collector_force_closes_on_timeout(monkeypatch):
 
 def test_completed_signal_with_no_matching_events_is_ignored():
     completed = []
-    collector = ObservationCollector(on_complete=lambda events, reason: completed.append(reason))
+    collector = ObservationCollector(on_complete=lambda key, events, reason: completed.append(reason))
     collector.on_observation_completed(
         ObservationCompletedSignal(runtime_context={"execution_id": "never-seen"}, reason="agent_execution_ended", timestamp="t1")
     )

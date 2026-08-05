@@ -34,7 +34,13 @@ from ases.shared.logger import get_logger
 # Builder: "Collector -> Builder, direction only ever flows this way"
 # (08-internal-architecture.md, section 7). The Collector never imports the
 # Builder itself.
-CompletionSink = Callable[[List[EventSignal], str], None]
+#
+# The correlation key (str) is included so a permanently-dropped
+# Observation's log entry (RC-9, RELIABILITY-005) can reference which
+# in-flight execution it was, without that identifier ever reaching the
+# wire-format JSON — it is carried as Observation.correlation_id, which
+# Observation.to_dict() deliberately excludes.
+CompletionSink = Callable[[str, List[EventSignal], str], None]
 
 
 def _correlation_key(runtime_context: Dict[str, Any]) -> str:
@@ -104,7 +110,7 @@ class ObservationCollector:
             "Observation completed (key=%s, reason=%s, events=%d).",
             key, reason, len(in_flight.events),
         )
-        self._on_complete(in_flight.events, reason)
+        self._on_complete(key, in_flight.events, reason)
 
     def _timeout_loop(self) -> None:
         # Polls once a second rather than scheduling a per-Observation

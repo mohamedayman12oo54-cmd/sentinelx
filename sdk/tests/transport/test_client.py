@@ -2,6 +2,7 @@ import urllib.error
 from unittest.mock import MagicMock, patch
 
 from ases.config.settings import Settings
+from ases.shared.constants import HTTP_REQUEST_TIMEOUT_SECONDS
 from ases.transport.client import APIClient
 
 
@@ -40,6 +41,42 @@ def test_send_fails_fast_on_4xx_without_retrying():
 
     assert result is False
     assert call_count["n"] == 1  # no retry on a 4xx — it will not succeed on retry
+
+
+def test_send_applies_the_configured_per_request_timeout():
+    # RC-9, RELIABILITY-001: proves the per-request send timeout (a
+    # previously-undocumented policy) is actually wired to the real HTTP
+    # call, not merely a constant that exists but is never used.
+    client = APIClient(_settings())
+    mock_response = MagicMock()
+    mock_response.getcode.return_value = 202
+    mock_response.__enter__.return_value = mock_response
+
+    with patch("ases.transport.client.urllib.request.urlopen", return_value=mock_response) as mock_urlopen:
+        client.send('{"events": []}')
+
+    _, kwargs = mock_urlopen.call_args
+    assert kwargs["timeout"] == HTTP_REQUEST_TIMEOUT_SECONDS
+
+
+def test_send_aborts_rather_than_hangs_when_a_single_attempt_times_out(monkeypatch):
+    # A slow/unresponsive Backend must not hang the Agent indefinitely — an
+    # attempt that exceeds HTTP_REQUEST_TIMEOUT_SECONDS surfaces as a
+    # TimeoutError (exactly what urllib raises when its own `timeout=`
+    # kwarg is exceeded) and is treated as the existing transient-failure
+    # path: retried up to the standard budget, then dropped — never left
+    # hanging, never raised into the host Agent.
+    monkeypatch.setattr("ases.transport.client.time.sleep", lambda seconds: None)
+    client = APIClient(_settings())
+
+    def raise_timeout(*args, **kwargs):
+        raise TimeoutError("timed out")
+
+    with patch("ases.transport.client.urllib.request.urlopen", side_effect=raise_timeout) as mock_urlopen:
+        result = client.send('{"events": []}')
+
+    assert result is False
+    assert mock_urlopen.call_count == 4  # 1 initial attempt + TRANSPORT_MAX_RETRIES (3)
 
 
 def test_send_retries_on_network_error_then_gives_up(monkeypatch):

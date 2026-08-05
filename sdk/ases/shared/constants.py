@@ -28,6 +28,40 @@ OBSERVATIONS_PATH = "/api/v1/observations"
 
 DEFAULT_ENVIRONMENT = "production"
 
+# --- Timeouts (RC-9, RELIABILITY-001/002) -------------------------------
+#
+# Four distinct timeout-shaped concepts exist in this SDK; each is a
+# separate constant with a separate meaning, named here together so a
+# future reader doesn't have to reconstruct which is which the way the
+# ASES audit series had to:
+#
+#   HTTP_REQUEST_TIMEOUT_SECONDS         — how long a single send attempt
+#                                           (one HTTP request to the
+#                                           Backend) is allowed to run
+#                                           before counting as a failure
+#                                           requiring a retry. Mirrors the
+#                                           Backend's own outbound budget
+#                                           for its Backend->ML call
+#                                           (MLClient.php: timeout(10)),
+#                                           for consistency across this
+#                                           project's various outbound
+#                                           HTTP calls — an adjustable
+#                                           engineering default, not a
+#                                           frozen requirement.
+#   TRANSPORT_SHUTDOWN_FLUSH_TIMEOUT_SECONDS (below) — how long the
+#                                           shutdown Flush is allowed to
+#                                           run, total, across every
+#                                           still-queued Observation.
+#   OBSERVATION_TIMEOUT_SECONDS (below)  — how long the Collector waits
+#                                           for a new Event before
+#                                           force-closing an in-flight
+#                                           Observation (a Lifecycle
+#                                           concept, unrelated to network
+#                                           I/O at all).
+#   Retry count (TRANSPORT_MAX_RETRIES, below) — not a timeout, but the
+#                                           fourth policy this audit found
+#                                           readers conflating with the
+#                                           three above.
 HTTP_REQUEST_TIMEOUT_SECONDS = 10.0
 
 # --- Authentication (RC-8, IDENTITY-001) -------------------------------
