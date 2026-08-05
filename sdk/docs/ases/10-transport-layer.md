@@ -102,15 +102,52 @@ Rate limit (429)                                 →  retried, but honoring the
 
 This was previously undocumented — the original rationale below was written entirely around the transient case, and applying it uniformly to an authentication rejection would mean retrying an invalid credential three times for no possible benefit before silently dropping the Observation with only a generic warning.
 
+### The Four Timeout-Shaped Concepts, Named Together (RC-9, RELIABILITY-001/002)
+
+This document, `09-observation-lifecycle.md`, and `environment-configuration.md` each address one piece of "how long does X wait" — previously scattered enough that reconstructing which timeout governs what required cross-referencing all three. Named here together, once:
+
+| Concept | Value | Governs |
+|---|---|---|
+| Per-request send timeout | **10 seconds** | How long a single HTTP attempt to the Backend is allowed to run before it counts as a failure requiring a retry. Mirrors the Backend's own outbound budget for its Backend→ML call (`MLClient.php`: `timeout(10)`), for consistency across this project's various outbound HTTP calls. |
+| Shutdown Flush timeout | **5 seconds** | How long the shutdown Flush (below) is allowed to run in total, across every still-queued Observation, before the process exits regardless. |
+| Observation-lifecycle timeout | 30 seconds (`09-observation-lifecycle.md §3`) | How long the Collector waits for a new Event before force-closing an in-flight Observation — a Lifecycle concept, unrelated to network I/O. |
+| Retry count | 3 (not a timeout) | How many times a transient/rate-limited failure is retried before the Observation is dropped. |
+
+All four are adjustable engineering defaults, not frozen business rules — the same discipline this codebase already applies to values like the Alert module's `SeverityMapper` thresholds — and, per `environment-configuration.md §7`, none of them is customer-configurable in V1.
+
+### Send Rate / Backpressure — a Stated Assumption, Not a Silent One (RC-9, RELIABILITY-003)
+
+The Worker drains the Queue and hands each Observation to the API Client individually — there is no batching, throttling, or client-side rate limiting of the SDK's own send rate anywhere in this design. This is a real, deliberate assumption, stated explicitly here rather than left unaddressed: **the SDK relies on the Backend's own rate limiter (`observation-ingestion`, 300 requests/minute per Agent — `backend/routes/api.php`, `AppServiceProvider.php`) as the governing ceiling**, not a client-side one. A burst of concurrent Observations completing near-simultaneously (a normal, expected scenario — `09-observation-lifecycle.md §4`) can therefore hit that ceiling; when it does, the Backend responds `429`, and the Retry Policy above already handles it correctly (honoring `Retry-After`) — this is the proportionate response to a real burst, not a reason to build client-side batching or throttling with no demonstrated need for it.
+
 ### If the Network Disconnects Entirely
 The Observation simply remains in the Queue. Once connectivity returns, the Worker resumes automatically — expected, normal behavior, nothing special required.
 
 ### If the SDK Is Shutting Down
-Before shutdown completes, Transport performs a **Flush** — a best-effort attempt to send whatever remains queued, bounded by a short timeout. If it can't finish in time, it simply stops; a lost final Observation on shutdown is an accepted, bounded tradeoff, not a defect.
+Before shutdown completes, Transport performs a **Flush** — a best-effort attempt to send whatever remains queued, bounded by a short timeout (**5 seconds** — see the timeout table above). If it can't finish in time, it simply stops; a lost final Observation on shutdown is an accepted, bounded tradeoff, not a defect.
 
 ### Should the Queue Persist to Disk?
 
 **Not in V1.** This follows directly from the Observation Lifecycle decision (see [`09-observation-lifecycle.md`](./09-observation-lifecycle.md)) that an Observation's life is measured in seconds. If the process crashes, the Agent itself has crashed — losing the last in-flight Observation in that scenario is acceptable for V1.
+
+### What a Permanently-Dropped Observation's Log Entry Actually Contains (RC-9, RELIABILITY-005)
+
+Two log lines together, not one — deliberately not duplicated into a single message, so they can never drift out of sync with each other:
+
+```text
+1. The API Client's own warning (transport/client.py), logged at the point
+   delivery finally failed — states the specific reason: which of the
+   three failure classes above applied (retries exhausted / authentication
+   failure / non-retryable rejection), including the HTTP status where
+   relevant. Never includes the api_key (see 08-internal-architecture.md
+   §7's explicit "must never log" rule).
+2. The Worker's own follow-up warning (transport/worker.py), logged
+   immediately after — states this Observation's internal correlation_id
+   (the Collector's own grouping key; never the wire-format JSON, which
+   carries no such field at all) and its event_count, and points back to
+   the preceding line for the reason.
+```
+
+Both lines carry a timestamp via the standard log format (`shared/logger.py`: `[%(asctime)s] %(levelname)-8s ases.%(name)s: %(message)s`) — not a separate, message-embedded field.
 
 ---
 

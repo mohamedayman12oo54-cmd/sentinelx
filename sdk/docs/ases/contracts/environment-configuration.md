@@ -107,7 +107,8 @@ Per [`10-transport-layer.md`](../10-transport-layer.md#5-the-transport-lifecycle
 ```text
 ✘ Retry count (fixed at 3)
 ✘ Queue size or persistence behavior
-✘ Shutdown flush timeout
+✘ Shutdown flush timeout (fixed at 5 seconds — RC-9, RELIABILITY-002)
+✘ Per-request send timeout (fixed at 10 seconds — RC-9, RELIABILITY-001)
 ```
 
 These remain internal implementation details, not customer-facing configuration, consistent with the Public API's "Intent, not Implementation" principle (see [`04-public-api.md`](../04-public-api.md#10-the-decision-that-outlives-this-document)).
