@@ -8,6 +8,16 @@ import { PageLoader, PageError } from "../components/ui/PageState.jsx";
 import { getAlert, acknowledgeAlert, resolveAlert } from "../lib/api/alerts.js";
 import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 
+// Matches ObservationDetails.jsx's own polling pattern (WALK-004,
+// RC-9/Phase 9 leftover item — this page was the one sibling that never
+// got it). An Alert's own content (reasons, evidence, severity) is fixed
+// once created, but its `status` can still change from another actor
+// acknowledging or resolving the same Alert elsewhere — poll while it
+// hasn't reached its own terminal state, stop once it has. Same interval
+// as ObservationDetails.jsx, for consistency, not a separately-tuned value.
+const POLL_INTERVAL_MS = 5000;
+const TERMINAL_STATUS = "RESOLVED";
+
 export default function AlertDetails() {
   const { alertId } = useParams();
   const [alert, setAlert] = useState(null);
@@ -15,9 +25,10 @@ export default function AlertDetails() {
   const [tab, setTab] = useState("summary");
   const [busy, setBusy] = useState(false);
 
-  async function load() {
-    setError(null);
-    setAlert(null);
+  // Refetch only — does not reset alert/error to null first, unlike
+  // load(), so a background poll never flashes the page back to a loading
+  // state (matches ObservationDetails.jsx's own refetch()).
+  async function refetch() {
     try {
       const res = await getAlert(alertId);
       setAlert(res);
@@ -26,11 +37,24 @@ export default function AlertDetails() {
     }
   }
 
+  async function load() {
+    setError(null);
+    setAlert(null);
+    await refetch();
+  }
+
   useEffect(() => {
     load();
     setTab("summary");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alertId]);
+
+  useEffect(() => {
+    if (!alert || alert.status === TERMINAL_STATUS) return;
+    const intervalId = setInterval(refetch, POLL_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alert?.status, alertId]);
 
   async function handleAcknowledge() {
     setBusy(true);
