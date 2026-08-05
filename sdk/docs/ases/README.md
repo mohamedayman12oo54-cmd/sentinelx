@@ -19,6 +19,8 @@ This documentation is written to serve four audiences at once, and it must satis
 
 If any explanation here would fail one of these four readers, it isn't finished.
 
+> **If you are a customer integrating ASES into your own Agent, start at [`sdk/README.md`](../../README.md) instead.** This document set exists for engineering design rationale — the *why* behind every decision — not customer onboarding; a first-time integrator is not one of the four audiences above, deliberately (RC-10, DX-004). `sdk/README.md` and [`sdk/docs/getting-started.md`](../getting-started.md) are the real, customer-scoped entry points, and link back here for any reader who wants the full rationale behind a specific decision.
+
 ---
 
 ## 2. The One Rule Every Decision in This Folder Traces Back To
@@ -71,12 +73,13 @@ docs/
     ├── 13-implementation-roadmap.md                                        ← The build order, milestone by milestone
     │
     ├── adr/                                             ← The pivotal architectural decisions, and why
-    │   ├── ADR-001-thin-adapter-principle.md
-    │   ├── ADR-002-in-memory-observation-buffering.md
-    │   ├── ADR-003-non-blocking-async-transport.md
-    │   ├── ADR-004-single-package-distribution.md
-    │   ├── ADR-005-domain-driven-repository-structure.md
-    │   └── ADR-006-sdk-responsibility-boundary.md
+    │   ├── ADR-001-adapter-based-framework-strategy.md
+    │   ├── ADR-002-thin-adapter-principle.md
+    │   ├── ADR-003-in-memory-observation-buffering.md
+    │   ├── ADR-004-non-blocking-async-transport.md
+    │   ├── ADR-005-sdk-responsibility-boundary.md
+    │   ├── ADR-006-domain-driven-repository-structure.md
+    │   └── ADR-007-single-package-distribution.md
     │
     ├── contracts/                                       ← Exact, implementation-ready specifications
     │   ├── public-api-contract.md

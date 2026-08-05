@@ -184,7 +184,7 @@ ASES Integration Layer
 └── (more, over time)
 ```
 
-V1 ships with **CrewAI only**, because it is the most widely used framework meeting our integration criteria (see [`07-agent-framework-ecosystem.md`](./07-agent-framework-ecosystem.md) for the full evaluation). Additional adapters are added afterward, one at a time, without changing anything else in the system — see [`ADR-005`](./adr/ADR-005-domain-driven-repository-structure.md) for why this is structurally guaranteed, not just a hope.
+V1 ships with **CrewAI only**, because it is the most widely used framework meeting our integration criteria (see [`07-agent-framework-ecosystem.md`](./07-agent-framework-ecosystem.md) for the full evaluation). Additional adapters are added afterward, one at a time, without changing anything else in the system — see [`ADR-006`](./adr/ADR-006-domain-driven-repository-structure.md) for why this is structurally guaranteed, not just a hope.
 
 ---
 

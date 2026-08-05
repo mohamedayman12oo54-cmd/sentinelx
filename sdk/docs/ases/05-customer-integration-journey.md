@@ -173,7 +173,7 @@ This is a fundamentally different, and fundamentally more honest, description of
     ↓
 4. Install ases-sdk
     ↓
-5. Install the appropriate Adapter
+5. Wire the appropriate Adapter to your Agent
     ↓
 6. Run the Agent
     ↓

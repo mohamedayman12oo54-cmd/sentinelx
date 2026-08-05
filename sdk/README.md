@@ -102,6 +102,7 @@ proof of how mechanical adding them will be.
 - [Architecture](./docs/architecture.md)
 - [Django Integration Example](./examples/django-custom-agent/)
 - [CrewAI Integration Example](./examples/crewai-basic/)
+- [Design Rationale](./docs/ases/README.md) — curious *why* a decision was made a certain way (e.g. why the retry count is fixed at 3, not configurable — see `docs/ases/adr/ADR-004-non-blocking-async-transport.md`)? This is where the full engineering rationale behind every part of this SDK lives. Not required reading to integrate ASES — start with Getting Started above for that.
 
 ## Compliance Notes
 
