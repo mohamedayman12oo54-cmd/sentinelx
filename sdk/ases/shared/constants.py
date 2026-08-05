@@ -30,6 +30,27 @@ DEFAULT_ENVIRONMENT = "production"
 
 HTTP_REQUEST_TIMEOUT_SECONDS = 10.0
 
+# --- Authentication (RC-8, IDENTITY-001) -------------------------------
+#
+# Confirmed directly against the real Laravel backend's Agent guard
+# (backend/app/Modules/Authentication/AuthServiceProvider.php:34-39):
+# Auth::viaRequest('agent-api-key', ...->handle($request->header('X-API-Key'))).
+# A single, custom header — never Authorization: Bearer, which is reserved
+# for the separate, JWT-based Human guard.
+API_KEY_HEADER = "X-API-Key"
+
+# --- Transport failure classification (RC-8, IDENTITY-002) -------------
+#
+# 401/403 are authentication rejections, not transient failures: retrying
+# with the same credential cannot succeed, so these fail fast without
+# consuming any of the retry budget below, and are logged distinctly.
+AUTH_FAILURE_STATUS_CODES = frozenset({401, 403})
+
+# 429 is retry-worthy, but not identically to a transient network failure —
+# the Backend's rate limiter's own Retry-After header (if present) is
+# honored instead of the fixed exponential backoff below.
+RATE_LIMIT_STATUS_CODE = 429
+
 # --- Transport retry policy (ADR-004, 10-transport-layer.md) ----------
 TRANSPORT_MAX_RETRIES = 3
 TRANSPORT_SHUTDOWN_FLUSH_TIMEOUT_SECONDS = 5.0
