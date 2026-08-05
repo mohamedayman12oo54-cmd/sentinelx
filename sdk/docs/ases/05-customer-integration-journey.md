@@ -126,6 +126,8 @@ The customer runs their Agent exactly as they always have. They do not separatel
 ### Stage 7 — Dashboard
 After the first Task completes, the customer opens the Dashboard and sees:
 
+**How long should this take?** Typically within a couple of minutes of submission under normal load — the Backend claims newly-submitted Observations in batches, once per minute (`analysis:poll-pending-observations`, `backend/routes/console.php`), so results are not instantaneous; if many Observations are queued at once, this can take longer, since each poll only claims a bounded batch. This is the one honest expectation ASES's own documentation can set on the customer's behalf — the SDK itself cannot, by design (see `adr/ADR-005-sdk-responsibility-boundary.md`: its own responsibility ends at `202 Accepted`, before any of this happens) — sourced from the Backend's own current, real scheduling behavior, not invented (RC-9, RELIABILITY-004/WALK-010).
+
 ```text
 Observation #1
     ↓

@@ -16,11 +16,19 @@ from ases.shared.constants import SDK_VERSION, SPEC_VERSION
 
 
 def build_observation(
-    signals: List[EventSignal], completion_reason: str, environment: str
+    signals: List[EventSignal],
+    completion_reason: str,
+    environment: str,
+    correlation_id: str = "",
 ) -> Observation:
     """Convert a finished group of EventSignals into a single Observation,
     in the Backend's real wire-format shape — Context + Events (each
     header/payload-nested) + Metadata (RC-7 / Ground 1).
+
+    `correlation_id` (RC-9, RELIABILITY-005) is the Collector's own
+    internal grouping key for this execution — carried on the returned
+    Observation for diagnostic logging only; Observation.to_dict() never
+    includes it.
 
     Raises ValueError if given an empty list — the Collector never calls
     this with zero Events (see collector._finalize's own empty-events
@@ -54,4 +62,4 @@ def build_observation(
         completion_reason=completion_reason,
         event_count=len(events),
     )
-    return Observation(context=context, events=events, metadata=metadata)
+    return Observation(context=context, events=events, metadata=metadata, correlation_id=correlation_id)

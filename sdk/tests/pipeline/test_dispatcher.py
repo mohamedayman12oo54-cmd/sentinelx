@@ -5,7 +5,7 @@ from ases.pipeline.events import EventSignal, ObservationCompletedSignal
 
 def test_dispatcher_routes_event_to_collector():
     received = []
-    collector = ObservationCollector(on_complete=lambda events, reason: received.append((events, reason)))
+    collector = ObservationCollector(on_complete=lambda key, events, reason: received.append((events, reason)))
     dispatcher = Dispatcher(collector)
 
     ctx = {"execution_id": "abc"}
@@ -20,7 +20,7 @@ def test_dispatcher_routes_event_to_collector():
 
 
 def test_dispatcher_ignores_unknown_signal_type():
-    collector = ObservationCollector(on_complete=lambda events, reason: None)
+    collector = ObservationCollector(on_complete=lambda key, events, reason: None)
     dispatcher = Dispatcher(collector)
     # Should not raise — an unrecognized signal is logged and dropped.
     dispatcher.dispatch(object())
