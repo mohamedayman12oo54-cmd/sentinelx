@@ -53,7 +53,7 @@ configure(api_key: str = None) -> None
 Standard Python `.env` file conventions are supported, consistent with customary practice for Python libraries (`fastapi`, `requests`, etc. — see [`12-packaging-and-distribution.md`](../12-packaging-and-distribution.md#2-why-pypi-specifically)):
 
 ```env
-ASES_API_KEY=ases_xxxxxxxxx
+ASES_API_KEY=sk_live_ab12_9f8e7d6c5b4a3928...
 ASES_ENDPOINT=https://api.sentinelx.example.com
 ASES_ENVIRONMENT=production
 ```
@@ -73,6 +73,30 @@ A `.env.example` file ships at the repository root (see [`11-repository-architec
 4. Failing fast, with a clear error message, if api_key is missing entirely —
    never allowing the SDK to silently start in an unconfigured state.
 ```
+
+---
+
+## 6a. Key Rotation and Revocation — Deliberate V1 Scope (RC-8, IDENTITY-003)
+
+The Backend supports rotating and revoking an Agent's API Key as a live, real-time operation (`POST /agents/{agentId}/rotate-api-key` — the previous key becomes invalid immediately). The SDK does not build live key-reload to track this — the same "avoid over-engineering" discipline this document set already applies elsewhere (e.g. the deliberate absence of a CLI, `11-repository-architecture.md §7`), and there is no current customer requirement driving it.
+
+**The accepted V1 behavior, stated explicitly rather than left silent:**
+
+```text
+1. A running SDK process holds its configured api_key for the process's
+   entire lifetime — resolved once, at Settings.resolve() time, and never
+   re-read afterward.
+2. If that key is rotated or revoked on the Backend while the process is
+   still running, every subsequent Observation send fails with the
+   authentication-failure handling defined in 10-transport-layer.md's
+   Retry Policy (a clear, actionable log warning, immediate drop, no
+   wasted retries) — not undefined behavior.
+3. Picking up a new key requires restarting the process with the new
+   ASES_API_KEY (or a new configure()/ASES(api_key=...) call in a fresh
+   process). There is no in-process reconfiguration path in V1.
+```
+
+This is a deliberate V1 scope decision, stated with the same directness `ADR-003-in-memory-observation-buffering.md` states its own accepted-loss-on-crash tradeoff — not an oversight, and not something apologized for.
 
 ---
 

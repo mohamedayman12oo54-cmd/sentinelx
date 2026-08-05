@@ -56,8 +56,90 @@ def test_send_retries_on_network_error_then_gives_up(monkeypatch):
     assert mock_urlopen.call_count == 4  # 1 initial attempt + TRANSPORT_MAX_RETRIES (3)
 
 
-def test_authorization_header_uses_bearer_scheme():
+def test_headers_use_x_api_key_scheme():
     client = APIClient(_settings())
     headers = client._build_headers()
-    assert headers["Authorization"] == "Bearer ases_test_key"
+    assert headers["X-API-Key"] == "ases_test_key"
+    assert "Authorization" not in headers
     assert headers["Content-Type"] == "application/json"
+
+
+def test_headers_request_json_error_responses():
+    # Discovered during Phase 8's own live verification: without this, the
+    # real Backend's default unauthenticated() handler assumes a browser
+    # request and tries to redirect to a non-existent "login" route,
+    # producing a 500/503 instead of a clean 401 — masking the very
+    # authentication failure this client is supposed to classify (RC-8).
+    client = APIClient(_settings())
+    headers = client._build_headers()
+    assert headers["Accept"] == "application/json"
+
+
+def test_send_fails_fast_on_401_without_retrying_and_logs_distinctly(caplog):
+    client = APIClient(_settings())
+    call_count = {"n": 0}
+
+    def raise_http_error(*args, **kwargs):
+        call_count["n"] += 1
+        raise urllib.error.HTTPError(
+            url="https://api.example.com/api/v1/observations",
+            code=401,
+            msg="Unauthorized",
+            hdrs=None,
+            fp=None,
+        )
+
+    with caplog.at_level("WARNING", logger="ases.transport.client"):
+        with patch("ases.transport.client.urllib.request.urlopen", side_effect=raise_http_error):
+            result = client.send('{"events": []}')
+
+    assert result is False
+    assert call_count["n"] == 1  # no retry -- a bad credential cannot succeed on attempt 2/3
+    assert any("authentication failed" in record.message for record in caplog.records)
+    assert "ases_test_key" not in caplog.text  # IDENTITY-004: the raw key must never be logged
+
+
+def test_send_retries_on_429_honoring_retry_after_header(monkeypatch):
+    sleep_calls = []
+    monkeypatch.setattr("ases.transport.client.time.sleep", lambda seconds: sleep_calls.append(seconds))
+    client = APIClient(_settings())
+
+    call_count = {"n": 0}
+
+    def raise_rate_limited(*args, **kwargs):
+        call_count["n"] += 1
+        raise urllib.error.HTTPError(
+            url="https://api.example.com/api/v1/observations",
+            code=429,
+            msg="Too Many Requests",
+            hdrs={"Retry-After": "7"},
+            fp=None,
+        )
+
+    with patch("ases.transport.client.urllib.request.urlopen", side_effect=raise_rate_limited):
+        result = client.send('{"events": []}')
+
+    assert result is False
+    assert call_count["n"] == 4  # retried up to the standard budget, unlike 401/403
+    assert sleep_calls == [7.0, 7.0, 7.0]  # honored Retry-After, not the exponential backoff
+
+
+def test_send_retries_on_429_without_retry_after_uses_standard_backoff(monkeypatch):
+    sleep_calls = []
+    monkeypatch.setattr("ases.transport.client.time.sleep", lambda seconds: sleep_calls.append(seconds))
+    client = APIClient(_settings())
+
+    def raise_rate_limited(*args, **kwargs):
+        raise urllib.error.HTTPError(
+            url="https://api.example.com/api/v1/observations",
+            code=429,
+            msg="Too Many Requests",
+            hdrs=None,
+            fp=None,
+        )
+
+    with patch("ases.transport.client.urllib.request.urlopen", side_effect=raise_rate_limited):
+        result = client.send('{"events": []}')
+
+    assert result is False
+    assert sleep_calls == [1, 2, 4]  # falls back to the same backoff as a transient failure

@@ -79,7 +79,28 @@ Failure → Retry
 
 ### Retry Policy
 
-The retry count is deliberately **not** exposed as a customer-configurable setting — it's an internal implementation detail. The adopted policy: **3 retries, then drop** — logged as a warning, never raised as an exception.
+The retry count is deliberately **not** exposed as a customer-configurable setting — it's an internal implementation detail. The adopted policy — **3 retries, then drop, logged as a warning, never raised as an exception** — applies to *transient* failures specifically. Not every failure the API Client can observe is transient, so three classes are distinguished (RC-8, IDENTITY-002):
+
+```text
+Transient (connection error, timeout, 5xx)   →  the policy above, unchanged.
+Authentication (401 / 403)                     →  NOT retried. A bad credential
+                                                     cannot succeed on attempt 2
+                                                     or 3. Fails fast, logged
+                                                     immediately and distinctly
+                                                     ("authentication failed —
+                                                     check your ASES_API_KEY
+                                                     configuration"), consuming
+                                                     none of the retry budget.
+Rate limit (429)                                 →  retried, but honoring the
+                                                     Backend's own Retry-After
+                                                     header when present, rather
+                                                     than the fixed backoff below
+                                                     — falls back to that backoff
+                                                     only if no Retry-After header
+                                                     is supplied.
+```
+
+This was previously undocumented — the original rationale below was written entirely around the transient case, and applying it uniformly to an authentication rejection would mean retrying an invalid credential three times for no possible benefit before silently dropping the Observation with only a generic warning.
 
 ### If the Network Disconnects Entirely
 The Observation simply remains in the Queue. Once connectivity returns, the Worker resumes automatically — expected, normal behavior, nothing special required.
@@ -103,6 +124,8 @@ Who knows the Endpoint?                       Transport only.
 Who knows Authentication?                       Transport only.
 Who knows the Retry policy?                       Transport only.
 ```
+
+**What "knowing Authentication" means mechanically (RC-8, IDENTITY-001):** the API Client attaches the resolved `api_key` as a single custom header, `X-API-Key: <api_key>` — never `Authorization: Bearer`, which is a distinct scheme reserved for the Backend's separate, JWT-based Human guard. Confirmed directly against the real Backend's Agent guard (`backend/app/Modules/Authentication/AuthServiceProvider.php:34-39`). This was previously unspecified anywhere in this document set — a genuine gap, not a stylistic omission, since no correct SDK implementation could be built against this document alone without it.
 
 ### Why Serialization Belongs to Transport, Not the Builder
 

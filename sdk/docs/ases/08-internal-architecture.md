@@ -92,6 +92,8 @@ Retry               — lives inside Transport, not the Core.
 
 Keeping Configuration and Logging as shared, read-only Services (rather than scattering environment-variable access across every class) is exactly what prevents the chaos that comes from a dozen components each managing their own version of shared state.
 
+**The Logger must never log the API Key** — not the raw value, and not a larger object (e.g. the full `Settings` instance) that happens to contain it. This applies everywhere the Logger is used, including the authentication-failure warning Transport logs on a 401/403 (`10-transport-layer.md §6`'s Retry Policy) — that message states *that* authentication failed, never the credential that failed (RC-8, IDENTITY-004). Stated with the same explicit "must never" discipline this document set already uses for the Adapter Contract (`contracts/public-api-contract.md §3`) and the Adapter Signal Contract (`contracts/adapter-signal-contract.md §5`) — this was previously an implicit assumption, not a stated rule.
+
 ---
 
 ## 8. The Architecture, Visualized
