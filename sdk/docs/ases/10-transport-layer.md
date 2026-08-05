@@ -325,3 +325,40 @@ Flush queue with a short timeout.
 SDK Responsibility Ends
 After SentinelX accepts the observation (HTTP 202 Accepted).
 ```
+
+---
+
+## 12. Error & Log Message Reference (RC-10, DX-005)
+
+This session's own "Errors Teach" principle names a specific standard: a good message ("API Key is missing. Please configure Sentinel before sending observations.") versus a bad one ("Invalid configuration"). No document previously quoted a single actual ASES message to check against that standard. The literal messages this codebase raises or logs, verified directly against source, in the two places they occur:
+
+**Configuration error — raised directly into customer code, at setup time** (`config/settings.py` — the one category of error the SDK is allowed to raise, since it happens before any Agent Task is running):
+
+```text
+ASES api_key is required. Pass it explicitly to ASES(api_key=...) or
+configure(api_key=...), or set the ASES_API_KEY environment variable.
+```
+
+```text
+configure() may only be called once per process. It has already been called.
+```
+
+**Authentication failure — logged, never raised, per the Retry Policy above** (`transport/client.py`, RC-8's IDENTITY-002 classification):
+
+```text
+Observation dropped: authentication failed (HTTP 401) — check your
+ASES_API_KEY configuration.
+```
+
+**Permanently-dropped Observation — the two-line shape specified in section 5 above** (`transport/worker.py`, RC-9's RELIABILITY-005):
+
+```text
+[API Client's own preceding line, e.g.:]
+SentinelX rejected the Observation: HTTP 422 (attempt 1/1).
+
+[Worker's follow-up line:]
+Observation dropped (correlation_id={"execution_id": "abc-123"}, event_count=2)
+— see the preceding warning from transport.client for the failure reason.
+```
+
+Every message above names the specific thing that went wrong and, where an action exists, states it directly (which environment variable to set, which configuration to check) — matching the "teaches" standard rather than the "punishes" one. None of them include the `api_key` value itself (see `08-internal-architecture.md §7`'s explicit "must never log" rule). Any new message added to this codebase should be checkable against this same reference, not invented ad hoc.
