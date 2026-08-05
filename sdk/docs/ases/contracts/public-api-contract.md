@@ -110,7 +110,7 @@ from ases.adapters import CrewAIAdapter
 
 crew = Crew(...)
 
-ases = ASES(api_key="ases_xxxxxxxxx")
+ases = ASES(api_key="sk_live_ab12_9f8e7d6c5b4a3928...")
 adapter = CrewAIAdapter(crew)
 ases.attach(adapter)
 ases.start()

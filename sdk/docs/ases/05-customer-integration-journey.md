@@ -102,7 +102,7 @@ What did you build your Agent with?
 This single answer determines the rest of the integration path — the journey is never forced to be identical for every customer.
 
 ### Stage 3 — Register Agent
-The customer registers the **Agent's metadata**, not its code: Name, Framework, Version, Environment, Description. ASES issues an **Agent API Key** — the Agent's official identity (see the Authentication documentation for the full credential design).
+The customer registers the **Agent's metadata**, not its code: Name, Framework, Version, Environment, Description, through the SentinelX Dashboard. ASES issues an **Agent API Key** — the Agent's official identity (see the Authentication documentation for the full credential design). Mechanically, this is two sequential Backend calls (create the Agent, then issue its first API Key) — the Dashboard chains them automatically and invisibly, so the customer experiences this stage as the one seamless step described above (RC-8, PUBCONTRACT-004; see `backend/docs/03-agent/adr/ADR-001-two-step-provisioning.md` for why the Backend itself requires two calls, and why the Dashboard, not a raw API-driven flow, is what this stage is describing).
 
 ### Stage 4 — Install
 Installing is deliberately separated from integrating. Installing is one command:

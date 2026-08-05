@@ -125,13 +125,16 @@ during that audit:
   briefly became a *hard* dependency of `import ases` itself. Fixed with a
   lazy import (`ases/adapters/__init__.py`) — confirmed by a regression
   test that runs in a subprocess with `crewai` import-blocked.
+- Confirmed and fixed the two assumptions previously listed here as
+  unconfirmed against the real backend: the wire-format JSON schema
+  (`ases/observation/models.py` — Context/Events/Metadata, header-nested
+  Events, the ten-value canonical `event_type` vocabulary) and the
+  authentication mechanism (`ases/transport/client.py` — a single
+  `X-API-Key` header, never `Authorization: Bearer`). Both are now
+  live-verified against the real Backend, not just documented — see
+  `backend/tests/Feature/Observation/SdkObservationComplianceTest.php`.
 
-Two assumptions remain from the original delivery, unconfirmed against the
-real backend — both isolated to one place each:
-
-1. **Wire-format JSON schema** — see `ases/observation/models.py`.
-2. **Endpoint path and Authorization scheme** — see `ases/transport/client.py`
-   and `ases/shared/constants.py`.
+No unconfirmed backend assumptions remain in this build.
 
 ## Development
 

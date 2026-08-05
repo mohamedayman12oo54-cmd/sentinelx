@@ -37,6 +37,9 @@ If the SentinelX API takes 500ms to respond and the SDK waited synchronously, ev
 ### Raising Exceptions on Network Failure Is Unacceptable at Any Rate
 A transient network timeout is common and expected. If Transport propagated that as an exception, a routine network hiccup on SentinelX's side would crash a customer's production Agent — turning a security tool into a reliability liability, the opposite of its purpose.
 
+### Not Every Failure Is Transient — Refined Under RC-8 (IDENTITY-002)
+This ADR's core decision — async, passive, bounded retry — is unchanged. What was refined, and made explicit for the first time here, is *what counts as retry-worthy*: an authentication rejection (401/403) is not transient in the sense this ADR's own rationale describes — it will not resolve itself on attempt 2 or 3 with the same credential, so it fails fast instead of consuming the retry budget the "common and expected" transient case above was designed for. A rate-limit response (429) sits in between: retry-worthy, but on the Backend's own stated schedule (`Retry-After`) rather than this ADR's fixed backoff when the Backend provides one. See [`10-transport-layer.md`](../10-transport-layer.md#5-the-transport-lifecycle)'s Retry Policy for the full three-way classification.
+
 ### Why an In-Memory Queue, Not a Message Broker
 The SDK runs embedded inside a single process — it is not a distributed system. Reaching for RabbitMQ or Kafka here would add real operational weight to solve a problem that exists at a scale of seconds and single-digit retry counts, not the scale those tools are built for.
 
